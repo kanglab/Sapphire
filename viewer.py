@@ -15,6 +15,7 @@ import base64
 import PIL.Image
 import dash_auth
 import numpy as np
+import scipy.ndimage
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
@@ -46,7 +47,7 @@ manual_evals_file = 'eclosion.csv'
 manual_evals_file = '171013.csv'
 manual_evals_file = 'pupariation.csv'
 
-theta = 50
+theta = 90
 labels = None
 signals = None
 manual_evals = np.loadtxt(
@@ -262,7 +263,8 @@ def callback(n_clicks, larva_or_adult):
     '''
     # Euclidean
     n_wells, n_times, height, width = labels.shape
-    centroids = np.array(list(map(centroid, labels.reshape(-1, height, width))))
+    temp = np.array([scipy.ndimage.binary_erosion(label, structure=np.ones((3, 3)), iterations=1) for label in labels.reshape(-1, height, width)]).astype(labels.dtype).reshape(*labels.shape)
+    centroids = np.array(list(map(centroid, temp.reshape(-1, height, width))))
     centroids = centroids.reshape(n_wells, n_times, 2)
     signals = np.sqrt((np.diff(centroids, axis=1)**2).sum(-1))
     return 'Current npy file : {}'.format(larva_or_adult)
