@@ -239,6 +239,14 @@ def callback(_):
 
 
 @app.callback(
+        Output('threshold-slider', 'max'),
+        [Input('current-npy', 'children')])
+def callback(_):
+    global signals
+    return signals.max()
+
+
+@app.callback(
         Output('current-npy', 'children'),
         [Input('button', 'n_clicks')],
         [State('dropdown1', 'value')])
