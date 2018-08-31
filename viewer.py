@@ -398,6 +398,7 @@ def callback(well_idx, threshold, rise_or_fall):
                     'title': 'Signal',
                 },
                 'showlegend': False,
+                'hovermode': 'closest',
             },
         }
 
