@@ -257,7 +257,14 @@ def callback(n_clicks, larva_or_adult):
             data_root,
             imaging_env,
             larva_or_adult)) >= theta
+    '''
     signals = (np.diff(labels.astype(np.int8), axis=1)**2).sum(-1).sum(-1)
+    '''
+    # Euclidean
+    n_wells, n_times, height, width = labels.shape
+    centroids = np.array(list(map(centroid, labels.reshape(-1, height, width))))
+    centroids = centroids.reshape(n_wells, n_times, 2)
+    signals = np.sqrt((np.diff(centroids, axis=1)**2).sum(-1))
     return 'Current npy file : {}'.format(larva_or_adult)
 
 
