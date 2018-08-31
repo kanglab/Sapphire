@@ -355,8 +355,13 @@ def callback(click_data):
         Output('signal-graph', 'figure'),
         [Input('well-selector', 'value'),
          Input('threshold-slider', 'value'),
-         Input('dropdown2', 'value')])
-def callback(well_idx, threshold, rise_or_fall):
+         Input('dropdown2', 'value'),
+         Input('signal-graph', 'clickData')])
+def callback(well_idx, threshold, rise_or_fall, click_data):
+    if click_data is None:
+        x, y = 0, 0
+    else:
+        x, y = click_data['points'][0]['x'], click_data['points'][0]['y']
     if rise_or_fall == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
     elif rise_or_fall == 'fall':
@@ -387,6 +392,13 @@ def callback(well_idx, threshold, rise_or_fall):
                     'y': list(range(256)),
                     'mode': 'lines',
                     'name': 'Auto',
+                },
+                {
+                    'x': [x],
+                    'y': [y],
+                    'mode': 'markers',
+                    'marker': {'size': 10},
+                    'name': 'Selected well',
                 },
             ],
             'layout': {
