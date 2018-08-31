@@ -370,13 +370,13 @@ def callback(well_idx, threshold, rise_or_fall):
                     'name': 'Threshold',
                 },
                 {
-                    'x': [manual_evals[well_idx]]*255,
+                    'x': [manual_evals[well_idx]] * int(signals.max()),
                     'y': list(range(256)),
                     'mode': 'lines',
                     'name': 'Manual',
                 },
                 {
-                    'x': [auto_evals[well_idx]]*255,
+                    'x': [auto_evals[well_idx]] * int(signals.max()),
                     'y': list(range(256)),
                     'mode': 'lines',
                     'name': 'Auto',
