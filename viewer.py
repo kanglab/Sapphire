@@ -271,7 +271,10 @@ def callback(threshold, well_idx, rise_or_fall):
     if rise_or_fall == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
     elif rise_or_fall == 'fall':
+        # Scan the signal from the right hand side.
         auto_evals = signals.shape[1] - (np.fliplr(signals) > threshold).argmax(axis=1)
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == signals.shape[1]] = 0
     return {
             'data': [
                 {
