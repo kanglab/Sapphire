@@ -22,7 +22,11 @@ from dash.dependencies import Input, Output, State
 
 def centroid(binary_img):
     rows, clms = np.where(binary_img)
-    return rows.sum() / rows.shape[0], clms.sum() / clms.shape[0]
+    cent = rows.sum() / rows.shape[0], clms.sum() / clms.shape[0]
+    if np.isnan(cent[0]):
+        return (binary_img.shape[0]/2, binary_img.shape[1]/2)
+    else:
+        return cent
 
 
 # -------------------
