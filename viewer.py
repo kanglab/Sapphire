@@ -226,7 +226,6 @@ app.layout = html.Div([
         Output('well-slider', 'max'),
         [Input('current-npy', 'children')])
 def callback(_):
-    global labels
     return len(labels) - 1
 
 
@@ -234,7 +233,6 @@ def callback(_):
         Output('well-selector', 'max'),
         [Input('current-npy', 'children')])
 def callback(_):
-    global labels
     return len(labels) - 1
 
 
@@ -242,7 +240,6 @@ def callback(_):
         Output('threshold-slider', 'max'),
         [Input('current-npy', 'children')])
 def callback(_):
-    global signals
     return signals.max()
 
 
