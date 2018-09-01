@@ -384,12 +384,13 @@ def callback(click_data):
         [Input('well-selector', 'value'),
          Input('threshold-slider', 'value'),
          Input('dropdown2', 'value'),
-         Input('signal-graph', 'clickData')])
-def callback(well_idx, threshold, rise_or_fall, click_data):
-    if click_data is None:
+         Input('time-selector', 'value')],
+        [State('signal-graph', 'figure')])
+def callback(well_idx, threshold, rise_or_fall, time, figure):
+    if figure is None:
         x, y = 0, 0
     else:
-        x, y = click_data['points'][0]['x'], click_data['points'][0]['y']
+        x, y = time, figure['data'][0]['y'][time]
     if rise_or_fall == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
     elif rise_or_fall == 'fall':
@@ -397,6 +398,7 @@ def callback(well_idx, threshold, rise_or_fall, click_data):
     return {
             'data': [
                 {
+                    # Signal
                     'x': list(range(len(signals[0, :]))),
                     'y': list(signals[well_idx]),
                     'mode': 'markers+lines',
@@ -404,29 +406,33 @@ def callback(well_idx, threshold, rise_or_fall, click_data):
                     'name': 'Signal',
                 },
                 {
+                    # Threshold (hrizontal line)
                     'x': list(range(len(signals[0, :]))),
                     'y': [threshold]*len(signals[0, :]),
                     'mode': 'lines',
                     'name': 'Threshold',
                 },
                 {
+                    # Manual evaluation time (vertical line)
                     'x': [manual_evals[well_idx]] * int(signals.max()),
                     'y': list(range(256)),
                     'mode': 'lines',
                     'name': 'Manual',
                 },
                 {
+                    # Auto evaluation time (vertical line)
                     'x': [auto_evals[well_idx]] * int(signals.max()),
                     'y': list(range(256)),
                     'mode': 'lines',
                     'name': 'Auto',
                 },
                 {
+                    # Selected data point
                     'x': [x],
                     'y': [y],
                     'mode': 'markers',
                     'marker': {'size': 10},
-                    'name': 'Selected well',
+                    'name': '',
                 },
             ],
             'layout': {
