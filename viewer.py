@@ -74,15 +74,6 @@ app.css.append_css(
         {'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
 
 app.layout = html.Div([
-    html.Div(['Current npy file : '], id='current-npy'),
-    html.Div([
-        'Data root : {}'.format(data_root),
-        html.Br(),
-        'Imaging environment : {}'.format(imaging_env),
-        html.Br(),
-        'File name : {}'.format(manual_evals_file),
-        html.Br(),
-    ]),
     html.Div([
         html.Div([
             html.H1('Well #', style={'display': 'inline-block'}),
@@ -128,7 +119,7 @@ app.layout = html.Div([
             ],
             style={
                 'display': 'inline-block',
-                'margin': '10px',
+                'margin': '10px 10px',
             },
         ),
         html.Div([
@@ -257,11 +248,25 @@ app.layout = html.Div([
             ],
             style={
                 'display': 'inline-block',
-                'width' : '800px',
-                'vertical-align': 'top',
-                'margin-right': '10px',
+                'margin': '10px 10px',
             },
-        )],
+        ),
+        html.Div([
+            html.Div(['Current npy file : '], id='current-npy'),
+            'Data root : {}'.format(data_root),
+            html.Br(),
+            'Imaging environment : {}'.format(imaging_env),
+            html.Br(),
+            'File name : {}'.format(manual_evals_file),
+            html.Br(),
+            ],
+            style={
+                'display': 'inline-block',
+                'vertical-align': 'top',
+                'margin': '10px 10px',
+            },
+        ),
+        ],
     ),
     html.Div([
         dcc.Graph(
