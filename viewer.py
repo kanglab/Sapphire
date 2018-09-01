@@ -104,23 +104,55 @@ app.layout = html.Div([
         ),
     ]),
     html.Div([
-        html.Img(
-            id='org-image',
+        html.Div([
+            html.Img(
+                id='t-image',
+                style={
+                    'background': '#555555',
+                    'height': '120px',
+                    'width': '120px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            html.Img(
+                id='t-label',
+                style={
+                    'background': '#555555',
+                    'height': '120px',
+                    'width': '120px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            ],
             style={
-                'background': '#555555',
-                'height': '200px',
-                'width': '200px',
-                'padding': '5px',
                 'display': 'inline-block',
             },
         ),
-        html.Img(
-            id='image',
+        html.Div([
+            html.Img(
+                id='t+1-image',
+                style={
+                    'background': '#555555',
+                    'height': '120px',
+                    'width': '120px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            html.Img(
+                id='t+1-label',
+                style={
+                    'background': '#555555',
+                    'height': '120px',
+                    'width': '120px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            ],
             style={
-                'background': '#555555',
-                'height': '200px',
-                'width': '200px',
-                'padding': '5px',
                 'display': 'inline-block',
             },
         ),
@@ -444,7 +476,7 @@ def callback(well_idx, threshold, rise_or_fall, time, figure):
 
 
 @app.callback(
-        Output('org-image', 'src'),
+        Output('t-image', 'src'),
         [Input('time-selector', 'value'),
          Input('well-selector', 'value')])
 def callback(time, well_idx):
@@ -462,13 +494,43 @@ def callback(time, well_idx):
 
 
 @app.callback(
-        Output('image', 'src'),
+        Output('t-label', 'src'),
         [Input('time-selector', 'value'),
          Input('well-selector', 'value')])
 def callback(time, well_idx):
     buf = io.BytesIO()
     PIL.Image.fromarray(
             (255 * labels[well_idx, time, :, :]).astype(np.uint8)).save(buf, format='PNG')
+    return 'data:image/png;base64,{}'.format(
+            base64.b64encode(buf.getvalue()).decode('utf-8'))
+
+
+@app.callback(
+        Output('t+1-image', 'src'),
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')])
+def callback(time, well_idx):
+    orgimg_paths = sorted(glob.glob(
+            os.path.join(data_root, imaging_env, 'original', '*.jpg')))
+    org_img = np.array(
+            PIL.Image.open(orgimg_paths[time+1]).convert('L'), dtype=np.uint8)
+    r, c = np.where(mask == well_idx)
+    org_img = org_img[r.min():r.max(), c.min():c.max()]
+    org_img = PIL.Image.fromarray(org_img)
+    buf = io.BytesIO()
+    org_img.save(buf, format='JPEG')
+    return 'data:image/jpeg;base64,{}'.format(
+            base64.b64encode(buf.getvalue()).decode('utf-8'))
+
+
+@app.callback(
+        Output('t+1-label', 'src'),
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')])
+def callback(time, well_idx):
+    buf = io.BytesIO()
+    PIL.Image.fromarray(
+            (255 * labels[well_idx, time+1, :, :]).astype(np.uint8)).save(buf, format='PNG')
     return 'data:image/png;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
