@@ -157,49 +157,94 @@ app.layout = html.Div([
             },
         ),
         html.Div([
-            dcc.Dropdown(
-                id='dropdown1',
-                options=[
-                    {
-                        'label': 'matsu_signal_data_larva.npy',
-                        'value': 'matsu_signal_data_larva.npy',
-                    },
-                    {
-                        'label': 'matsu_signal_data_adult.npy',
-                        'value': 'matsu_signal_data_adult.npy',
-                    },
+            'Npy file :',
+            html.Br(),
+            html.Div([
+                dcc.Dropdown(
+                    id='dropdown1',
+                    options=[
+                        {
+                            'label': 'matsu_signal_data_larva.npy',
+                            'value': 'matsu_signal_data_larva.npy',
+                        },
+                        {
+                            'label': 'matsu_signal_data_adult.npy',
+                            'value': 'matsu_signal_data_adult.npy',
+                        },
+                    ],
+                    value='matsu_signal_data_larva.npy',
+                    placeholder='Select npy file...',
+                    clearable=False,
+                ),
                 ],
-                value='matsu_signal_data_larva.npy',
-                placeholder='Select npy file...',
-                clearable=False,
+                style={
+                    'display': 'inline-block',
+                    'width': '300px',
+                    'vertical-align': 'middle',
+                },
             ),
-            html.Button(
-                'Load',
-                id='button',
-            ),
-            dcc.Dropdown(
-                id='dropdown2',
-                options=[
-                    {'label': 'rise', 'value': 'rise'},
-                    {'label': 'fall', 'value': 'fall'},
+            html.Div([
+                html.Button(
+                    'Load',
+                    id='button',
+                ),
                 ],
-                value='rise',
-                placeholder='Detect...',
-                clearable=False,
+                style={
+                    'display': 'inline-block',
+                },
             ),
-            dcc.Input(
-                id='well-selector',
-                type='number',
-                value=0,
-                min=0,
-                size=5,
+            html.Br(),
+            html.Br(),
+            'Target to detect :',
+            html.Br(),
+            html.Div([
+                dcc.Dropdown(
+                    id='dropdown2',
+                    options=[
+                        {'label': 'rise', 'value': 'rise'},
+                        {'label': 'fall', 'value': 'fall'},
+                    ],
+                    value='rise',
+                    placeholder='Detect...',
+                    clearable=False,
+                ),
+                ],
+                style={
+                    'width': '100px',
+                },
             ),
-            dcc.Slider(
-                id='well-slider',
-                value=0,
-                min=0,
-                step=1,
+            html.Br(),
+            'Well index :',
+            html.Br(),
+            html.Div([
+                dcc.Input(
+                    id='well-selector',
+                    type='number',
+                    value=0,
+                    min=0,
+                    size=5,
+                ),
+                ],
+                style={'display': 'inline-block'},
             ),
+            html.Div([
+                dcc.Slider(
+                    id='well-slider',
+                    value=0,
+                    min=0,
+                    step=1,
+                ),
+                ],
+                style={
+                    'display': 'inline-block',
+                    'width': '300px',
+                    'margin-left': '20px',
+                },
+            ),
+            html.Br(),
+            html.Br(),
+            'Time :',
+            html.Br(),
             dcc.Input(
                 id='time-selector',
                 type='number',
@@ -210,7 +255,7 @@ app.layout = html.Div([
             ],
             style={
                 'display': 'inline-block',
-                'width' : '300px',
+                'width' : '800px',
                 'vertical-align': 'top',
                 'margin-right': '10px',
             },
