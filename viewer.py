@@ -104,43 +104,55 @@ app.layout = html.Div([
         ),
     ]),
     html.Div([
-        html.Img(
-            id='t-image',
+        html.Div([
+            html.Img(
+                id='t-image',
+                style={
+                    'background': '#555555',
+                    'height': '120px',
+                    'width': '120px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            html.Img(
+                id='t-label',
+                style={
+                    'background': '#555555',
+                    'height': '120px',
+                    'width': '120px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            ],
             style={
-                'background': '#555555',
-                'height': '200px',
-                'width': '200px',
-                'padding': '5px',
                 'display': 'inline-block',
             },
         ),
-        html.Img(
-            id='t-label',
+        html.Div([
+            html.Img(
+                id='t+1-image',
+                style={
+                    'background': '#555555',
+                    'height': '120px',
+                    'width': '120px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            html.Img(
+                id='t+1-label',
+                style={
+                    'background': '#555555',
+                    'height': '120px',
+                    'width': '120px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            ],
             style={
-                'background': '#555555',
-                'height': '200px',
-                'width': '200px',
-                'padding': '5px',
-                'display': 'inline-block',
-            },
-        ),
-        html.Img(
-            id='t+1-image',
-            style={
-                'background': '#555555',
-                'height': '200px',
-                'width': '200px',
-                'padding': '5px',
-                'display': 'inline-block',
-            },
-        ),
-        html.Img(
-            id='t+1-label',
-            style={
-                'background': '#555555',
-                'height': '200px',
-                'width': '200px',
-                'padding': '5px',
                 'display': 'inline-block',
             },
         ),
