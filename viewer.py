@@ -128,6 +128,7 @@ app.layout = html.Div([
             ],
             style={
                 'display': 'inline-block',
+                'margin': '10px',
             },
         ),
         html.Div([
@@ -154,6 +155,7 @@ app.layout = html.Div([
             ],
             style={
                 'display': 'inline-block',
+                'margin': '10px',
             },
         ),
         html.Div([
