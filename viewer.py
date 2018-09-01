@@ -77,6 +77,7 @@ app.layout = html.Div([
     html.Header([html.H1('Viewer')]),
     html.Div([
         html.Div([
+            html.Div(['Image at "t"'], style={'display': 'table'}),
             html.Img(
                 id='t-image',
                 style={
@@ -104,6 +105,7 @@ app.layout = html.Div([
             },
         ),
         html.Div([
+            html.Div(['"t+1"'], style={'display': 'table'}),
             html.Img(
                 id='t+1-image',
                 style={
