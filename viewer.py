@@ -39,7 +39,7 @@ VALID_USERNAME_PASSWORD_PAIRS = [
     ['kang', 'dash3360'],
 ]
 
-data_root = 'G:/Research/Drosophila/data/'
+data_root = 'G:/Research/Drosophila/CUI/data/'
 imaging_env = '171013.15.50.w1118.starvation.96well.3plates.740D-3'
 imaging_env = 'allevents'
 
@@ -47,7 +47,7 @@ manual_evals_file = 'eclosion.csv'
 manual_evals_file = '171013.csv'
 manual_evals_file = 'pupariation.csv'
 
-theta = 90
+theta = 50
 labels = None
 signals = None
 manual_evals = np.loadtxt(
@@ -104,32 +104,6 @@ app.layout = html.Div([
         ),
     ]),
     html.Div([
-        dcc.Input(
-            id='well-selector',
-            type='number',
-            value=0,
-            min=0,
-            size=5,
-        ),
-        dcc.Slider(
-            id='well-slider',
-            value=0,
-            min=0,
-            step=1,
-        ),
-        dcc.Input(
-            id='time-selector',
-            type='number',
-            value=0,
-            min=0,
-            size=5,
-        ),
-        ],
-        style={
-            'width': '400px',
-        },
-    ),
-    html.Div([
         html.Img(
             id='org-image',
             style={
@@ -180,6 +154,26 @@ app.layout = html.Div([
                 value='rise',
                 placeholder='Detect...',
                 clearable=False,
+            ),
+            dcc.Input(
+                id='well-selector',
+                type='number',
+                value=0,
+                min=0,
+                size=5,
+            ),
+            dcc.Slider(
+                id='well-slider',
+                value=0,
+                min=0,
+                step=1,
+            ),
+            dcc.Input(
+                id='time-selector',
+                type='number',
+                value=0,
+                min=0,
+                size=5,
             ),
             ],
             style={
