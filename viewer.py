@@ -74,26 +74,7 @@ app.css.append_css(
         {'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
 
 app.layout = html.Div([
-    html.Div([
-        html.Div([
-            html.H1('Well #', style={'display': 'inline-block'}),
-            html.H1(id='well-header', style={'display': 'inline-block'}),
-            ],
-            style={
-                'display': 'inline-block',
-                'margin-right': '100px',
-            },
-        ),
-        html.Div([
-            html.H4('Timestep : ', style={'display': 'inline-block'}),
-            html.H4(id='time-header', style={'display': 'inline-block'}),
-            ],
-            style={
-                'display': 'inline-block',
-                'margin-right': '100px',
-            },
-        ),
-    ]),
+    html.Header([html.H1('Viewer')]),
     html.Div([
         html.Div([
             html.Img(
@@ -438,23 +419,6 @@ def callback(threshold, well_idx, rise_or_fall):
         [Input('well-slider', 'value')])
 def callback(well_idx):
     return well_idx
-
-
-@app.callback(
-        Output('well-header', 'children'),
-        [Input('well-selector', 'value')])
-def callback(well_idx):
-    return '{}'.format(well_idx)
-
-
-@app.callback(
-        Output('time-header', 'children'),
-        [Input('signal-graph', 'clickData')])
-def callback(click_data):
-    if click_data is None:
-        return
-    time = click_data['points'][0]['x']
-    return '{}'.format(time)
 
 
 @app.callback(
