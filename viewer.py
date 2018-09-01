@@ -39,7 +39,7 @@ VALID_USERNAME_PASSWORD_PAIRS = [
     ['kang', 'dash3360'],
 ]
 
-data_root = 'G:/Research/Drosophila/data/'
+data_root = 'G:/Research/Drosophila/CUI/data/'
 imaging_env = '171013.15.50.w1118.starvation.96well.3plates.740D-3'
 imaging_env = 'allevents'
 
@@ -47,7 +47,7 @@ manual_evals_file = 'eclosion.csv'
 manual_evals_file = '171013.csv'
 manual_evals_file = 'pupariation.csv'
 
-theta = 90
+theta = 50
 labels = None
 signals = None
 manual_evals = np.loadtxt(
@@ -104,24 +104,6 @@ app.layout = html.Div([
         ),
     ]),
     html.Div([
-        dcc.Input(
-            id='well-selector',
-            type='number',
-            value=0,
-            min=0,
-            size=5,
-        ),
-        dcc.Slider(
-            id='well-slider',
-            value=0,
-            min=0,
-            step=1,
-        )],
-        style={
-            'width': '400px',
-        },
-    ),
-    html.Div([
         html.Img(
             id='org-image',
             style={
@@ -173,6 +155,26 @@ app.layout = html.Div([
                 placeholder='Detect...',
                 clearable=False,
             ),
+            dcc.Input(
+                id='well-selector',
+                type='number',
+                value=0,
+                min=0,
+                size=5,
+            ),
+            dcc.Slider(
+                id='well-slider',
+                value=0,
+                min=0,
+                step=1,
+            ),
+            dcc.Input(
+                id='time-selector',
+                type='number',
+                value=0,
+                min=0,
+                size=5,
+            ),
             ],
             style={
                 'display': 'inline-block',
@@ -189,7 +191,7 @@ app.layout = html.Div([
                 'display': 'inline-block',
                 'height': '500px',
                 'width': '60%',
-                },
+            },
         ),
         html.Div([
             dcc.Slider(
@@ -217,7 +219,7 @@ app.layout = html.Div([
             },
         ),
     ]),
-],
+    ],
     style={
         'width': '1200px',
     },
@@ -227,6 +229,23 @@ app.layout = html.Div([
 # ------------
 #  Callbacks
 # ------------
+@app.callback(
+        Output('time-selector', 'value'),
+        [Input('signal-graph', 'clickData')])
+def callback(click_data):
+    if click_data is None:
+        return 0
+    else:
+        return click_data['points'][0]['x']
+
+
+@app.callback(
+        Output('time-selector', 'max'),
+        [Input('current-npy', 'children')])
+def callback(_):
+    return signals.shape[1] - 1
+
+
 @app.callback(
         Output('well-slider', 'max'),
         [Input('current-npy', 'children')])
@@ -258,8 +277,8 @@ def callback(n_clicks, larva_or_adult):
             data_root,
             imaging_env,
             larva_or_adult)) >= theta
-    '''
     signals = (np.diff(labels.astype(np.int8), axis=1)**2).sum(-1).sum(-1)
+
     '''
     # Euclidean
     n_wells, n_times, height, width = labels.shape
@@ -267,6 +286,7 @@ def callback(n_clicks, larva_or_adult):
     centroids = np.array(list(map(centroid, temp.reshape(-1, height, width))))
     centroids = centroids.reshape(n_wells, n_times, 2)
     signals = np.sqrt((np.diff(centroids, axis=1)**2).sum(-1))
+    '''
     return 'Current npy file : {}'.format(larva_or_adult)
 
 
@@ -358,12 +378,13 @@ def callback(click_data):
         [Input('well-selector', 'value'),
          Input('threshold-slider', 'value'),
          Input('dropdown2', 'value'),
-         Input('signal-graph', 'clickData')])
-def callback(well_idx, threshold, rise_or_fall, click_data):
-    if click_data is None:
+         Input('time-selector', 'value')],
+        [State('signal-graph', 'figure')])
+def callback(well_idx, threshold, rise_or_fall, time, figure):
+    if figure is None:
         x, y = 0, 0
     else:
-        x, y = click_data['points'][0]['x'], click_data['points'][0]['y']
+        x, y = time, figure['data'][0]['y'][time]
     if rise_or_fall == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
     elif rise_or_fall == 'fall':
@@ -371,6 +392,7 @@ def callback(well_idx, threshold, rise_or_fall, click_data):
     return {
             'data': [
                 {
+                    # Signal
                     'x': list(range(len(signals[0, :]))),
                     'y': list(signals[well_idx]),
                     'mode': 'markers+lines',
@@ -378,29 +400,33 @@ def callback(well_idx, threshold, rise_or_fall, click_data):
                     'name': 'Signal',
                 },
                 {
+                    # Threshold (hrizontal line)
                     'x': list(range(len(signals[0, :]))),
                     'y': [threshold]*len(signals[0, :]),
                     'mode': 'lines',
                     'name': 'Threshold',
                 },
                 {
+                    # Manual evaluation time (vertical line)
                     'x': [manual_evals[well_idx]] * int(signals.max()),
                     'y': list(range(256)),
                     'mode': 'lines',
                     'name': 'Manual',
                 },
                 {
+                    # Auto evaluation time (vertical line)
                     'x': [auto_evals[well_idx]] * int(signals.max()),
                     'y': list(range(256)),
                     'mode': 'lines',
                     'name': 'Auto',
                 },
                 {
+                    # Selected data point
                     'x': [x],
                     'y': [y],
                     'mode': 'markers',
                     'marker': {'size': 10},
-                    'name': 'Selected well',
+                    'name': '',
                 },
             ],
             'layout': {
@@ -419,13 +445,9 @@ def callback(well_idx, threshold, rise_or_fall, click_data):
 
 @app.callback(
         Output('org-image', 'src'),
-        [Input('signal-graph', 'clickData'),
-            Input('well-selector', 'value')])
-def callback(click_data, well_idx):
-    if click_data is None:
-        time = 0
-    else:
-        time = click_data['points'][0]['x']
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')])
+def callback(time, well_idx):
     orgimg_paths = sorted(glob.glob(
             os.path.join(data_root, imaging_env, 'original', '*.jpg')))
     org_img = np.array(
@@ -441,13 +463,9 @@ def callback(click_data, well_idx):
 
 @app.callback(
         Output('image', 'src'),
-        [Input('signal-graph', 'clickData'),
+        [Input('time-selector', 'value'),
          Input('well-selector', 'value')])
-def callback(click_data, well_idx):
-    if click_data is None:
-        time = 0
-    else:
-        time = click_data['points'][0]['x']
+def callback(time, well_idx):
     buf = io.BytesIO()
     PIL.Image.fromarray(
             (255 * labels[well_idx, time, :, :]).astype(np.uint8)).save(buf, format='PNG')
