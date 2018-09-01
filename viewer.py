@@ -74,37 +74,10 @@ app.css.append_css(
         {'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
 
 app.layout = html.Div([
-    html.Div(['Current npy file : '], id='current-npy'),
-    html.Div([
-        'Data root : {}'.format(data_root),
-        html.Br(),
-        'Imaging environment : {}'.format(imaging_env),
-        html.Br(),
-        'File name : {}'.format(manual_evals_file),
-        html.Br(),
-    ]),
+    html.Header([html.H1('Viewer')]),
     html.Div([
         html.Div([
-            html.H1('Well #', style={'display': 'inline-block'}),
-            html.H1(id='well-header', style={'display': 'inline-block'}),
-            ],
-            style={
-                'display': 'inline-block',
-                'margin-right': '100px',
-            },
-        ),
-        html.Div([
-            html.H4('Timestep : ', style={'display': 'inline-block'}),
-            html.H4(id='time-header', style={'display': 'inline-block'}),
-            ],
-            style={
-                'display': 'inline-block',
-                'margin-right': '100px',
-            },
-        ),
-    ]),
-    html.Div([
-        html.Div([
+            html.Div(['Image at "t"'], style={'display': 'table'}),
             html.Img(
                 id='t-image',
                 style={
@@ -128,9 +101,11 @@ app.layout = html.Div([
             ],
             style={
                 'display': 'inline-block',
+                'margin': '10px 10px',
             },
         ),
         html.Div([
+            html.Div(['"t+1"'], style={'display': 'table'}),
             html.Img(
                 id='t+1-image',
                 style={
@@ -154,52 +129,98 @@ app.layout = html.Div([
             ],
             style={
                 'display': 'inline-block',
+                'margin': '10px',
             },
         ),
         html.Div([
-            dcc.Dropdown(
-                id='dropdown1',
-                options=[
-                    {
-                        'label': 'matsu_signal_data_larva.npy',
-                        'value': 'matsu_signal_data_larva.npy',
-                    },
-                    {
-                        'label': 'matsu_signal_data_adult.npy',
-                        'value': 'matsu_signal_data_adult.npy',
-                    },
+            'Npy file :',
+            html.Br(),
+            html.Div([
+                dcc.Dropdown(
+                    id='dropdown1',
+                    options=[
+                        {
+                            'label': 'matsu_signal_data_larva.npy',
+                            'value': 'matsu_signal_data_larva.npy',
+                        },
+                        {
+                            'label': 'matsu_signal_data_adult.npy',
+                            'value': 'matsu_signal_data_adult.npy',
+                        },
+                    ],
+                    value='matsu_signal_data_larva.npy',
+                    placeholder='Select npy file...',
+                    clearable=False,
+                ),
                 ],
-                value='matsu_signal_data_larva.npy',
-                placeholder='Select npy file...',
-                clearable=False,
+                style={
+                    'display': 'inline-block',
+                    'width': '300px',
+                    'vertical-align': 'middle',
+                },
             ),
-            html.Button(
-                'Load',
-                id='button',
-            ),
-            dcc.Dropdown(
-                id='dropdown2',
-                options=[
-                    {'label': 'rise', 'value': 'rise'},
-                    {'label': 'fall', 'value': 'fall'},
+            html.Div([
+                html.Button(
+                    'Load',
+                    id='button',
+                ),
                 ],
-                value='rise',
-                placeholder='Detect...',
-                clearable=False,
+                style={
+                    'display': 'inline-block',
+                },
             ),
-            dcc.Input(
-                id='well-selector',
-                type='number',
-                value=0,
-                min=0,
-                size=5,
+            html.Br(),
+            html.Br(),
+            'Target to detect :',
+            html.Br(),
+            html.Div([
+                dcc.Dropdown(
+                    id='dropdown2',
+                    options=[
+                        {'label': 'rise', 'value': 'rise'},
+                        {'label': 'fall', 'value': 'fall'},
+                    ],
+                    value='rise',
+                    placeholder='Detect...',
+                    clearable=False,
+                ),
+                ],
+                style={
+                    'width': '100px',
+                },
             ),
-            dcc.Slider(
-                id='well-slider',
-                value=0,
-                min=0,
-                step=1,
+            html.Br(),
+            'Well index :',
+            html.Br(),
+            html.Div([
+                dcc.Input(
+                    id='well-selector',
+                    type='number',
+                    value=0,
+                    min=0,
+                    size=5,
+                ),
+                ],
+                style={'display': 'inline-block'},
             ),
+            html.Div([
+                dcc.Slider(
+                    id='well-slider',
+                    value=0,
+                    min=0,
+                    step=1,
+                ),
+                ],
+                style={
+                    'display': 'inline-block',
+                    'width': '300px',
+                    'margin-left': '20px',
+                },
+            ),
+            html.Br(),
+            html.Br(),
+            'Time :',
+            html.Br(),
             dcc.Input(
                 id='time-selector',
                 type='number',
@@ -210,11 +231,25 @@ app.layout = html.Div([
             ],
             style={
                 'display': 'inline-block',
-                'width' : '300px',
-                'vertical-align': 'top',
-                'margin-right': '10px',
+                'margin': '10px 10px',
             },
-        )],
+        ),
+        html.Div([
+            html.Div(['Current npy file : '], id='current-npy'),
+            'Data root : {}'.format(data_root),
+            html.Br(),
+            'Imaging environment : {}'.format(imaging_env),
+            html.Br(),
+            'File name : {}'.format(manual_evals_file),
+            html.Br(),
+            ],
+            style={
+                'display': 'inline-block',
+                'vertical-align': 'top',
+                'margin': '10px 10px',
+            },
+        ),
+        ],
     ),
     html.Div([
         dcc.Graph(
@@ -386,23 +421,6 @@ def callback(threshold, well_idx, rise_or_fall):
         [Input('well-slider', 'value')])
 def callback(well_idx):
     return well_idx
-
-
-@app.callback(
-        Output('well-header', 'children'),
-        [Input('well-selector', 'value')])
-def callback(well_idx):
-    return '{}'.format(well_idx)
-
-
-@app.callback(
-        Output('time-header', 'children'),
-        [Input('signal-graph', 'clickData')])
-def callback(click_data):
-    if click_data is None:
-        return
-    time = click_data['points'][0]['x']
-    return '{}'.format(time)
 
 
 @app.callback(
