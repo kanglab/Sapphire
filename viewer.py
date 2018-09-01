@@ -116,7 +116,15 @@ app.layout = html.Div([
             value=0,
             min=0,
             step=1,
-        )],
+        ),
+        dcc.Input(
+            id='time-selector',
+            type='number',
+            value=0,
+            min=0,
+            size=5,
+        ),
+        ],
         style={
             'width': '400px',
         },
@@ -189,7 +197,7 @@ app.layout = html.Div([
                 'display': 'inline-block',
                 'height': '500px',
                 'width': '60%',
-                },
+            },
         ),
         html.Div([
             dcc.Slider(
@@ -217,7 +225,7 @@ app.layout = html.Div([
             },
         ),
     ]),
-],
+    ],
     style={
         'width': '1200px',
     },
@@ -227,6 +235,23 @@ app.layout = html.Div([
 # ------------
 #  Callbacks
 # ------------
+@app.callback(
+        Output('time-selector', 'value'),
+        [Input('signal-graph', 'clickData')])
+def callback(click_data):
+    if click_data is None:
+        return 0
+    else:
+        return click_data['points'][0]['x']
+
+
+@app.callback(
+        Output('time-selector', 'max'),
+        [Input('current-npy', 'children')])
+def callback(_):
+    return signals.shape[1] - 1
+
+
 @app.callback(
         Output('well-slider', 'max'),
         [Input('current-npy', 'children')])
@@ -258,8 +283,8 @@ def callback(n_clicks, larva_or_adult):
             data_root,
             imaging_env,
             larva_or_adult)) >= theta
-    '''
     signals = (np.diff(labels.astype(np.int8), axis=1)**2).sum(-1).sum(-1)
+
     '''
     # Euclidean
     n_wells, n_times, height, width = labels.shape
@@ -267,6 +292,7 @@ def callback(n_clicks, larva_or_adult):
     centroids = np.array(list(map(centroid, temp.reshape(-1, height, width))))
     centroids = centroids.reshape(n_wells, n_times, 2)
     signals = np.sqrt((np.diff(centroids, axis=1)**2).sum(-1))
+    '''
     return 'Current npy file : {}'.format(larva_or_adult)
 
 
@@ -419,13 +445,9 @@ def callback(well_idx, threshold, rise_or_fall, click_data):
 
 @app.callback(
         Output('org-image', 'src'),
-        [Input('signal-graph', 'clickData'),
-            Input('well-selector', 'value')])
-def callback(click_data, well_idx):
-    if click_data is None:
-        time = 0
-    else:
-        time = click_data['points'][0]['x']
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')])
+def callback(time, well_idx):
     orgimg_paths = sorted(glob.glob(
             os.path.join(data_root, imaging_env, 'original', '*.jpg')))
     org_img = np.array(
@@ -441,13 +463,9 @@ def callback(click_data, well_idx):
 
 @app.callback(
         Output('image', 'src'),
-        [Input('signal-graph', 'clickData'),
+        [Input('time-selector', 'value'),
          Input('well-selector', 'value')])
-def callback(click_data, well_idx):
-    if click_data is None:
-        time = 0
-    else:
-        time = click_data['points'][0]['x']
+def callback(time, well_idx):
     buf = io.BytesIO()
     PIL.Image.fromarray(
             (255 * labels[well_idx, time, :, :]).astype(np.uint8)).save(buf, format='PNG')
