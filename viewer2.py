@@ -379,6 +379,22 @@ def callback(n_clicks, data_root, env, csv, npy):
 
 
 @app.callback(
+        Output('imaging-env', 'children'),
+        [Input('current-npy', 'children')],
+        [State('env-dropdown', 'value')])
+def callback(_, env):
+    return env
+
+
+@app.callback(
+        Output('manual-evals-file', 'children'),
+        [Input('current-npy', 'children')],
+        [State('csv-dropdown', 'value')])
+def callback(_, csv):
+    return csv
+
+
+@app.callback(
         Output('time-selector', 'max'),
         [Input('current-npy', 'children')],
         [State('data-root', 'children'),
