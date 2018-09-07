@@ -328,22 +328,12 @@ def callback(env, data_root):
 
 
 @cache.memoize()
-def store_labels(data_root, env, morpho):
-    if env is None:
-        return
-
-    labels = np.load(os.path.join(data_root, env, morpho)) >= THETA
-
-    return labels
-
-
-@cache.memoize()
 def store_signals(data_root, env, morpho):
     if env is None:
         return
 
-    labels = store_labels(data_root, env, morpho)
-    signals = (np.diff(labels.astype(np.int8), axis=1)**2).sum(-1).sum(-1)
+    signals = np.load(os.path.join(
+        data_root, env, 'inference', morpho, 'signals.npy'))
 
     return signals
 
@@ -383,7 +373,6 @@ def callback(n_clicks, data_root, env, csv, morpho):
         return ''
 
     print('[2] callback : button')
-    store_labels(data_root, env, morpho)
     store_signals(data_root, env, morpho)
     store_manual_evals(data_root, env, csv)
     store_mask(data_root, env)
@@ -701,7 +690,6 @@ def callback(time, well_idx, data_root, env, morpho):
     if env is None:
         return ''
 
-    labels = store_labels(data_root, env, morpho)
     buf = io.BytesIO()
     PIL.Image.fromarray(
             (255 * labels[well_idx, time, :, :]).astype(np.uint8)).save(buf, format='PNG')
@@ -720,7 +708,6 @@ def callback(time, well_idx, data_root, env, morpho):
     if env is None:
         return ''
 
-    labels = store_labels(data_root, env, morpho)
     buf = io.BytesIO()
     PIL.Image.fromarray(
             (255 * labels[well_idx, time+1, :, :]).astype(np.uint8)).save(buf, format='PNG')
