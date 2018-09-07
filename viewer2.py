@@ -219,11 +219,11 @@ app.layout = html.Div([
             'Data root :',
             html.Div(DATA_ROOT, id='data-root'),
             'Imaging environment :',
-            html.Div(id='imaging-env'),
+            html.Div(id='current-env'),
             'Current npy file :',
             html.Div(id='current-npy'),
             'File name :',
-            html.Div(id='manual-evals-file'),
+            html.Div(id='current-csv'),
             ],
             style={
                 'display': 'inline-block',
@@ -379,7 +379,7 @@ def callback(n_clicks, data_root, env, csv, npy):
 
 
 @app.callback(
-        Output('imaging-env', 'children'),
+        Output('current-env', 'children'),
         [Input('current-npy', 'children')],
         [State('env-dropdown', 'value')])
 def callback(_, env):
@@ -387,7 +387,7 @@ def callback(_, env):
 
 
 @app.callback(
-        Output('manual-evals-file', 'children'),
+        Output('current-csv', 'children'),
         [Input('current-npy', 'children')],
         [State('csv-dropdown', 'value')])
 def callback(_, csv):
