@@ -361,6 +361,15 @@ def store_manual_evals(data_root, env, npy):
     return manual_evals
 
 
+@cache.memoize()
+def store_mask(data_root, env):
+    if env is None:
+        return
+
+    return np.load(os.path.join(data_root, env, 'mask.npy'))
+
+
+
 @app.callback(
         Output('current-npy', 'children'),
         [Input('button', 'n_clicks')],
@@ -377,6 +386,7 @@ def callback(n_clicks, data_root, env, csv, npy):
     store_labels(data_root, env, npy)
     store_signals(data_root, env, npy)
     store_manual_evals(data_root, env, csv)
+    store_mask(data_root, env)
     print('[3] callback : button')
     return npy
 
