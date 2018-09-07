@@ -67,6 +67,7 @@ org_div = html.Div(
         style={
             'display': 'inline-block',
             'width': '33%',
+            'visibility': 'hidden',
         },
     )
 
