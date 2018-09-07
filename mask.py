@@ -7,16 +7,17 @@
 #
 # Copyright (C) 2018 Taishi Matsumura
 #
+import io
+import time
 import dash
+import base64
+import PIL.Image
+import numpy as np
+import plotly.graph_objs as go
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
-import plotly.graph_objs as go
-import PIL.Image
-import numpy as np
-import time
-import io
-import base64
+
 
 header = html.Header(html.H1('Mask Create Tool'))
 
@@ -62,18 +63,33 @@ input_div = html.Div(
             row_gap, clm_gap, plate_gap, x, y, well_w, well_h])
 
 org_div = html.Div(
-        [dcc.Graph(id='org-img')],
+        [dcc.Graph(id='org-img', style={'visibility': 'hidden'})],
         id='org-div',
-        style={'display': 'inline-block'})
+        style={
+            'display': 'inline-block',
+            'width': '33%',
+        },
+    )
 
-mask_div = html.Div(id='mask-div', style={'display': 'inline-block'})
+mask_div = html.Div(
+        id='mask-div',
+        style={
+            'display': 'inline-block',
+            'width': '66%',
+        },
+    )
 
-images_div = html.Div(id='images-div', children=[org_div, mask_div])
+images_div = html.Div(
+        id='images-div',
+        children=[org_div, mask_div],
+        style={'width': '1200px'},  # for 1280x1024 display
+    )
 
 app = dash.Dash()
 app.layout = html.Div([header, input_div, images_div])
 app.css.append_css(
         {'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
+
 
 @app.callback(
         Output('org-div', 'children'),
@@ -90,8 +106,8 @@ def update_images_div(data_uri):
         figure = {
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
             'layout': {
-                'width': 500,
-                'height': 800,
+                'width': 400,
+                'height': 700,
                 'margin': go.layout.Margin(l=40, b=40, t=26, r=10),
                 'xaxis': {
                     'range': (0, width),
@@ -115,8 +131,14 @@ def update_images_div(data_uri):
                 'dragmode': 'select',
             }
         },
-        style={'display': 'inline-block'})
+        style={
+            'display': 'inline-block',
+            'width': '100%',
+            'visibility': 'visible',
+        }
+    )
     return [graph]
+
 
 @app.callback(
         Output('x', 'value'),
@@ -127,6 +149,7 @@ def update_x(selected_data):
     range_x = np.array(selected_data['range']['x']).astype(int)
     return range_x[0]
 
+
 @app.callback(
         Output('y', 'value'),
         [Input('org-img', 'selectedData')])
@@ -135,6 +158,8 @@ def update_y(selected_data):
         return
     range_y = np.array(selected_data['range']['y']).astype(int)
     return range_y[0]
+
+
 
 @app.callback(
         Output('well_w', 'value'),
@@ -145,6 +170,7 @@ def update_well_w(selected_data):
     range_x = np.array(selected_data['range']['x']).astype(int)
     return range_x[1] - range_x[0]
 
+
 @app.callback(
         Output('well_h', 'value'),
         [Input('org-img', 'selectedData')])
@@ -153,6 +179,7 @@ def update_well_h(selected_data):
         return
     range_y = np.array(selected_data['range']['y']).astype(int)
     return range_y[1] - range_y[0]
+
 
 @app.callback(
         Output('mask-div', 'children'),
@@ -199,20 +226,20 @@ def draw_images(
             np.flipud(np.where(mask>=0, 255, 0).astype(np.uint8)))
     masked = PIL.Image.fromarray(
             np.flipud(np.where(mask>=0, 1, 0).astype(np.uint8)) * org_img)
-    buff1 = io.BytesIO()
-    buff2 = io.BytesIO()
-    grayed.save(buff1, format='PNG')
-    masked.save(buff2, format='PNG')
+    mask_buf = io.BytesIO()
+    masked_buf = io.BytesIO()
+    grayed.save(mask_buf, format='PNG')
+    masked.save(masked_buf, format='PNG')
 
     np.save('static/mask.npy', mask.astype(np.int16))
 
-    graph2 = dcc.Graph(
-        id='graph2',
+    mask_img = dcc.Graph(
+        id='mask-img',
         figure={
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
             'layout': {
-                'width': 500,
-                'height': 800,
+                'width': 400,
+                'height': 700,
                 'margin': go.layout.Margin(l=40, b=40, t=26, r=10),
                 'xaxis': {
                     'range': (0, width),
@@ -232,21 +259,24 @@ def draw_images(
                     'sizex': width,
                     'sizey': height,
                     'source': 'data:image/png;base64,{}'.format(
-                        base64.b64encode(buff1.getvalue()).decode('utf-8')),
+                        base64.b64encode(mask_buf.getvalue()).decode('utf-8')),
                 }],
                 'dragmode': 'select',
             }
         },
-        style={'display': 'inline-block'},
+        style={
+            'display': 'inline-block',
+            'width': '50%',
+        }
     )
 
-    graph3 = dcc.Graph(
-        id='graph3',
+    masked_img = dcc.Graph(
+        id='masked-img',
         figure={
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
             'layout': {
-                'width': 500,
-                'height': 800,
+                'width': 400,
+                'height': 700,
                 'margin': go.layout.Margin(l=40, b=40, t=26, r=10),
                 'xaxis': {
                     'range': (0, width),
@@ -266,15 +296,18 @@ def draw_images(
                     'sizex': width,
                     'sizey': height,
                     'source': 'data:image/png;base64,{}'.format(
-                        base64.b64encode(buff2.getvalue()).decode('utf-8')),
+                        base64.b64encode(masked_buf.getvalue()).decode('utf-8')),
                 }],
                 'dragmode': 'select',
             }
         },
-        style={'display': 'inline-block'},
+        style={
+            'display': 'inline-block',
+            'width': '50%',
+        }
     )
 
-    return [graph2, graph3]
+    return [masked_img, mask_img]
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)
