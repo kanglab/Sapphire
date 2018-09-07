@@ -128,12 +128,12 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Npy file :',
+            'Morpho :',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
-                    id='npy-dropdown',
-                    placeholder='Select npy file...',
+                    id='morpho-dropdown',
+                    placeholder='Select morpho...',
                     clearable=False,
                 ),
                 ],
@@ -225,8 +225,8 @@ app.layout = html.Div([
             'File name :',
             html.Div(id='current-csv'),
             html.Br(),
-            'Current npy file :',
-            html.Div(id='current-npy'),
+            'Current morpho :',
+            html.Div(id='current-morpho'),
             ],
             style={
                 'display': 'inline-block',
@@ -313,7 +313,7 @@ def callback(env, data_root):
 
 
 @app.callback(
-        Output('npy-dropdown', 'options'),
+        Output('morpho-dropdown', 'options'),
         [Input('env-dropdown', 'value')],
         [State('data-root', 'children')])
 def callback(env, data_root):
@@ -322,39 +322,39 @@ def callback(env, data_root):
 
     npys = [os.path.basename(i)
             for i in sorted(glob.glob(os.path.join(
-                data_root, env, 'matsu_signal_data_*.npy')))]
+                data_root, env, 'inference', '*'))) if os.path.isdir(i)]
 
     return [{'label': i, 'value': i} for i in npys]
 
 
 @cache.memoize()
-def store_labels(data_root, env, npy):
+def store_labels(data_root, env, morpho):
     if env is None:
         return
 
-    labels = np.load(os.path.join(data_root, env, npy)) >= THETA
+    labels = np.load(os.path.join(data_root, env, morpho)) >= THETA
 
     return labels
 
 
 @cache.memoize()
-def store_signals(data_root, env, npy):
+def store_signals(data_root, env, morpho):
     if env is None:
         return
 
-    labels = store_labels(data_root, env, npy)
+    labels = store_labels(data_root, env, morpho)
     signals = (np.diff(labels.astype(np.int8), axis=1)**2).sum(-1).sum(-1)
 
     return signals
 
 
 @cache.memoize()
-def store_manual_evals(data_root, env, npy):
+def store_manual_evals(data_root, env, morpho):
     if env is None:
         return
 
     manual_evals = np.loadtxt(
-            os.path.join(data_root, env, 'original', npy),
+            os.path.join(data_root, env, 'original', morpho),
             dtype=np.uint16,
             delimiter=',').flatten()
 
@@ -371,29 +371,29 @@ def store_mask(data_root, env):
 
 
 @app.callback(
-        Output('current-npy', 'children'),
+        Output('current-morpho', 'children'),
         [Input('button', 'n_clicks')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
-         State('npy-dropdown', 'value')])
-def callback(n_clicks, data_root, env, csv, npy):
+         State('morpho-dropdown', 'value')])
+def callback(n_clicks, data_root, env, csv, morpho):
     print('[1] callback : button')
     if n_clicks is None:
         return ''
 
     print('[2] callback : button')
-    store_labels(data_root, env, npy)
-    store_signals(data_root, env, npy)
+    store_labels(data_root, env, morpho)
+    store_signals(data_root, env, morpho)
     store_manual_evals(data_root, env, csv)
     store_mask(data_root, env)
     print('[3] callback : button')
-    return npy
+    return morpho
 
 
 @app.callback(
         Output('current-env', 'children'),
-        [Input('current-npy', 'children')],
+        [Input('current-morpho', 'children')],
         [State('env-dropdown', 'value')])
 def callback(_, env):
     return env
@@ -401,7 +401,7 @@ def callback(_, env):
 
 @app.callback(
         Output('current-csv', 'children'),
-        [Input('current-npy', 'children')],
+        [Input('current-morpho', 'children')],
         [State('csv-dropdown', 'value')])
 def callback(_, csv):
     return csv
@@ -409,68 +409,68 @@ def callback(_, csv):
 
 @app.callback(
         Output('time-selector', 'max'),
-        [Input('current-npy', 'children')],
+        [Input('current-morpho', 'children')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('npy-dropdown', 'value')])
-def callback(_, data_root, env, npy):
+         State('morpho-dropdown', 'value')])
+def callback(_, data_root, env, morpho):
     print('[1] callback : time-selector max')
     if env is None:
         return
 
-    signals = store_signals(data_root, env, npy)
+    signals = store_signals(data_root, env, morpho)
     return signals.shape[1] - 1
 
 
 @app.callback(
         Output('threshold-slider', 'max'),
-        [Input('current-npy', 'children')],
+        [Input('current-morpho', 'children')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('npy-dropdown', 'value')])
-def callback(_, data_root, env, npy):
+         State('morpho-dropdown', 'value')])
+def callback(_, data_root, env, morpho):
     print('[1] callback : threshold-slider max')
     if env is None:
         return
 
-    signals = store_signals(data_root, env, npy)
+    signals = store_signals(data_root, env, morpho)
     return signals.max()
 
 
 @app.callback(
         Output('well-slider', 'max'),
-        [Input('current-npy', 'children')],
+        [Input('current-morpho', 'children')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('npy-dropdown', 'value')])
-def callback(_, data_root, env, npy):
+         State('morpho-dropdown', 'value')])
+def callback(_, data_root, env, morpho):
     print('[1] callback : well-slider max')
     if env is None:
         return
 
-    signals = store_signals(data_root, env, npy)
+    signals = store_signals(data_root, env, morpho)
     return len(signals) - 1
 
 
 @app.callback(
         Output('well-selector', 'max'),
-        [Input('current-npy', 'children')],
+        [Input('current-morpho', 'children')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('npy-dropdown', 'value')])
-def callback(_, data_root, env, npy):
+         State('morpho-dropdown', 'value')])
+def callback(_, data_root, env, morpho):
     print('[1] callback : well-selector max')
     if env is None:
         return
 
-    signals = store_signals(data_root, env, npy)
+    signals = store_signals(data_root, env, morpho)
     return len(signals) - 1
 
 
 @app.callback(
         Output('well-slider', 'value'),
         [Input('summary-graph', 'clickData'),
-         Input('current-npy', 'children')])
+         Input('current-morpho', 'children')])
 def callback(click_data, _):
     print('[1] callback : well-slider value')
     if click_data is None:
@@ -507,9 +507,9 @@ def callback(click_data):
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
-         State('npy-dropdown', 'value')])
+         State('morpho-dropdown', 'value')])
 def callback(well_idx, threshold, rise_or_fall, time,
-        figure, data_root, env, csv, npy):
+        figure, data_root, env, csv, morpho):
     if env is None:
         return {'data': []}
 
@@ -518,7 +518,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
     else:
         x, y = time, figure['data'][0]['y'][time]
 
-    signals = store_signals(data_root, env, npy)
+    signals = store_signals(data_root, env, morpho)
     manual_evals = store_manual_evals(data_root, env, csv)
 
     if rise_or_fall == 'rise':
@@ -587,14 +587,14 @@ def callback(well_idx, threshold, rise_or_fall, time,
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
-         State('npy-dropdown', 'value')])
-def callback(threshold, well_idx, rise_or_fall, data_root, env, csv, npy):
+         State('morpho-dropdown', 'value')])
+def callback(threshold, well_idx, rise_or_fall, data_root, env, csv, morpho):
     print('[1] callback : summary-graph')
     if env is None:
         return {'data': []}
     print('[2] callback : summary-graph')
 
-    signals = store_signals(data_root, env, npy)
+    signals = store_signals(data_root, env, morpho)
     manual_evals = store_manual_evals(data_root, env, csv)
 
     if rise_or_fall == 'rise':
@@ -696,12 +696,12 @@ def callback(time, well_idx, data_root, env):
          Input('well-selector', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('current-npy', 'children')])
-def callback(time, well_idx, data_root, env, npy):
+         State('current-morpho', 'children')])
+def callback(time, well_idx, data_root, env, morpho):
     if env is None:
         return ''
 
-    labels = store_labels(data_root, env, npy)
+    labels = store_labels(data_root, env, morpho)
     buf = io.BytesIO()
     PIL.Image.fromarray(
             (255 * labels[well_idx, time, :, :]).astype(np.uint8)).save(buf, format='PNG')
@@ -715,12 +715,12 @@ def callback(time, well_idx, data_root, env, npy):
          Input('well-selector', 'value')])
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('current-npy', 'children')])
-def callback(time, well_idx, data_root, env, npy):
+         State('current-morpho', 'children')])
+def callback(time, well_idx, data_root, env, morpho):
     if env is None:
         return ''
 
-    labels = store_labels(data_root, env, npy)
+    labels = store_labels(data_root, env, morpho)
     buf = io.BytesIO()
     PIL.Image.fromarray(
             (255 * labels[well_idx, time+1, :, :]).astype(np.uint8)).save(buf, format='PNG')
