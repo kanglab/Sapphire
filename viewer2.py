@@ -16,12 +16,14 @@ import PIL.Image
 import dash_auth
 import numpy as np
 import scipy.ndimage
+import flask_caching
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 
 
 DATA_ROOT = 'G:/Research/Drosophila/CUI/data/'
+THETA = 50
 
 
 # -------
@@ -30,6 +32,10 @@ DATA_ROOT = 'G:/Research/Drosophila/CUI/data/'
 app = dash.Dash()
 app.css.append_css(
         {'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
+cache = flask_caching.Cache()
+cache.init_app(
+        app.server, config={'CACHE_TYPE': 'filesystem', 'CACHE_DIR': 'cache/'})
+
 app.layout = html.Div([
     html.Header([html.H1('Viewer')]),
     html.Div([
@@ -275,6 +281,7 @@ app.layout = html.Div([
 def callback(data_root):
     imaging_envs = [os.path.basename(i)
             for i in sorted(glob.glob(os.path.join(data_root, '*')))]
+
     return [{'label': i, 'value': i} for i in imaging_envs]
 
 
@@ -294,9 +301,11 @@ def callback(envs):
 def callback(env, data_root):
     if env is None:
         return []
+
     csvs = [os.path.basename(i)
             for i in sorted(glob.glob(os.path.join(
                 data_root, env, 'original', '*.csv')))]
+
     return [{'label': i, 'value': i} for i in csvs]
 
 
@@ -307,10 +316,208 @@ def callback(env, data_root):
 def callback(env, data_root):
     if env is None:
         return []
+
     npys = [os.path.basename(i)
             for i in sorted(glob.glob(os.path.join(
                 data_root, env, 'matsu_signal_data_*.npy')))]
+
     return [{'label': i, 'value': i} for i in npys]
+
+
+@cache.memoize()
+def store_labels(data_root, env, npy):
+    if env is None:
+        return
+
+    labels = np.load(os.path.join(data_root, env, npy)) >= THETA
+
+    return labels
+
+
+@cache.memoize()
+def store_signals(data_root, env, npy):
+    if env is None:
+        return
+
+    labels = store_labels(data_root, env, npy)
+    signals = (np.diff(labels.astype(np.int8), axis=1)**2).sum(-1).sum(-1)
+
+    return signals
+
+
+@cache.memoize()
+def store_manual_evals(data_root, env, npy):
+    if env is None:
+        return
+
+    manual_evals = np.loadtxt(
+            os.path.join(data_root, env, 'original', npy),
+            dtype=np.uint16,
+            delimiter=',').flatten()
+
+    return manual_evals
+
+
+@app.callback(
+        Output('current-npy', 'children'),
+        [Input('button', 'n_clicks')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('csv-dropdown', 'value'),
+         State('npy-dropdown', 'value')])
+def callback(n_clicks, data_root, env, csv, npy):
+    print('[1] callback : button')
+    if n_clicks is None:
+        return ''
+
+    print('[2] callback : button')
+    store_labels(data_root, env, npy)
+    store_signals(data_root, env, npy)
+    store_manual_evals(data_root, env, csv)
+    print('[3] callback : button')
+    return npy
+
+
+@app.callback(
+        Output('time-selector', 'max'),
+        [Input('current-npy', 'children')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('npy-dropdown', 'value')])
+def callback(_, data_root, env, npy):
+    print('[1] callback : time-selector max')
+    if env is None:
+        return
+
+    signals = store_signals(data_root, env, npy)
+    return signals.shape[1] - 1
+
+
+@app.callback(
+        Output('threshold-slider', 'max'),
+        [Input('current-npy', 'children')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('npy-dropdown', 'value')])
+def callback(_, data_root, env, npy):
+    print('[1] callback : threshold-slider max')
+    if env is None:
+        return
+
+    signals = store_signals(data_root, env, npy)
+    return signals.max()
+
+
+@app.callback(
+        Output('well-slider', 'max'),
+        [Input('current-npy', 'children')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('npy-dropdown', 'value')])
+def callback(_, data_root, env, npy):
+    print('[1] callback : well-slider max')
+    if env is None:
+        return
+
+    signals = store_signals(data_root, env, npy)
+    return len(signals) - 1
+
+
+@app.callback(
+        Output('well-selector', 'max'),
+        [Input('current-npy', 'children')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('npy-dropdown', 'value')])
+def callback(_, data_root, env, npy):
+    print('[1] callback : well-selector max')
+    if env is None:
+        return
+
+    signals = store_signals(data_root, env, npy)
+    return len(signals) - 1
+
+
+@app.callback(
+        Output('well-slider', 'value'),
+        [Input('summary-graph', 'clickData'),
+         Input('current-npy', 'children')])
+def callback(click_data, _):
+    print('[1] callback : well-slider value')
+    if click_data is None:
+        return 20
+
+    return click_data['points'][0]['pointNumber']
+
+
+@app.callback(
+        Output('well-selector', 'value'),
+        [Input('well-slider', 'value')])
+def callback(well_idx):
+    print('[1] callback : well-selector value')
+    return well_idx
+
+
+@app.callback(
+        Output('summary-graph', 'figure'),
+        [Input('threshold-slider', 'value'),
+         Input('well-selector', 'value'),
+         Input('target-dropdown', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('csv-dropdown', 'value'),
+         State('npy-dropdown', 'value')])
+def callback(threshold, well_idx, rise_or_fall, data_root, env, csv, npy):
+    print('[1] callback : summary-graph')
+    if env is None:
+        return {'data': []}
+    print('[2] callback : summary-graph')
+
+    signals = store_signals(data_root, env, npy)
+    manual_evals = store_manual_evals(data_root, env, csv)
+
+    if rise_or_fall == 'rise':
+        auto_evals = (signals > threshold).argmax(axis=1)
+    elif rise_or_fall == 'fall':
+        # Scan the signal from the right hand side.
+        auto_evals = signals.shape[1] - (np.fliplr(signals) > threshold).argmax(axis=1)
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == signals.shape[1]] = 0
+
+    return {
+            'data': [
+                {
+                    'x': list(auto_evals),
+                    'y': list(manual_evals),
+                    'mode': 'markers',
+                    'marker': {'size': 5},
+                    'name': 'Well',
+                },
+                {
+                    'x': [0, len(signals[0, :])],
+                    'y': [0, len(signals[0, :])],
+                    'mode': 'lines',
+                    'name': 'Auto = Manual',
+                },
+                {
+                    'x': [auto_evals[well_idx]],
+                    'y': [manual_evals[well_idx]],
+                    'mode': 'markers',
+                    'marker': {'size': 10},
+                    'name': 'Selected well',
+                },
+            ],
+            'layout': {
+                'title': 'Auto vs Manual',
+                'xaxis': {
+                    'title': 'Auto',
+                },
+                'yaxis': {
+                    'title': 'Manual',
+                },
+                'hovermode': 'closest',
+            },
+        }
 
 
 if __name__ == '__main__':
