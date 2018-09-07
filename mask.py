@@ -7,16 +7,17 @@
 #
 # Copyright (C) 2018 Taishi Matsumura
 #
+import io
+import time
 import dash
+import base64
+import PIL.Image
+import numpy as np
+import plotly.graph_objs as go
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
-import plotly.graph_objs as go
-import PIL.Image
-import numpy as np
-import time
-import io
-import base64
+
 
 header = html.Header(html.H1('Mask Create Tool'))
 
@@ -90,6 +91,7 @@ app.layout = html.Div([header, input_div, images_div])
 app.css.append_css(
         {'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
 
+
 @app.callback(
         Output('org-div', 'children'),
         [Input('uploader', 'contents')])
@@ -137,6 +139,7 @@ def update_images_div(data_uri):
     )
     return [graph]
 
+
 @app.callback(
         Output('x', 'value'),
         [Input('org-img', 'selectedData')])
@@ -145,6 +148,7 @@ def update_x(selected_data):
         return
     range_x = np.array(selected_data['range']['x']).astype(int)
     return range_x[0]
+
 
 @app.callback(
         Output('y', 'value'),
@@ -155,6 +159,8 @@ def update_y(selected_data):
     range_y = np.array(selected_data['range']['y']).astype(int)
     return range_y[0]
 
+
+
 @app.callback(
         Output('well_w', 'value'),
         [Input('org-img', 'selectedData')])
@@ -164,6 +170,7 @@ def update_well_w(selected_data):
     range_x = np.array(selected_data['range']['x']).astype(int)
     return range_x[1] - range_x[0]
 
+
 @app.callback(
         Output('well_h', 'value'),
         [Input('org-img', 'selectedData')])
@@ -172,6 +179,7 @@ def update_well_h(selected_data):
         return
     range_y = np.array(selected_data['range']['y']).astype(int)
     return range_y[1] - range_y[0]
+
 
 @app.callback(
         Output('mask-div', 'children'),
