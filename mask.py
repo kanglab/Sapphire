@@ -8,6 +8,7 @@
 # Copyright (C) 2018 Taishi Matsumura
 #
 import io
+import os
 import time
 import dash
 import base64
@@ -231,6 +232,7 @@ def draw_images(
     grayed.save(mask_buf, format='PNG')
     masked.save(masked_buf, format='PNG')
 
+    os.makedirs('static/', exist_ok=True)
     np.save('static/mask.npy', mask.astype(np.int16))
 
     mask_img = dcc.Graph(
