@@ -655,5 +655,69 @@ def callback(time, well_idx, data_root, env):
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
+@app.callback(
+        Output('t+1-image', 'src'),
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(time, well_idx, data_root, env):
+    if env is None:
+        return ''
+
+    mask = store_mask(data_root, env)
+    orgimg_paths = sorted(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg')))
+    org_img = np.array(
+            PIL.Image.open(orgimg_paths[time+1]).convert('L'), dtype=np.uint8)
+    r, c = np.where(mask == well_idx)
+    org_img = org_img[r.min():r.max(), c.min():c.max()]
+    org_img = PIL.Image.fromarray(org_img)
+    buf = io.BytesIO()
+    org_img.save(buf, format='JPEG')
+    return 'data:image/jpeg;base64,{}'.format(
+            base64.b64encode(buf.getvalue()).decode('utf-8'))
+
+
+'''
+@app.callback(
+        Output('t-label', 'src'),
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('current-npy', 'children')])
+def callback(time, well_idx, data_root, env, npy):
+    if env is None:
+        return ''
+
+    labels = store_labels(data_root, env, npy)
+    buf = io.BytesIO()
+    PIL.Image.fromarray(
+            (255 * labels[well_idx, time, :, :]).astype(np.uint8)).save(buf, format='PNG')
+    return 'data:image/png;base64,{}'.format(
+            base64.b64encode(buf.getvalue()).decode('utf-8'))
+
+
+@app.callback(
+        Output('t+1-label', 'src'),
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')])
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('current-npy', 'children')])
+def callback(time, well_idx, data_root, env, npy):
+    if env is None:
+        return ''
+
+    labels = store_labels(data_root, env, npy)
+    buf = io.BytesIO()
+    PIL.Image.fromarray(
+            (255 * labels[well_idx, time+1, :, :]).astype(np.uint8)).save(buf, format='PNG')
+    return 'data:image/png;base64,{}'.format(
+            base64.b64encode(buf.getvalue()).decode('utf-8'))
+'''
+
+
 if __name__ == '__main__':
     app.run_server(debug=True)
