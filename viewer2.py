@@ -488,6 +488,16 @@ def callback(well_idx):
 
 
 @app.callback(
+        Output('time-selector', 'value'),
+        [Input('signal-graph', 'clickData')])
+def callback(click_data):
+    if click_data is None:
+        return 0
+    else:
+        return click_data['points'][0]['x']
+
+
+@app.callback(
         Output('signal-graph', 'figure'),
         [Input('well-selector', 'value'),
          Input('threshold-slider', 'value'),
