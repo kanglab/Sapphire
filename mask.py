@@ -63,12 +63,11 @@ input_div = html.Div(
             row_gap, clm_gap, plate_gap, x, y, well_w, well_h])
 
 org_div = html.Div(
-        [dcc.Graph(id='org-img')],
+        [dcc.Graph(id='org-img', style={'visibility': 'hidden'})],
         id='org-div',
         style={
             'display': 'inline-block',
             'width': '33%',
-            'visibility': 'hidden',
         },
     )
 
@@ -135,6 +134,7 @@ def update_images_div(data_uri):
         style={
             'display': 'inline-block',
             'width': '100%',
+            'visibility': 'visible',
         }
     )
     return [graph]
