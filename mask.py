@@ -64,11 +64,25 @@ input_div = html.Div(
 org_div = html.Div(
         [dcc.Graph(id='org-img')],
         id='org-div',
-        style={'display': 'inline-block'})
+        style={
+            'display': 'inline-block',
+            'width': '33%',
+        },
+    )
 
-mask_div = html.Div(id='mask-div', style={'display': 'inline-block'})
+mask_div = html.Div(
+        id='mask-div',
+        style={
+            'display': 'inline-block',
+            'width': '66%',
+        },
+    )
 
-images_div = html.Div(id='images-div', children=[org_div, mask_div])
+images_div = html.Div(
+        id='images-div',
+        children=[org_div, mask_div],
+        style={'width': '1200px'},  # for 1280x1024 display
+    )
 
 app = dash.Dash()
 app.layout = html.Div([header, input_div, images_div])
@@ -90,8 +104,8 @@ def update_images_div(data_uri):
         figure = {
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
             'layout': {
-                'width': 500,
-                'height': 800,
+                'width': 400,
+                'height': 700,
                 'margin': go.layout.Margin(l=40, b=40, t=26, r=10),
                 'xaxis': {
                     'range': (0, width),
@@ -115,7 +129,11 @@ def update_images_div(data_uri):
                 'dragmode': 'select',
             }
         },
-        style={'display': 'inline-block'})
+        style={
+            'display': 'inline-block',
+            'width': '100%',
+        }
+    )
     return [graph]
 
 @app.callback(
@@ -211,8 +229,8 @@ def draw_images(
         figure={
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
             'layout': {
-                'width': 500,
-                'height': 800,
+                'width': 400,
+                'height': 700,
                 'margin': go.layout.Margin(l=40, b=40, t=26, r=10),
                 'xaxis': {
                     'range': (0, width),
@@ -237,7 +255,10 @@ def draw_images(
                 'dragmode': 'select',
             }
         },
-        style={'display': 'inline-block'},
+        style={
+            'display': 'inline-block',
+            'width': '50%',
+        }
     )
 
     graph3 = dcc.Graph(
@@ -245,8 +266,8 @@ def draw_images(
         figure={
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
             'layout': {
-                'width': 500,
-                'height': 800,
+                'width': 400,
+                'height': 700,
                 'margin': go.layout.Margin(l=40, b=40, t=26, r=10),
                 'xaxis': {
                     'range': (0, width),
@@ -271,7 +292,10 @@ def draw_images(
                 'dragmode': 'select',
             }
         },
-        style={'display': 'inline-block'},
+        style={
+            'display': 'inline-block',
+            'width': '50%',
+        }
     )
 
     return [graph2, graph3]
