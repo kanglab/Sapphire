@@ -459,6 +459,88 @@ def callback(well_idx):
 
 
 @app.callback(
+        Output('signal-graph', 'figure'),
+        [Input('well-selector', 'value'),
+         Input('threshold-slider', 'value'),
+         Input('target-dropdown', 'value'),
+         Input('time-selector', 'value')],
+        [State('signal-graph', 'figure'),
+         State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('csv-dropdown', 'value'),
+         State('npy-dropdown', 'value')])
+def callback(well_idx, threshold, rise_or_fall, time,
+        figure, data_root, env, csv, npy):
+    if env is None:
+        return {'data': []}
+
+    if len(figure['data']) == 0:
+        x, y = 0, 0
+    else:
+        x, y = time, figure['data'][0]['y'][time]
+
+    signals = store_signals(data_root, env, npy)
+    manual_evals = store_manual_evals(data_root, env, csv)
+
+    if rise_or_fall == 'rise':
+        auto_evals = (signals > threshold).argmax(axis=1)
+    elif rise_or_fall == 'fall':
+        auto_evals = signals.shape[1] - (np.fliplr(signals) > threshold).argmax(axis=1)
+    return {
+            'data': [
+                {
+                    # Signal
+                    'x': list(range(len(signals[0, :]))),
+                    'y': list(signals[well_idx]),
+                    'mode': 'markers+lines',
+                    'marker': {'size': 5},
+                    'name': 'Signal',
+                },
+                {
+                    # Threshold (hrizontal line)
+                    'x': list(range(len(signals[0, :]))),
+                    'y': [threshold]*len(signals[0, :]),
+                    'mode': 'lines',
+                    'name': 'Threshold',
+                },
+                {
+                    # Manual evaluation time (vertical line)
+                    'x': [manual_evals[well_idx]] * int(signals.max()),
+                    'y': list(range(256)),
+                    'mode': 'lines',
+                    'name': 'Manual',
+                },
+                {
+                    # Auto evaluation time (vertical line)
+                    'x': [auto_evals[well_idx]] * int(signals.max()),
+                    'y': list(range(256)),
+                    'mode': 'lines',
+                    'name': 'Auto',
+                },
+                {
+                    # Selected data point
+                    'x': [x],
+                    'y': [y],
+                    'mode': 'markers',
+                    'marker': {'size': 10},
+                    'name': '',
+                },
+            ],
+            'layout': {
+                'title': '',
+                'xaxis': {
+                    'title': 'Time step',
+                },
+                'yaxis': {
+                    'title': 'Signal',
+                },
+                'showlegend': False,
+                'hovermode': 'closest',
+            },
+        }
+
+
+@app.callback(
         Output('summary-graph', 'figure'),
         [Input('threshold-slider', 'value'),
          Input('well-selector', 'value'),
