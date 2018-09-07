@@ -218,12 +218,15 @@ app.layout = html.Div([
         html.Div([
             'Data root :',
             html.Div(DATA_ROOT, id='data-root'),
+            html.Br(),
             'Imaging environment :',
             html.Div(id='current-env'),
-            'Current npy file :',
-            html.Div(id='current-npy'),
+            html.Br(),
             'File name :',
             html.Div(id='current-csv'),
+            html.Br(),
+            'Current npy file :',
+            html.Div(id='current-npy'),
             ],
             style={
                 'display': 'inline-block',
