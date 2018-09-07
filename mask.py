@@ -217,15 +217,15 @@ def draw_images(
             np.flipud(np.where(mask>=0, 255, 0).astype(np.uint8)))
     masked = PIL.Image.fromarray(
             np.flipud(np.where(mask>=0, 1, 0).astype(np.uint8)) * org_img)
-    buff1 = io.BytesIO()
-    buff2 = io.BytesIO()
-    grayed.save(buff1, format='PNG')
-    masked.save(buff2, format='PNG')
+    mask_buf = io.BytesIO()
+    masked_buf = io.BytesIO()
+    grayed.save(mask_buf, format='PNG')
+    masked.save(masked_buf, format='PNG')
 
     np.save('static/mask.npy', mask.astype(np.int16))
 
-    graph2 = dcc.Graph(
-        id='graph2',
+    mask_img = dcc.Graph(
+        id='mask-img',
         figure={
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
             'layout': {
@@ -250,7 +250,7 @@ def draw_images(
                     'sizex': width,
                     'sizey': height,
                     'source': 'data:image/png;base64,{}'.format(
-                        base64.b64encode(buff1.getvalue()).decode('utf-8')),
+                        base64.b64encode(mask_buf.getvalue()).decode('utf-8')),
                 }],
                 'dragmode': 'select',
             }
@@ -261,8 +261,8 @@ def draw_images(
         }
     )
 
-    graph3 = dcc.Graph(
-        id='graph3',
+    masked_img = dcc.Graph(
+        id='masked-img',
         figure={
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
             'layout': {
@@ -287,7 +287,7 @@ def draw_images(
                     'sizex': width,
                     'sizey': height,
                     'source': 'data:image/png;base64,{}'.format(
-                        base64.b64encode(buff2.getvalue()).decode('utf-8')),
+                        base64.b64encode(masked_buf.getvalue()).decode('utf-8')),
                 }],
                 'dragmode': 'select',
             }
@@ -298,7 +298,7 @@ def draw_images(
         }
     )
 
-    return [graph2, graph3]
+    return [masked_img, mask_img]
 
 if __name__ == '__main__':
     app.run_server(debug=True)
