@@ -143,16 +143,6 @@ app.layout = html.Div([
                     'vertical-align': 'middle',
                 },
             ),
-            html.Div([
-                html.Button(
-                    'Load',
-                    id='button',
-                ),
-                ],
-                style={
-                    'display': 'inline-block',
-                },
-            ),
             html.Br(),
             'Target to detect :',
             html.Br(),
@@ -362,13 +352,12 @@ def store_mask(data_root, env):
 
 @app.callback(
         Output('current-morpho', 'children'),
-        [Input('button', 'n_clicks')],
+        [Input('morpho-dropdown', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('csv-dropdown', 'value'),
-         State('morpho-dropdown', 'value')])
-def callback(n_clicks, data_root, env, csv, morpho):
-    if n_clicks is None:
+         State('csv-dropdown', 'value')])
+def callback(morpho, data_root, env, csv):
+    if env is None or csv is None:
         return ''
 
     store_signals(data_root, env, morpho)
