@@ -689,11 +689,11 @@ def callback(time, well_idx, data_root, env, morpho):
     if env is None:
         return ''
 
+    label_images = sorted(glob.glob(
+            os.path.join(data_root, env, 'inference',
+                morpho, '{:03d}'.format(well_idx), '*.png')))
     buf = io.BytesIO()
-    PIL.Image.open(os.path.join(
-            data_root, env, 'inference', morpho,
-            '{:03d}'.format(well_idx),
-            '{:04d}.png'.format(time+1))).save(buf, format='PNG')
+    PIL.Image.open(label_images[time]).save(buf, format='PNG')
     return 'data:image/png;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
@@ -709,11 +709,11 @@ def callback(time, well_idx, data_root, env, morpho):
     if env is None:
         return ''
 
+    label_images = sorted(glob.glob(
+            os.path.join(data_root, env, 'inference',
+                morpho, '{:03d}'.format(well_idx), '*.png')))
     buf = io.BytesIO()
-    PIL.Image.open(os.path.join(
-            data_root, env, 'inference', morpho,
-            '{:03d}'.format(well_idx),
-            '{:04d}.png'.format(time+2))).save(buf, format='PNG')
+    PIL.Image.open(label_images[time+1]).save(buf, format='PNG')
     return 'data:image/png;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
