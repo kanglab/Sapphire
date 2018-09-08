@@ -678,7 +678,6 @@ def callback(time, well_idx, data_root, env):
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
-'''
 @app.callback(
         Output('t-label', 'src'),
         [Input('time-selector', 'value'),
@@ -691,8 +690,10 @@ def callback(time, well_idx, data_root, env, morpho):
         return ''
 
     buf = io.BytesIO()
-    PIL.Image.fromarray(
-            (255 * labels[well_idx, time, :, :]).astype(np.uint8)).save(buf, format='PNG')
+    PIL.Image.open(os.path.join(
+            data_root, env, 'inference', morpho,
+            '{:03d}'.format(well_idx),
+            '{:04d}.png'.format(time+1))).save(buf, format='PNG')
     return 'data:image/png;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
@@ -700,7 +701,7 @@ def callback(time, well_idx, data_root, env, morpho):
 @app.callback(
         Output('t+1-label', 'src'),
         [Input('time-selector', 'value'),
-         Input('well-selector', 'value')])
+         Input('well-selector', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('current-morpho', 'children')])
@@ -709,11 +710,12 @@ def callback(time, well_idx, data_root, env, morpho):
         return ''
 
     buf = io.BytesIO()
-    PIL.Image.fromarray(
-            (255 * labels[well_idx, time+1, :, :]).astype(np.uint8)).save(buf, format='PNG')
+    PIL.Image.open(os.path.join(
+            data_root, env, 'inference', morpho,
+            '{:03d}'.format(well_idx),
+            '{:04d}.png'.format(time+2))).save(buf, format='PNG')
     return 'data:image/png;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
-'''
 
 
 if __name__ == '__main__':
