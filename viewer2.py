@@ -368,15 +368,12 @@ def store_mask(data_root, env):
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value')])
 def callback(n_clicks, data_root, env, csv, morpho):
-    print('[1] callback : button')
     if n_clicks is None:
         return ''
 
-    print('[2] callback : button')
     store_signals(data_root, env, morpho)
     store_manual_evals(data_root, env, csv)
     store_mask(data_root, env)
-    print('[3] callback : button')
     return morpho
 
 
@@ -403,7 +400,6 @@ def callback(_, csv):
          State('env-dropdown', 'value'),
          State('morpho-dropdown', 'value')])
 def callback(_, data_root, env, morpho):
-    print('[1] callback : time-selector max')
     if env is None:
         return
 
@@ -418,7 +414,6 @@ def callback(_, data_root, env, morpho):
          State('env-dropdown', 'value'),
          State('morpho-dropdown', 'value')])
 def callback(_, data_root, env, morpho):
-    print('[1] callback : threshold-slider max')
     if env is None:
         return
 
@@ -433,7 +428,6 @@ def callback(_, data_root, env, morpho):
          State('env-dropdown', 'value'),
          State('morpho-dropdown', 'value')])
 def callback(_, data_root, env, morpho):
-    print('[1] callback : well-slider max')
     if env is None:
         return
 
@@ -448,7 +442,6 @@ def callback(_, data_root, env, morpho):
          State('env-dropdown', 'value'),
          State('morpho-dropdown', 'value')])
 def callback(_, data_root, env, morpho):
-    print('[1] callback : well-selector max')
     if env is None:
         return
 
@@ -461,7 +454,6 @@ def callback(_, data_root, env, morpho):
         [Input('summary-graph', 'clickData'),
          Input('current-morpho', 'children')])
 def callback(click_data, _):
-    print('[1] callback : well-slider value')
     if click_data is None:
         return 20
 
@@ -472,7 +464,6 @@ def callback(click_data, _):
         Output('well-selector', 'value'),
         [Input('well-slider', 'value')])
 def callback(well_idx):
-    print('[1] callback : well-selector value')
     return well_idx
 
 
@@ -578,10 +569,8 @@ def callback(well_idx, threshold, rise_or_fall, time,
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value')])
 def callback(threshold, well_idx, rise_or_fall, data_root, env, csv, morpho):
-    print('[1] callback : summary-graph')
     if env is None:
         return {'data': []}
-    print('[2] callback : summary-graph')
 
     signals = store_signals(data_root, env, morpho)
     manual_evals = store_manual_evals(data_root, env, csv)
