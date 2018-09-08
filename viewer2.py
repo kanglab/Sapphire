@@ -319,7 +319,7 @@ def callback(env, data_root):
 
 @cache.memoize()
 def store_signals(data_root, env, morpho):
-    if env is None:
+    if env is None or morpho is None:
         return
 
     signals = np.load(os.path.join(
@@ -329,12 +329,12 @@ def store_signals(data_root, env, morpho):
 
 
 @cache.memoize()
-def store_manual_evals(data_root, env, morpho):
-    if env is None:
+def store_manual_evals(data_root, env, csv):
+    if env is None or csv is None:
         return
 
     manual_evals = np.loadtxt(
-            os.path.join(data_root, env, 'original', morpho),
+            os.path.join(data_root, env, 'original', csv),
             dtype=np.uint16,
             delimiter=',').flatten()
 
@@ -352,13 +352,13 @@ def store_mask(data_root, env):
 
 @app.callback(
         Output('current-morpho', 'children'),
-        [Input('morpho-dropdown', 'value')],
+        [Input('csv-dropdown', 'value'),
+         Input('morpho-dropdown', 'value')],
         [State('data-root', 'children'),
-         State('env-dropdown', 'value'),
-         State('csv-dropdown', 'value')])
-def callback(morpho, data_root, env, csv):
-    if env is None or csv is None:
-        return ''
+         State('env-dropdown', 'value')])
+def callback(csv, morpho, data_root, env):
+    if env is None or csv is None or morpho is None:
+        return
 
     store_signals(data_root, env, morpho)
     store_manual_evals(data_root, env, csv)
@@ -389,7 +389,7 @@ def callback(_, csv):
          State('env-dropdown', 'value'),
          State('morpho-dropdown', 'value')])
 def callback(_, data_root, env, morpho):
-    if env is None:
+    if env is None or morpho is None:
         return
 
     signals = store_signals(data_root, env, morpho)
@@ -403,7 +403,7 @@ def callback(_, data_root, env, morpho):
          State('env-dropdown', 'value'),
          State('morpho-dropdown', 'value')])
 def callback(_, data_root, env, morpho):
-    if env is None:
+    if env is None or morpho is None:
         return
 
     signals = store_signals(data_root, env, morpho)
@@ -417,7 +417,7 @@ def callback(_, data_root, env, morpho):
          State('env-dropdown', 'value'),
          State('morpho-dropdown', 'value')])
 def callback(_, data_root, env, morpho):
-    if env is None:
+    if env is None or morpho is None:
         return
 
     signals = store_signals(data_root, env, morpho)
@@ -431,7 +431,7 @@ def callback(_, data_root, env, morpho):
          State('env-dropdown', 'value'),
          State('morpho-dropdown', 'value')])
 def callback(_, data_root, env, morpho):
-    if env is None:
+    if env is None or morpho is None:
         return
 
     signals = store_signals(data_root, env, morpho)
@@ -479,7 +479,7 @@ def callback(click_data):
          State('morpho-dropdown', 'value')])
 def callback(well_idx, threshold, rise_or_fall, time,
         figure, data_root, env, csv, morpho):
-    if env is None:
+    if env is None or csv is None or morpho is None:
         return {'data': []}
 
     if len(figure['data']) == 0:
@@ -558,7 +558,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value')])
 def callback(threshold, well_idx, rise_or_fall, data_root, env, csv, morpho):
-    if env is None:
+    if env is None or csv is None or morpho is None:
         return {'data': []}
 
     signals = store_signals(data_root, env, morpho)
@@ -664,7 +664,7 @@ def callback(time, well_idx, data_root, env):
          State('env-dropdown', 'value'),
          State('current-morpho', 'children')])
 def callback(time, well_idx, data_root, env, morpho):
-    if env is None:
+    if env is None or morpho is None:
         return ''
 
     label_images = sorted(glob.glob(
@@ -684,7 +684,7 @@ def callback(time, well_idx, data_root, env, morpho):
          State('env-dropdown', 'value'),
          State('current-morpho', 'children')])
 def callback(time, well_idx, data_root, env, morpho):
-    if env is None:
+    if env is None or morpho is None:
         return ''
 
     label_images = sorted(glob.glob(
