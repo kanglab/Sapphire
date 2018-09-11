@@ -485,7 +485,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
     if len(figure['data']) == 0:
         x, y = 0, 0
     else:
-        x, y = time, figure['data'][0]['y'][time]
+        x, y = time, figure['data'][2]['y'][time]
 
     signals = store_signals(data_root, env, morpho)
     manual_evals = store_manual_evals(data_root, env, csv)
@@ -497,11 +497,27 @@ def callback(well_idx, threshold, rise_or_fall, time,
     return {
             'data': [
                 {
+                    # Manual evaluation time (vertical line)
+                    'x': [manual_evals[well_idx]] * int(signals.max()),
+                    'y': list(range(256)),
+                    'mode': 'lines',
+                    'name': 'Manual',
+                    'line': {'width': 5, 'color': '#2ca02c'},
+                },
+                {
+                    # Auto evaluation time (vertical line)
+                    'x': [auto_evals[well_idx]] * int(signals.max()),
+                    'y': list(range(256)),
+                    'mode': 'lines',
+                    'name': 'Auto',
+                    'line': {'width': 5, 'color': 'd62728'},
+                },
+                {
                     # Signal
                     'x': list(range(len(signals[0, :]))),
                     'y': list(signals[well_idx]),
                     'mode': 'markers+lines',
-                    'marker': {'size': 5},
+                    'marker': {'size': 5, 'color': '#1f77b4'},
                     'name': 'Signal',
                 },
                 {
@@ -510,20 +526,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'y': [threshold]*len(signals[0, :]),
                     'mode': 'lines',
                     'name': 'Threshold',
-                },
-                {
-                    # Manual evaluation time (vertical line)
-                    'x': [manual_evals[well_idx]] * int(signals.max()),
-                    'y': list(range(256)),
-                    'mode': 'lines',
-                    'name': 'Manual',
-                },
-                {
-                    # Auto evaluation time (vertical line)
-                    'x': [auto_evals[well_idx]] * int(signals.max()),
-                    'y': list(range(256)),
-                    'mode': 'lines',
-                    'name': 'Auto',
+                    'line': {'width': 5, 'color': '#ff7f0e'},
                 },
                 {
                     # Selected data point
@@ -536,11 +539,14 @@ def callback(well_idx, threshold, rise_or_fall, time,
             ],
             'layout': {
                 'title': '',
+                'font': {'size': 25},
                 'xaxis': {
                     'title': 'Time step',
+                    'tickfont': {'size': 25},
                 },
                 'yaxis': {
-                    'title': 'Signal',
+                    'title': 'Signal intensity',
+                    'tickfont': {'size': 25},
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
