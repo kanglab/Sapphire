@@ -57,7 +57,7 @@ well_w = dcc.Input(
 well_h = dcc.Input(
         id='well_h', type='number', value=0, max=1500, min=0, size=5)
 angle = dcc.Input(
-        id='angle', type='number', value=0, max=90, min=0, size=5)
+        id='angle', type='number', value=0, max=90, min=0, size=5, step=0.1)
 
 input_div = html.Div(
         id='input-div',
