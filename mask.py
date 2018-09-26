@@ -56,12 +56,14 @@ well_w = dcc.Input(
         id='well_w', type='number', value=0, max=1500, min=0, size=5)
 well_h = dcc.Input(
         id='well_h', type='number', value=0, max=1500, min=0, size=5)
+angle = dcc.Input(
+        id='angle', type='number', value=0, max=90, min=0, size=5, step=0.1)
 
 input_div = html.Div(
         id='input-div',
         children=[
             uploader, 'test string', n_rows, n_clms, n_plates,
-            row_gap, clm_gap, plate_gap, x, y, well_w, well_h])
+            row_gap, clm_gap, plate_gap, x, y, well_w, well_h, angle])
 
 org_div = html.Div(
         [dcc.Graph(id='org-img', style={'visibility': 'hidden'})],
@@ -193,11 +195,12 @@ def update_well_h(selected_data):
             Input('x', 'value'),
             Input('y', 'value'),
             Input('well_w', 'value'),
-            Input('well_h', 'value')],
+            Input('well_h', 'value'),
+            Input('angle', 'value')],
         [State('org-img', 'figure')])
 def draw_images(
         n_rows, n_clms, n_plates,
-        gap_r, gap_c, gap_p, x, y, well_w, well_h, figure):
+        gap_r, gap_c, gap_p, x, y, well_w, well_h, angle, figure):
     if figure is None:
         return
     # Get base64ed hash of original image
@@ -212,13 +215,20 @@ def draw_images(
     count = 0
 
     # Mask create loop
+    angle = np.deg2rad(angle)
     mask = -1 * np.ones_like(org_img)
     for n in range(n_plates):
         for idx_r in range(n_rows):
             for idx_c in range(n_clms):
                 c1 = x + idx_c*(well_w + gap_c)
-                c2 = c1 + well_w
                 r1 = y + idx_r*(well_h + gap_r) + n*(n_rows*well_h + gap_p) + gap_r*(n - 1)
+                c1, r1 = np.dot(
+                        np.array(
+                            [[np.cos(angle), -np.sin(angle)],
+                             [np.sin(angle),  np.cos(angle)]]),
+                        np.array([c1-x, r1-y])) + np.array([x, y])
+                c1, r1 = np.round([c1, r1]).astype(int)
+                c2 = c1 + well_w
                 r2 = r1 + well_h
                 mask[r1:r2, c1:c2] = count
                 count += 1
@@ -312,4 +322,4 @@ def draw_images(
     return [masked_img, mask_img]
 
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(debug=True)
