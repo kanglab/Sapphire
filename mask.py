@@ -226,7 +226,7 @@ def draw_images(
                         np.array(
                             [[np.cos(angle), -np.sin(angle)],
                              [np.sin(angle),  np.cos(angle)]]),
-                        np.array([c1, r1]))
+                        np.array([c1-x, r1-y])) + np.array([x, y])
                 c1, r1 = np.round([c1, r1]).astype(int)
                 c2 = c1 + well_w
                 r2 = r1 + well_h
