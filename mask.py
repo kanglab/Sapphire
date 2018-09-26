@@ -56,12 +56,14 @@ well_w = dcc.Input(
         id='well_w', type='number', value=0, max=1500, min=0, size=5)
 well_h = dcc.Input(
         id='well_h', type='number', value=0, max=1500, min=0, size=5)
+angle = dcc.Input(
+        id='angle', type='number', value=0, max=90, min=0, size=5)
 
 input_div = html.Div(
         id='input-div',
         children=[
             uploader, 'test string', n_rows, n_clms, n_plates,
-            row_gap, clm_gap, plate_gap, x, y, well_w, well_h])
+            row_gap, clm_gap, plate_gap, x, y, well_w, well_h, angle])
 
 org_div = html.Div(
         [dcc.Graph(id='org-img', style={'visibility': 'hidden'})],
@@ -193,11 +195,12 @@ def update_well_h(selected_data):
             Input('x', 'value'),
             Input('y', 'value'),
             Input('well_w', 'value'),
-            Input('well_h', 'value')],
+            Input('well_h', 'value'),
+            Input('angle', 'value')],
         [State('org-img', 'figure')])
 def draw_images(
         n_rows, n_clms, n_plates,
-        gap_r, gap_c, gap_p, x, y, well_w, well_h, figure):
+        gap_r, gap_c, gap_p, x, y, well_w, well_h, angle, figure):
     if figure is None:
         return
     # Get base64ed hash of original image
@@ -312,4 +315,4 @@ def draw_images(
     return [masked_img, mask_img]
 
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(debug=True)
