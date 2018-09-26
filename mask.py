@@ -215,13 +215,20 @@ def draw_images(
     count = 0
 
     # Mask create loop
+    angle = np.deg2rad(angle)
     mask = -1 * np.ones_like(org_img)
     for n in range(n_plates):
         for idx_r in range(n_rows):
             for idx_c in range(n_clms):
                 c1 = x + idx_c*(well_w + gap_c)
-                c2 = c1 + well_w
                 r1 = y + idx_r*(well_h + gap_r) + n*(n_rows*well_h + gap_p) + gap_r*(n - 1)
+                c1, r1 = np.dot(
+                        np.array(
+                            [[np.cos(angle), -np.sin(angle)],
+                             [np.sin(angle),  np.cos(angle)]]),
+                        np.array([c1, r1]))
+                c1, r1 = np.round([c1, r1]).astype(int)
+                c2 = c1 + well_w
                 r2 = r1 + well_h
                 mask[r1:r2, c1:c2] = count
                 count += 1
