@@ -9,6 +9,7 @@
 #
 import io
 import os
+import json
 import time
 import dash
 import base64
@@ -242,9 +243,30 @@ def draw_images(
     grayed.save(mask_buf, format='PNG')
     masked.save(masked_buf, format='PNG')
 
+    # make the directory for saving
     os.makedirs('static/', exist_ok=True)
+
+    # save the mask
     np.save('static/mask.npy', mask.astype(np.int16))
 
+    # save the parameters
+    params_dict = {
+            'n-rows': n_rows,
+            'n-clms': n_clms,
+            'n-plates': n_plates,
+            'row-gap': gap_r,
+            'clm-gap': gap_c,
+            'plate-gap': gap_p,
+            'x': x,
+            'y': y,
+            'well-w': well_w,
+            'well-h': well_h,
+            'angle': angle,
+            }
+    with open('static/mask_params.json', 'w') as f:
+        json.dump(params_dict, f, indent=4)
+
+    # define the graphs to draw
     mask_img = dcc.Graph(
         id='mask-img',
         figure={
