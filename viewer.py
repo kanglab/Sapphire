@@ -720,6 +720,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 'yaxis': {
                     'title': 'Manual',
                 },
+                'showlegend': False,
                 'hovermode': 'closest',
             },
         }
@@ -763,7 +764,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                     'x': list(bins[1:]),
                     'y': list(ns),
                     'mode': 'markers',
-                    'type': 'bar'
+                    'type': 'bar',
                     'marker': {'size': 5},
                 },
             ],
@@ -775,6 +776,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 'yaxis': {
                     'title': 'Count',
                 },
+                'showlegend': False,
                 'hovermode': 'closest',
             },
         }
