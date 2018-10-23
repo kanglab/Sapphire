@@ -771,7 +771,8 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
             'layout': {
                 'title': 'Error histogram',
                 'xaxis': {
-                    'title': 'Diff.',
+                    'title': 'auto - manual',
+                    'range': [-len(signals.T), len(signals.T)],
                 },
                 'yaxis': {
                     'title': 'Count',
