@@ -644,7 +644,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
                 },
             ],
             'layout': {
-                'title': 'Activity signal',
+                'title': 'Activity signal (threshold={})'.format(threshold),
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'Time step',
