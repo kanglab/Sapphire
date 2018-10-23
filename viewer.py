@@ -19,6 +19,7 @@ import flask_caching
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
+import plotly.graph_objs as go
 
 
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
@@ -37,64 +38,8 @@ cache.init_app(
 #  Definition of the viewer page
 # ================================
 app.layout = html.Div([
-    html.Header([html.H1('Viewer')]),
+    html.Header([html.H1('Viewer', style={'margin': '0px'})]),
     html.Div([
-        html.Div([
-            html.Div(['Image at "t"'], style={'display': 'table'}),
-            html.Img(
-                id='t-image',
-                style={
-                    'background': '#555555',
-                    'height': '120px',
-                    'width': '120px',
-                    'padding': '5px',
-                    'display': 'block',
-                },
-            ),
-            html.Img(
-                id='t-label',
-                style={
-                    'background': '#555555',
-                    'height': '120px',
-                    'width': '120px',
-                    'padding': '5px',
-                    'display': 'block',
-                },
-            ),
-            ],
-            style={
-                'display': 'inline-block',
-                'margin': '10px 10px',
-            },
-        ),
-        html.Div([
-            html.Div(['"t+1"'], style={'display': 'table'}),
-            html.Img(
-                id='t+1-image',
-                style={
-                    'background': '#555555',
-                    'height': '120px',
-                    'width': '120px',
-                    'padding': '5px',
-                    'display': 'block',
-                },
-            ),
-            html.Img(
-                id='t+1-label',
-                style={
-                    'background': '#555555',
-                    'height': '120px',
-                    'width': '120px',
-                    'padding': '5px',
-                    'display': 'block',
-                },
-            ),
-            ],
-            style={
-                'display': 'inline-block',
-                'margin': '10px',
-            },
-        ),
         html.Div([
             'Imaging environment :',
             html.Br(),
@@ -107,7 +52,7 @@ app.layout = html.Div([
                 ],
                 style={
                     'display': 'inline-block',
-                    'width': '300px',
+                    'width': '200px',
                     'vertical-align': 'middle',
                 },
             ),
@@ -123,7 +68,7 @@ app.layout = html.Div([
                 ],
                 style={
                     'display': 'inline-block',
-                    'width': '300px',
+                    'width': '200px',
                     'vertical-align': 'middle',
                 },
             ),
@@ -139,7 +84,7 @@ app.layout = html.Div([
                 ],
                 style={
                     'display': 'inline-block',
-                    'width': '300px',
+                    'width': '200px',
                     'vertical-align': 'middle',
                 },
             ),
@@ -155,7 +100,7 @@ app.layout = html.Div([
                 ],
                 style={
                     'display': 'inline-block',
-                    'width': '300px',
+                    'width': '200px',
                     'vertical-align': 'middle',
                 },
             ),
@@ -189,8 +134,11 @@ app.layout = html.Div([
                     size=5,
                 ),
                 ],
-                style={'display': 'inline-block'},
+                style={
+                    'display': 'inline-block',
+                },
             ),
+            html.Br(),
             html.Div([
                 dcc.Slider(
                     id='well-slider',
@@ -201,24 +149,86 @@ app.layout = html.Div([
                 ],
                 style={
                     'display': 'inline-block',
-                    'width': '300px',
-                    'margin-left': '20px',
+                    'width': '200px',
+                    # 'margin-left': '20px',
                 },
             ),
             html.Br(),
             'Time :',
             html.Br(),
-            dcc.Input(
-                id='time-selector',
-                type='number',
-                value=0,
-                min=0,
-                size=5,
-            ),
+            html.Div([
+                dcc.Input(
+                    id='time-selector',
+                    type='number',
+                    value=0,
+                    min=0,
+                    size=5,
+                ),
+                ],
+                style={
+                    'display': 'inline-block',
+                },
+            )
             ],
             style={
                 'display': 'inline-block',
                 'margin': '10px 10px',
+            },
+        ),
+        html.Div([
+            html.Div(['Image at "t"'], style={'display': 'table'}),
+            html.Img(
+                id='t-image',
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            html.Img(
+                id='t-label',
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            ],
+            style={
+                'display': 'inline-block',
+                'margin': '2px 2px',
+            },
+        ),
+        html.Div([
+            html.Div(['"t+1"'], style={'display': 'table'}),
+            html.Img(
+                id='t+1-image',
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            html.Img(
+                id='t+1-label',
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            ],
+            style={
+                'display': 'inline-block',
+                'margin': '2px',
             },
         ),
         html.Div([
@@ -238,20 +248,18 @@ app.layout = html.Div([
             html.Div(id='current-result'),
             ],
             style={
-                'display': 'inline-block',
+                # 'display': 'inline-block',
+                'display': 'none',
                 'vertical-align': 'top',
                 'margin': '10px 10px',
             },
         ),
-        ],
-    ),
-    html.Div([
         dcc.Graph(
             id='signal-graph',
             style={
                 'display': 'inline-block',
-                'height': '500px',
-                'width': '60%',
+                'height': '400px',
+                # 'width': '40%',
             },
         ),
         html.Div([
@@ -266,17 +274,28 @@ app.layout = html.Div([
             )],
             style={
                 'display': 'inline-block',
-                'height': '300px',
-                'width': '5%',
-                'padding-bottom': '100px',
+                'height': '280px',
+                'width': '10px',
+                'padding-bottom': '70px',
             },
         ),
+    ],
+    ),
+    html.Div([
         dcc.Graph(
             id='summary-graph',
             style={
                 'display': 'inline-block',
-                'height': '500px',
-                'width': '35%',
+                'height': '400px',
+                'width': '25%',
+            },
+        ),
+        dcc.Graph(
+            id='error-hist',
+            style={
+                'display': 'inline-block',
+                'height': '400px',
+                'width': '25%',
             },
         ),
     ]),
@@ -577,6 +596,8 @@ def callback(click_data):
          State('result-dropdown', 'value')])
 def callback(well_idx, threshold, rise_or_fall, time,
         figure, data_root, env, csv, morpho, result):
+
+    # Exception handling
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
@@ -585,13 +606,21 @@ def callback(well_idx, threshold, rise_or_fall, time,
     else:
         x, y = time, figure['data'][2]['y'][time]
 
+    # Load the data
     signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
 
+    # Compute event times from signals
     if rise_or_fall == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
+
     elif rise_or_fall == 'fall':
-        auto_evals = signals.shape[1] - (np.fliplr(signals) > threshold).argmax(axis=1)
+        # Scan the signal from the right hand side.
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > threshold).argmax(axis=1))
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == signals.shape[1]] = 0
+
     return {
             'data': [
                 {
@@ -636,18 +665,19 @@ def callback(well_idx, threshold, rise_or_fall, time,
                 },
             ],
             'layout': {
-                'title': '',
-                'font': {'size': 25},
+                'title': 'Activity signal (threshold={})'.format(threshold),
+                'font': {'size': 15},
                 'xaxis': {
                     'title': 'Time step',
-                    'tickfont': {'size': 25},
+                    'tickfont': {'size': 15},
                 },
                 'yaxis': {
                     'title': 'Signal intensity',
-                    'tickfont': {'size': 25},
+                    'tickfont': {'size': 15},
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
+                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
             },
         }
 
@@ -667,17 +697,23 @@ def callback(well_idx, threshold, rise_or_fall, time,
          State('result-dropdown', 'value')])
 def callback(threshold, well_idx, rise_or_fall, data_root,
         env, csv, morpho, result):
+
+    # Exception handling
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
+    # Load the data
     signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
 
+    # Compute event times from signals
     if rise_or_fall == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
+
     elif rise_or_fall == 'fall':
         # Scan the signal from the right hand side.
-        auto_evals = signals.shape[1] - (np.fliplr(signals) > threshold).argmax(axis=1)
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > threshold).argmax(axis=1))
         # If the signal was not more than the threshold.
         auto_evals[auto_evals == signals.shape[1]] = 0
 
@@ -706,13 +742,95 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
             ],
             'layout': {
                 'title': 'Auto vs Manual',
+                'font': {'size': 15},
                 'xaxis': {
                     'title': 'Auto',
+                    'tickfont': {'size': 15},
                 },
                 'yaxis': {
                     'title': 'Manual',
+                    'tickfont': {'size': 15},
                 },
+                'showlegend': False,
                 'hovermode': 'closest',
+                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
+            },
+        }
+
+
+# =======================================
+#  Update the figure in the error-hist.
+# =======================================
+@app.callback(
+        Output('error-hist', 'figure'),
+        [Input('threshold-slider', 'value'),
+         Input('well-selector', 'value'),
+         Input('target-dropdown', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('csv-dropdown', 'value'),
+         State('morpho-dropdown', 'value'),
+         State('result-dropdown', 'value')])
+def callback(threshold, well_idx, rise_or_fall, data_root,
+        env, csv, morpho, result):
+
+    # Exception handling
+    if env is None or csv is None or morpho is None:
+        return {'data': []}
+
+    # Load the data
+    signals = store_signals(data_root, env, morpho, result)
+    manual_evals = store_manual_evals(data_root, env, csv)
+
+    # Compute event times from signals
+    if rise_or_fall == 'rise':
+        auto_evals = (signals > threshold).argmax(axis=1)
+
+    elif rise_or_fall == 'fall':
+        # Scan the signal from the right hand side.
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > threshold).argmax(axis=1))
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == signals.shape[1]] = 0
+
+    # Calculate how many frames auto-evaluation is far from manual's one
+    errors = auto_evals - manual_evals
+    ns, bins = np.histogram(errors, 1000)
+
+    # Calculate the root mean square
+    rms = np.sqrt((errors**2).sum() / len(errors))
+
+    return {
+            'data': [
+                {
+                    'x': list(bins[1:]),
+                    'y': list(ns),
+                    'mode': 'markers',
+                    'type': 'bar',
+                    'marker': {'size': 5},
+                },
+                {
+                    'x': [-10, 10],
+                    'y': [ns.max(), ns.max()],
+                    'mode': 'lines',
+                    'fill': 'tozeroy',
+                },
+            ],
+            'layout': {
+                'title': 'Error histogram (RMS={})'.format(int(rms)),
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'auto - manual',
+                    'range': [-len(signals.T), len(signals.T)],
+                    'tickfont': {'size': 15},
+                },
+                'yaxis': {
+                    'title': 'Count',
+                    'tickfont': {'size': 15},
+                },
+                'showlegend': False,
+                'hovermode': 'closest',
+                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
             },
         }
 
