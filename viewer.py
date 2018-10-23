@@ -767,6 +767,12 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                     'type': 'bar',
                     'marker': {'size': 5},
                 },
+                {
+                    'x': [-10, 10],
+                    'y': [ns.max(), ns.max()],
+                    'mode': 'lines',
+                    'fill': 'tozeroy',
+                },
             ],
             'layout': {
                 'title': 'Error histogram',
