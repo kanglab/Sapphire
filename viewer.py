@@ -585,6 +585,8 @@ def callback(click_data):
          State('result-dropdown', 'value')])
 def callback(well_idx, threshold, rise_or_fall, time,
         figure, data_root, env, csv, morpho, result):
+
+    # Exception handling
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
@@ -593,13 +595,21 @@ def callback(well_idx, threshold, rise_or_fall, time,
     else:
         x, y = time, figure['data'][2]['y'][time]
 
+    # Load the data
     signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
 
+    # Compute event times from signals
     if rise_or_fall == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
+
     elif rise_or_fall == 'fall':
-        auto_evals = signals.shape[1] - (np.fliplr(signals) > threshold).argmax(axis=1)
+        # Scan the signal from the right hand side.
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > threshold).argmax(axis=1))
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == signals.shape[1]] = 0
+
     return {
             'data': [
                 {
@@ -675,17 +685,23 @@ def callback(well_idx, threshold, rise_or_fall, time,
          State('result-dropdown', 'value')])
 def callback(threshold, well_idx, rise_or_fall, data_root,
         env, csv, morpho, result):
+
+    # Exception handling
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
+    # Load the data
     signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
 
+    # Compute event times from signals
     if rise_or_fall == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
+
     elif rise_or_fall == 'fall':
         # Scan the signal from the right hand side.
-        auto_evals = signals.shape[1] - (np.fliplr(signals) > threshold).argmax(axis=1)
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > threshold).argmax(axis=1))
         # If the signal was not more than the threshold.
         auto_evals[auto_evals == signals.shape[1]] = 0
 
@@ -744,22 +760,31 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
          State('result-dropdown', 'value')])
 def callback(threshold, well_idx, rise_or_fall, data_root,
         env, csv, morpho, result):
+
+    # Exception handling
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
+    # Load the data
     signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
 
+    # Compute event times from signals
     if rise_or_fall == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
+
     elif rise_or_fall == 'fall':
         # Scan the signal from the right hand side.
-        auto_evals = signals.shape[1] - (np.fliplr(signals) > threshold).argmax(axis=1)
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > threshold).argmax(axis=1))
         # If the signal was not more than the threshold.
         auto_evals[auto_evals == signals.shape[1]] = 0
 
+    # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
     ns, bins = np.histogram(errors, 1000)
+
+    # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
 
     return {
