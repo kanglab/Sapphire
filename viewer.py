@@ -144,6 +144,22 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
+            'Inference result :',
+            html.Br(),
+            html.Div([
+                dcc.Dropdown(
+                    id='result-dropdown',
+                    placeholder='Select result dir...',
+                    clearable=False,
+                ),
+                ],
+                style={
+                    'display': 'inline-block',
+                    'width': '300px',
+                    'vertical-align': 'middle',
+                },
+            ),
+            html.Br(),
             'Target to detect :',
             html.Br(),
             html.Div([
@@ -316,6 +332,25 @@ def callback(env, data_root):
                 data_root, env, 'inference', '*'))) if os.path.isdir(i)]
 
     return [{'label': i, 'value': i} for i in npys]
+
+
+# ======================================================
+#  Initialize result-dropdown when selecting a morpho.
+# ======================================================
+@app.callback(
+        Output('result-dropdown', 'options'),
+        [Input('morpho-dropdown', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(morpho, data_root, env):
+    if env is None:
+        return []
+
+    results = [os.path.basename(i)
+            for i in sorted(glob.glob(os.path.join(
+                data_root, env, 'inference', morpho, '*'))) if os.path.isdir(i)]
+
+    return [{'label': i, 'value': i} for i in results]
 
 
 # ==========
