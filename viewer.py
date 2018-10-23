@@ -177,7 +177,7 @@ app.layout = html.Div([
             },
         ),
         html.Div([
-            html.Div(['Image at "t"'], style={'display': 'table'}),
+            html.Div('Original image', style={'display': 'table'}),
             html.Img(
                 id='t-image',
                 style={
@@ -188,6 +188,7 @@ app.layout = html.Div([
                     'display': 'block',
                 },
             ),
+            html.Div('Label', style={'display': 'table'}),
             html.Img(
                 id='t-label',
                 style={
@@ -198,6 +199,18 @@ app.layout = html.Div([
                     'display': 'block',
                 },
             ),
+            html.Div('Probability', style={'display': 'table'}),
+            html.Img(
+                id='t-prob',
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            html.Div(['Image at "t"'], style={'display': 'table'}),
             ],
             style={
                 'display': 'inline-block',
@@ -205,7 +218,6 @@ app.layout = html.Div([
             },
         ),
         html.Div([
-            html.Div(['"t+1"'], style={'display': 'table'}),
             html.Img(
                 id='t+1-image',
                 style={
@@ -216,6 +228,7 @@ app.layout = html.Div([
                     'display': 'block',
                 },
             ),
+            html.Div('Label', style={'display': 'table'}),
             html.Img(
                 id='t+1-label',
                 style={
@@ -226,6 +239,18 @@ app.layout = html.Div([
                     'display': 'block',
                 },
             ),
+            html.Div('Probability', style={'display': 'table'}),
+            html.Img(
+                id='t+1-prob',
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            html.Div(['"t+1"'], style={'display': 'table'}),
             ],
             style={
                 'display': 'inline-block',
@@ -977,6 +1002,78 @@ def callback(time, well_idx, data_root, env, morpho, result):
     # Buffer the well image as byte stream
     buf = io.BytesIO()
     label_image.save(buf, format='PNG')
+
+    return 'data:image/png;base64,{}'.format(
+            base64.b64encode(buf.getvalue()).decode('utf-8'))
+
+
+# ======================
+#  Update the t-prob.
+# ======================
+@app.callback(
+        Output('t-prob', 'src'),
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('current-morpho', 'children'),
+         State('current-result', 'children')])
+def callback(time, well_idx, data_root, env, morpho, result):
+
+    # Exception handling
+    if env is None or morpho is None or result is None:
+        return ''
+
+    # Load a zip file storing prob images
+    # and get a prob image
+    zipfile_path = os.path.join(
+            data_root, env, 'inference', morpho, result, 'probs',
+            '{:03d}.zip'.format(well_idx))
+    with zipfile.ZipFile(zipfile_path, 'r') as probs_zip:
+        filenames = sorted(
+                [info.filename for info in probs_zip.infolist()])
+        with probs_zip.open(filenames[time]) as prob_file:
+            prob_image = PIL.Image.open(prob_file)
+
+    # Buffer the well image as byte stream
+    buf = io.BytesIO()
+    prob_image.save(buf, format='PNG')
+
+    return 'data:image/png;base64,{}'.format(
+            base64.b64encode(buf.getvalue()).decode('utf-8'))
+
+
+# ========================
+#  Update the t+1-prob.
+# ========================
+@app.callback(
+        Output('t+1-prob', 'src'),
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('current-morpho', 'children'),
+         State('current-result', 'children')])
+def callback(time, well_idx, data_root, env, morpho, result):
+
+    # Exception handling
+    if env is None or morpho is None or result is None:
+        return ''
+
+    # Load a zip file storing prob images
+    # and get a prob image
+    zipfile_path = os.path.join(
+            data_root, env, 'inference', morpho, result, 'probs',
+            '{:03d}.zip'.format(well_idx))
+    with zipfile.ZipFile(zipfile_path, 'r') as probs_zip:
+        filenames = sorted(
+                [info.filename for info in probs_zip.infolist()])
+        with probs_zip.open(filenames[time+1]) as prob_file:
+            prob_image = PIL.Image.open(prob_file)
+
+    # Buffer the well image as byte stream
+    buf = io.BytesIO()
+    prob_image.save(buf, format='PNG')
 
     return 'data:image/png;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
