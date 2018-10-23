@@ -45,8 +45,8 @@ app.layout = html.Div([
                 id='t-image',
                 style={
                     'background': '#555555',
-                    'height': '120px',
-                    'width': '120px',
+                    'height': '80px',
+                    'width': '80px',
                     'padding': '5px',
                     'display': 'block',
                 },
@@ -55,8 +55,8 @@ app.layout = html.Div([
                 id='t-label',
                 style={
                     'background': '#555555',
-                    'height': '120px',
-                    'width': '120px',
+                    'height': '80px',
+                    'width': '80px',
                     'padding': '5px',
                     'display': 'block',
                 },
@@ -64,7 +64,7 @@ app.layout = html.Div([
             ],
             style={
                 'display': 'inline-block',
-                'margin': '10px 10px',
+                'margin': '2px 2px',
             },
         ),
         html.Div([
@@ -73,8 +73,8 @@ app.layout = html.Div([
                 id='t+1-image',
                 style={
                     'background': '#555555',
-                    'height': '120px',
-                    'width': '120px',
+                    'height': '80px',
+                    'width': '80px',
                     'padding': '5px',
                     'display': 'block',
                 },
@@ -83,8 +83,8 @@ app.layout = html.Div([
                 id='t+1-label',
                 style={
                     'background': '#555555',
-                    'height': '120px',
-                    'width': '120px',
+                    'height': '80px',
+                    'width': '80px',
                     'padding': '5px',
                     'display': 'block',
                 },
@@ -92,7 +92,7 @@ app.layout = html.Div([
             ],
             style={
                 'display': 'inline-block',
-                'margin': '10px',
+                'margin': '2px',
             },
         ),
         html.Div([
@@ -107,7 +107,7 @@ app.layout = html.Div([
                 ],
                 style={
                     'display': 'inline-block',
-                    'width': '300px',
+                    'width': '200px',
                     'vertical-align': 'middle',
                 },
             ),
@@ -123,7 +123,7 @@ app.layout = html.Div([
                 ],
                 style={
                     'display': 'inline-block',
-                    'width': '300px',
+                    'width': '200px',
                     'vertical-align': 'middle',
                 },
             ),
@@ -139,7 +139,7 @@ app.layout = html.Div([
                 ],
                 style={
                     'display': 'inline-block',
-                    'width': '300px',
+                    'width': '200px',
                     'vertical-align': 'middle',
                 },
             ),
@@ -155,7 +155,7 @@ app.layout = html.Div([
                 ],
                 style={
                     'display': 'inline-block',
-                    'width': '300px',
+                    'width': '200px',
                     'vertical-align': 'middle',
                 },
             ),
@@ -189,8 +189,11 @@ app.layout = html.Div([
                     size=5,
                 ),
                 ],
-                style={'display': 'inline-block'},
+                style={
+                    'display': 'inline-block',
+                },
             ),
+            html.Br(),
             html.Div([
                 dcc.Slider(
                     id='well-slider',
@@ -201,25 +204,31 @@ app.layout = html.Div([
                 ],
                 style={
                     'display': 'inline-block',
-                    'width': '300px',
-                    'margin-left': '20px',
+                    'width': '200px',
+                    # 'margin-left': '20px',
                 },
             ),
             html.Br(),
             'Time :',
             html.Br(),
-            dcc.Input(
-                id='time-selector',
-                type='number',
-                value=0,
-                min=0,
-                size=5,
-            ),
+            html.Div([
+                dcc.Input(
+                    id='time-selector',
+                    type='number',
+                    value=0,
+                    min=0,
+                    size=5,
+                ),
             ],
             style={
                 'display': 'inline-block',
-                'margin': '10px 10px',
             },
+            )
+        ],
+        style={
+            'display': 'inline-block',
+            'margin': '10px 10px',
+        },
         ),
         html.Div([
             'Data root :',
@@ -238,20 +247,18 @@ app.layout = html.Div([
             html.Div(id='current-result'),
             ],
             style={
-                'display': 'inline-block',
+                # 'display': 'inline-block',
+                'display': 'none',
                 'vertical-align': 'top',
                 'margin': '10px 10px',
             },
         ),
-    ],
-    ),
-    html.Div([
         dcc.Graph(
             id='signal-graph',
             style={
                 'display': 'inline-block',
                 'height': '500px',
-                'width': '40%',
+                # 'width': '40%',
             },
         ),
         html.Div([
@@ -271,6 +278,9 @@ app.layout = html.Div([
                 'padding-bottom': '100px',
             },
         ),
+    ],
+    ),
+    html.Div([
         dcc.Graph(
             id='summary-graph',
             style={
