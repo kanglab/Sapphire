@@ -251,7 +251,7 @@ app.layout = html.Div([
             style={
                 'display': 'inline-block',
                 'height': '500px',
-                'width': '60%',
+                'width': '40%',
             },
         ),
         html.Div([
@@ -276,7 +276,15 @@ app.layout = html.Div([
             style={
                 'display': 'inline-block',
                 'height': '500px',
-                'width': '35%',
+                'width': '30%',
+            },
+        ),
+        dcc.Graph(
+            id='error-hist',
+            style={
+                'display': 'inline-block',
+                'height': '500px',
+                'width': '25%',
             },
         ),
     ]),
