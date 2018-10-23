@@ -760,6 +760,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
 
     errors = auto_evals - manual_evals
     ns, bins = np.histogram(errors, 1000)
+    rms = np.sqrt((errors**2).sum() / len(errors))
 
     return {
             'data': [
@@ -778,7 +779,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 },
             ],
             'layout': {
-                'title': 'Error histogram',
+                'title': 'Error histogram (RMS={})'.format(int(rms)),
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'auto - manual',
