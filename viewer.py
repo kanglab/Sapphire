@@ -233,6 +233,9 @@ app.layout = html.Div([
             html.Br(),
             'Current morpho :',
             html.Div(id='current-morpho'),
+            html.Br(),
+            'Current result :',
+            html.Div(id='current-result'),
             ],
             style={
                 'display': 'inline-block',
@@ -357,12 +360,12 @@ def callback(morpho, data_root, env):
 #  Caching
 # ==========
 @cache.memoize()
-def store_signals(data_root, env, morpho):
-    if env is None or morpho is None:
+def store_signals(data_root, env, morpho, result):
+    if env is None or morpho is None or result is None:
         return
 
     signals = np.load(os.path.join(
-        data_root, env, 'inference', morpho, 'signals.npy'))
+        data_root, env, 'inference', morpho, result, 'signals.npy'))
 
     return signals
 
@@ -413,9 +416,9 @@ def callback(csv, data_root, env):
     return csv
 
 
-# ==============================================
-#  Load a signal file when selecting a morpho.
-# ==============================================
+# =========================================================
+#  Initialize the current-morpho when selecting a morpho.
+# =========================================================
 @app.callback(
         Output('current-morpho', 'children'),
         [Input('morpho-dropdown', 'value')],
@@ -424,9 +427,24 @@ def callback(csv, data_root, env):
 def callback(morpho, data_root, env):
     if env is None or morpho is None:
         return
-
-    store_signals(data_root, env, morpho)
     return morpho
+
+
+# ========================================================
+#  Load a signal file when selecting a result directory.
+# ========================================================
+@app.callback(
+        Output('current-result', 'children'),
+        [Input('result-dropdown', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('morpho-dropdown', 'value')])
+def callback(result, data_root, env, morpho):
+    if env is None or morpho is None:
+        return
+
+    store_signals(data_root, env, morpho, result)
+    return result
 
 
 # ====================================================
@@ -435,15 +453,15 @@ def callback(morpho, data_root, env):
 # ====================================================
 @app.callback(
         Output('time-selector', 'max'),
-        [Input('current-morpho', 'children')],
+        [Input('current-result', 'children')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('morpho-dropdown', 'value')])
-def callback(_, data_root, env, morpho):
+def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    signals = store_signals(data_root, env, morpho)
+    signals = store_signals(data_root, env, morpho, result)
     return signals.shape[1] - 1
 
 
@@ -453,15 +471,15 @@ def callback(_, data_root, env, morpho):
 # =======================================================
 @app.callback(
         Output('threshold-slider', 'max'),
-        [Input('current-morpho', 'children')],
+        [Input('current-result', 'children')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('morpho-dropdown', 'value')])
-def callback(_, data_root, env, morpho):
+def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    signals = store_signals(data_root, env, morpho)
+    signals = store_signals(data_root, env, morpho, result)
     return signals.max()
 
 
@@ -471,15 +489,15 @@ def callback(_, data_root, env, morpho):
 # =======================================================
 @app.callback(
         Output('well-slider', 'max'),
-        [Input('current-morpho', 'children')],
+        [Input('current-result', 'children')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('morpho-dropdown', 'value')])
-def callback(_, data_root, env, morpho):
+def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    signals = store_signals(data_root, env, morpho)
+    signals = store_signals(data_root, env, morpho, result)
     return len(signals) - 1
 
 
@@ -489,15 +507,15 @@ def callback(_, data_root, env, morpho):
 # ====================================================
 @app.callback(
         Output('well-selector', 'max'),
-        [Input('current-morpho', 'children')],
+        [Input('current-result', 'children')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('morpho-dropdown', 'value')])
-def callback(_, data_root, env, morpho):
+def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    signals = store_signals(data_root, env, morpho)
+    signals = store_signals(data_root, env, morpho, result)
     return len(signals) - 1
 
 
@@ -508,7 +526,7 @@ def callback(_, data_root, env, morpho):
 # ======================================================
 @app.callback(
         Output('well-slider', 'value'),
-        [Input('current-morpho', 'children'),
+        [Input('current-result', 'children'),
          Input('summary-graph', 'clickData')])
 def callback(_, click_data):
     if click_data is None:
@@ -555,9 +573,10 @@ def callback(click_data):
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
-         State('morpho-dropdown', 'value')])
+         State('morpho-dropdown', 'value'),
+         State('result-dropdown', 'value')])
 def callback(well_idx, threshold, rise_or_fall, time,
-        figure, data_root, env, csv, morpho):
+        figure, data_root, env, csv, morpho, result):
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
@@ -566,7 +585,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
     else:
         x, y = time, figure['data'][2]['y'][time]
 
-    signals = store_signals(data_root, env, morpho)
+    signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
 
     if rise_or_fall == 'rise':
@@ -644,12 +663,14 @@ def callback(well_idx, threshold, rise_or_fall, time,
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
-         State('morpho-dropdown', 'value')])
-def callback(threshold, well_idx, rise_or_fall, data_root, env, csv, morpho):
+         State('morpho-dropdown', 'value'),
+         State('result-dropdown', 'value')])
+def callback(threshold, well_idx, rise_or_fall, data_root,
+        env, csv, morpho, result):
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
-    signals = store_signals(data_root, env, morpho)
+    signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
 
     if rise_or_fall == 'rise':
@@ -759,14 +780,15 @@ def callback(time, well_idx, data_root, env):
          Input('well-selector', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('current-morpho', 'children')])
-def callback(time, well_idx, data_root, env, morpho):
-    if env is None or morpho is None:
+         State('current-morpho', 'children'),
+         State('current-result', 'children')])
+def callback(time, well_idx, data_root, env, morpho, result):
+    if env is None or morpho is None or result is None:
         return ''
 
     label_images = sorted(glob.glob(
             os.path.join(data_root, env, 'inference',
-                morpho, '{:03d}'.format(well_idx), '*.png')))
+                morpho, result, '{:03d}'.format(well_idx), '*.png')))
     buf = io.BytesIO()
     PIL.Image.open(label_images[time]).save(buf, format='PNG')
     return 'data:image/png;base64,{}'.format(
@@ -782,14 +804,15 @@ def callback(time, well_idx, data_root, env, morpho):
          Input('well-selector', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('current-morpho', 'children')])
-def callback(time, well_idx, data_root, env, morpho):
-    if env is None or morpho is None:
+         State('current-morpho', 'children'),
+         State('current-result', 'children')])
+def callback(time, well_idx, data_root, env, morpho, result):
+    if env is None or morpho is None or result is None:
         return ''
 
     label_images = sorted(glob.glob(
             os.path.join(data_root, env, 'inference',
-                morpho, '{:03d}'.format(well_idx), '*.png')))
+                morpho, result, '{:03d}'.format(well_idx), '*.png')))
     buf = io.BytesIO()
     PIL.Image.open(label_images[time+1]).save(buf, format='PNG')
     return 'data:image/png;base64,{}'.format(
