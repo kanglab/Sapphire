@@ -22,7 +22,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State
 
 
-DATA_ROOT = 'G:/Research/Drosophila/CUI/data/'
+DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
 
 
@@ -268,25 +268,23 @@ app.layout = html.Div([
 )
 
 
+# =================================================
+#  Initialize env-dropdown when opening the page.
+# =================================================
 @app.callback(
         Output('env-dropdown', 'options'),
         [Input('data-root', 'children')])
 def callback(data_root):
+
     imaging_envs = [os.path.basename(i)
             for i in sorted(glob.glob(os.path.join(data_root, '*')))]
 
     return [{'label': i, 'value': i} for i in imaging_envs]
 
 
-'''
-@app.callback(
-        Output('env-dropdown', 'value'),
-        [Input('env-dropdown', 'options')])
-def callback(envs):
-    return envs[-1]['value']
-'''
-
-
+# =================================================================
+#  Initialize csv-dropdown when selecting an imaging environment.
+# =================================================================
 @app.callback(
         Output('csv-dropdown', 'options'),
         [Input('env-dropdown', 'value')],
@@ -302,6 +300,9 @@ def callback(env, data_root):
     return [{'label': i, 'value': i} for i in csvs]
 
 
+# ===================================================================
+#  Initialize morpho-dropdown when selecting an imaging environment.
+# ===================================================================
 @app.callback(
         Output('morpho-dropdown', 'options'),
         [Input('env-dropdown', 'value')],
@@ -317,6 +318,9 @@ def callback(env, data_root):
     return [{'label': i, 'value': i} for i in npys]
 
 
+# ==========
+#  Caching
+# ==========
 @cache.memoize()
 def store_signals(data_root, env, morpho):
     if env is None or morpho is None:
@@ -349,39 +353,51 @@ def store_mask(data_root, env):
     return np.load(os.path.join(data_root, env, 'mask.npy'))
 
 
-
-@app.callback(
-        Output('current-morpho', 'children'),
-        [Input('csv-dropdown', 'value'),
-         Input('morpho-dropdown', 'value')],
-        [State('data-root', 'children'),
-         State('env-dropdown', 'value')])
-def callback(csv, morpho, data_root, env):
-    if env is None or csv is None or morpho is None:
-        return
-
-    store_signals(data_root, env, morpho)
-    store_manual_evals(data_root, env, csv)
-    store_mask(data_root, env)
-    return morpho
-
-
+# ==========================================================
+#  Load a mask file when selecting an imaging environment.
+# ==========================================================
 @app.callback(
         Output('current-env', 'children'),
-        [Input('current-morpho', 'children')],
-        [State('env-dropdown', 'value')])
-def callback(_, env):
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    store_mask(data_root, env)
     return env
 
 
+# ======================================
+#  Load a csv file when selecting csv.
+# ======================================
 @app.callback(
         Output('current-csv', 'children'),
-        [Input('current-morpho', 'children')],
-        [State('csv-dropdown', 'value')])
-def callback(_, csv):
+        [Input('csv-dropdown', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(csv, data_root, env):
+    store_manual_evals(data_root, env, csv)
     return csv
 
 
+# ==============================================
+#  Load a signal file when selecting a morpho.
+# ==============================================
+@app.callback(
+        Output('current-morpho', 'children'),
+        [Input('morpho-dropdown', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(morpho, data_root, env):
+    if env is None or morpho is None:
+        return
+
+    store_signals(data_root, env, morpho)
+    return morpho
+
+
+# ====================================================
+#  Initialize the maximum value of the time-selector
+#  after loading a signal file.
+# ====================================================
 @app.callback(
         Output('time-selector', 'max'),
         [Input('current-morpho', 'children')],
@@ -396,6 +412,10 @@ def callback(_, data_root, env, morpho):
     return signals.shape[1] - 1
 
 
+# =======================================================
+#  Initialize the maximum value of the threshold-slider
+#  after loading a signal file.
+# =======================================================
 @app.callback(
         Output('threshold-slider', 'max'),
         [Input('current-morpho', 'children')],
@@ -410,6 +430,10 @@ def callback(_, data_root, env, morpho):
     return signals.max()
 
 
+# =======================================================
+#  Initialize the maximum value of the threshold-slider
+#  after loading a signal file.
+# =======================================================
 @app.callback(
         Output('well-slider', 'max'),
         [Input('current-morpho', 'children')],
@@ -424,6 +448,10 @@ def callback(_, data_root, env, morpho):
     return len(signals) - 1
 
 
+# ====================================================
+#  Initialize the maximum value of the well-selector
+#  after loading a signal file.
+# ====================================================
 @app.callback(
         Output('well-selector', 'max'),
         [Input('current-morpho', 'children')],
@@ -438,17 +466,26 @@ def callback(_, data_root, env, morpho):
     return len(signals) - 1
 
 
+# ======================================================
+#  Initialize the current value of the well-slider
+#  after loading a signal file
+#  or when clicking a data point in the summary-graph.
+# ======================================================
 @app.callback(
         Output('well-slider', 'value'),
-        [Input('summary-graph', 'clickData'),
-         Input('current-morpho', 'children')])
-def callback(click_data, _):
+        [Input('current-morpho', 'children'),
+         Input('summary-graph', 'clickData')])
+def callback(_, click_data):
     if click_data is None:
         return 20
 
     return click_data['points'][0]['pointNumber']
 
 
+# ====================================================
+#  Initialize the current value of the well-selector
+#  when selecting a value on the well-slider.
+# ====================================================
 @app.callback(
         Output('well-selector', 'value'),
         [Input('well-slider', 'value')])
@@ -456,6 +493,10 @@ def callback(well_idx):
     return well_idx
 
 
+# ====================================================
+#  Initialize the current value of the time-selector
+#  when clicking a data point in the signal-graph.
+# ====================================================
 @app.callback(
         Output('time-selector', 'value'),
         [Input('signal-graph', 'clickData')])
@@ -466,6 +507,9 @@ def callback(click_data):
         return click_data['points'][0]['x']
 
 
+# =========================================
+#  Update the figure in the signal-graph.
+# =========================================
 @app.callback(
         Output('signal-graph', 'figure'),
         [Input('well-selector', 'value'),
@@ -554,6 +598,9 @@ def callback(well_idx, threshold, rise_or_fall, time,
         }
 
 
+# ==========================================
+#  Update the figure in the summary-graph.
+# ==========================================
 @app.callback(
         Output('summary-graph', 'figure'),
         [Input('threshold-slider', 'value'),
@@ -614,6 +661,9 @@ def callback(threshold, well_idx, rise_or_fall, data_root, env, csv, morpho):
         }
 
 
+# ======================
+#  Update the t-image.
+# ======================
 @app.callback(
         Output('t-image', 'src'),
         [Input('time-selector', 'value'),
@@ -638,6 +688,9 @@ def callback(time, well_idx, data_root, env):
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
+# ========================
+#  Update the t+1-image.
+# ========================
 @app.callback(
         Output('t+1-image', 'src'),
         [Input('time-selector', 'value'),
@@ -662,6 +715,9 @@ def callback(time, well_idx, data_root, env):
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
+# ======================
+#  Update the t-label.
+# ======================
 @app.callback(
         Output('t-label', 'src'),
         [Input('time-selector', 'value'),
@@ -682,6 +738,9 @@ def callback(time, well_idx, data_root, env, morpho):
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
+# ========================
+#  Update the t+1-label.
+# ========================
 @app.callback(
         Output('t+1-label', 'src'),
         [Input('time-selector', 'value'),
