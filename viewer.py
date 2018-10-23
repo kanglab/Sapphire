@@ -15,7 +15,6 @@ import base64
 import PIL.Image
 import dash_auth
 import numpy as np
-import scipy.ndimage
 import flask_caching
 import dash_core_components as dcc
 import dash_html_components as html
