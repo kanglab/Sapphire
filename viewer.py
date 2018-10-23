@@ -26,9 +26,6 @@ DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
 
 
-# -------
-#  Main
-# -------
 app = dash.Dash()
 app.css.append_css(
         {'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
@@ -36,6 +33,10 @@ cache = flask_caching.Cache()
 cache.init_app(
         app.server, config={'CACHE_TYPE': 'filesystem', 'CACHE_DIR': 'cache/'})
 
+
+# ================================
+#  Definition of the viewer page
+# ================================
 app.layout = html.Div([
     html.Header([html.H1('Viewer')]),
     html.Div([
