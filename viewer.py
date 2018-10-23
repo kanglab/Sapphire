@@ -1007,5 +1007,77 @@ def callback(time, well_idx, data_root, env, morpho, result):
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
+# ======================
+#  Update the t-prob.
+# ======================
+@app.callback(
+        Output('t-prob', 'src'),
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('current-morpho', 'children'),
+         State('current-result', 'children')])
+def callback(time, well_idx, data_root, env, morpho, result):
+
+    # Exception handling
+    if env is None or morpho is None or result is None:
+        return ''
+
+    # Load a zip file storing prob images
+    # and get a prob image
+    zipfile_path = os.path.join(
+            data_root, env, 'inference', morpho, result, 'probs',
+            '{:03d}.zip'.format(well_idx))
+    with zipfile.ZipFile(zipfile_path, 'r') as probs_zip:
+        filenames = sorted(
+                [info.filename for info in probs_zip.infolist()])
+        with probs_zip.open(filenames[time]) as prob_file:
+            prob_image = PIL.Image.open(prob_file)
+
+    # Buffer the well image as byte stream
+    buf = io.BytesIO()
+    prob_image.save(buf, format='PNG')
+
+    return 'data:image/png;base64,{}'.format(
+            base64.b64encode(buf.getvalue()).decode('utf-8'))
+
+
+# ========================
+#  Update the t+1-prob.
+# ========================
+@app.callback(
+        Output('t+1-prob', 'src'),
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('current-morpho', 'children'),
+         State('current-result', 'children')])
+def callback(time, well_idx, data_root, env, morpho, result):
+
+    # Exception handling
+    if env is None or morpho is None or result is None:
+        return ''
+
+    # Load a zip file storing prob images
+    # and get a prob image
+    zipfile_path = os.path.join(
+            data_root, env, 'inference', morpho, result, 'probs',
+            '{:03d}.zip'.format(well_idx))
+    with zipfile.ZipFile(zipfile_path, 'r') as probs_zip:
+        filenames = sorted(
+                [info.filename for info in probs_zip.infolist()])
+        with probs_zip.open(filenames[time+1]) as prob_file:
+            prob_image = PIL.Image.open(prob_file)
+
+    # Buffer the well image as byte stream
+    buf = io.BytesIO()
+    prob_image.save(buf, format='PNG')
+
+    return 'data:image/png;base64,{}'.format(
+            base64.b64encode(buf.getvalue()).decode('utf-8'))
+
+
 if __name__ == '__main__':
     app.run_server(debug=True)
