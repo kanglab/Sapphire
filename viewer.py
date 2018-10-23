@@ -19,6 +19,7 @@ import flask_caching
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
+import plotly.graph_objs as go
 
 
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
@@ -37,7 +38,7 @@ cache.init_app(
 #  Definition of the viewer page
 # ================================
 app.layout = html.Div([
-    html.Header([html.H1('Viewer')]),
+    html.Header([html.H1('Viewer', style={'margin': '0px'})]),
     html.Div([
         html.Div([
             'Imaging environment :',
@@ -257,7 +258,7 @@ app.layout = html.Div([
             id='signal-graph',
             style={
                 'display': 'inline-block',
-                'height': '500px',
+                'height': '400px',
                 # 'width': '40%',
             },
         ),
@@ -273,9 +274,9 @@ app.layout = html.Div([
             )],
             style={
                 'display': 'inline-block',
-                'height': '300px',
-                'width': '5%',
-                'padding-bottom': '100px',
+                'height': '280px',
+                'width': '10px',
+                'padding-bottom': '70px',
             },
         ),
     ],
@@ -285,15 +286,15 @@ app.layout = html.Div([
             id='summary-graph',
             style={
                 'display': 'inline-block',
-                'height': '500px',
-                'width': '30%',
+                'height': '400px',
+                'width': '25%',
             },
         ),
         dcc.Graph(
             id='error-hist',
             style={
                 'display': 'inline-block',
-                'height': '500px',
+                'height': '400px',
                 'width': '25%',
             },
         ),
@@ -676,6 +677,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
+                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
             },
         }
 
@@ -751,6 +753,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
+                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
             },
         }
 
@@ -827,6 +830,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
+                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
             },
         }
 
