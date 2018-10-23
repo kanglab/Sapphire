@@ -12,6 +12,7 @@ import os
 import glob
 import dash
 import base64
+import zipfile
 import PIL.Image
 import dash_auth
 import numpy as np
@@ -845,19 +846,29 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
         [State('data-root', 'children'),
          State('env-dropdown', 'value')])
 def callback(time, well_idx, data_root, env):
+
+    # Exception handling
     if env is None:
         return ''
 
+    # Load the mask
     mask = store_mask(data_root, env)
+
+    # Load an original image
     orgimg_paths = sorted(glob.glob(
             os.path.join(data_root, env, 'original', '*.jpg')))
     org_img = np.array(
             PIL.Image.open(orgimg_paths[time]).convert('L'), dtype=np.uint8)
+
+    # Cut out an well image from the original image
     r, c = np.where(mask == well_idx)
     org_img = org_img[r.min():r.max(), c.min():c.max()]
     org_img = PIL.Image.fromarray(org_img)
+
+    # Buffer the well image as byte stream
     buf = io.BytesIO()
     org_img.save(buf, format='JPEG')
+
     return 'data:image/jpeg;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
@@ -872,19 +883,29 @@ def callback(time, well_idx, data_root, env):
         [State('data-root', 'children'),
          State('env-dropdown', 'value')])
 def callback(time, well_idx, data_root, env):
+
+    # Exception handling
     if env is None:
         return ''
 
+    # Load the mask
     mask = store_mask(data_root, env)
+
+    # Load an original image
     orgimg_paths = sorted(glob.glob(
             os.path.join(data_root, env, 'original', '*.jpg')))
     org_img = np.array(
             PIL.Image.open(orgimg_paths[time+1]).convert('L'), dtype=np.uint8)
+
+    # Cut out an well image from the original image
     r, c = np.where(mask == well_idx)
     org_img = org_img[r.min():r.max(), c.min():c.max()]
     org_img = PIL.Image.fromarray(org_img)
+
+    # Buffer the well image as byte stream
     buf = io.BytesIO()
     org_img.save(buf, format='JPEG')
+
     return 'data:image/jpeg;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
@@ -901,14 +922,26 @@ def callback(time, well_idx, data_root, env):
          State('current-morpho', 'children'),
          State('current-result', 'children')])
 def callback(time, well_idx, data_root, env, morpho, result):
+
+    # Exception handling
     if env is None or morpho is None or result is None:
         return ''
 
-    label_images = sorted(glob.glob(
-            os.path.join(data_root, env, 'inference',
-                morpho, result, '{:03d}'.format(well_idx), '*.png')))
+    # Load a zip file storing label images
+    # and get a label image
+    zipfile_path = os.path.join(
+            data_root, env, 'inference', morpho, result, 'labels',
+            '{:03d}.zip'.format(well_idx))
+    with zipfile.ZipFile(zipfile_path, 'r') as labels_zip:
+        filenames = sorted(
+                [info.filename for info in labels_zip.infolist()])
+        with labels_zip.open(filenames[time]) as label_file:
+            label_image = PIL.Image.open(label_file)
+
+    # Buffer the well image as byte stream
     buf = io.BytesIO()
-    PIL.Image.open(label_images[time]).save(buf, format='PNG')
+    label_image.save(buf, format='PNG')
+
     return 'data:image/png;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
@@ -925,14 +958,26 @@ def callback(time, well_idx, data_root, env, morpho, result):
          State('current-morpho', 'children'),
          State('current-result', 'children')])
 def callback(time, well_idx, data_root, env, morpho, result):
+
+    # Exception handling
     if env is None or morpho is None or result is None:
         return ''
 
-    label_images = sorted(glob.glob(
-            os.path.join(data_root, env, 'inference',
-                morpho, result, '{:03d}'.format(well_idx), '*.png')))
+    # Load a zip file storing label images
+    # and get a label image
+    zipfile_path = os.path.join(
+            data_root, env, 'inference', morpho, result, 'labels',
+            '{:03d}.zip'.format(well_idx))
+    with zipfile.ZipFile(zipfile_path, 'r') as labels_zip:
+        filenames = sorted(
+                [info.filename for info in labels_zip.infolist()])
+        with labels_zip.open(filenames[time+1]) as label_file:
+            label_image = PIL.Image.open(label_file)
+
+    # Buffer the well image as byte stream
     buf = io.BytesIO()
-    PIL.Image.open(label_images[time+1]).save(buf, format='PNG')
+    label_image.save(buf, format='PNG')
+
     return 'data:image/png;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
