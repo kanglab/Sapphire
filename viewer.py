@@ -177,7 +177,7 @@ app.layout = html.Div([
             },
         ),
         html.Div([
-            html.Div(['Image at "t"'], style={'display': 'table'}),
+            html.Div('Original image', style={'display': 'table'}),
             html.Img(
                 id='t-image',
                 style={
@@ -188,6 +188,7 @@ app.layout = html.Div([
                     'display': 'block',
                 },
             ),
+            html.Div('Label', style={'display': 'table'}),
             html.Img(
                 id='t-label',
                 style={
@@ -198,6 +199,18 @@ app.layout = html.Div([
                     'display': 'block',
                 },
             ),
+            html.Div('Probability', style={'display': 'table'}),
+            html.Img(
+                id='t-prob',
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            html.Div(['Image at "t"'], style={'display': 'table'}),
             ],
             style={
                 'display': 'inline-block',
@@ -205,7 +218,6 @@ app.layout = html.Div([
             },
         ),
         html.Div([
-            html.Div(['"t+1"'], style={'display': 'table'}),
             html.Img(
                 id='t+1-image',
                 style={
@@ -216,6 +228,7 @@ app.layout = html.Div([
                     'display': 'block',
                 },
             ),
+            html.Div('Label', style={'display': 'table'}),
             html.Img(
                 id='t+1-label',
                 style={
@@ -226,6 +239,18 @@ app.layout = html.Div([
                     'display': 'block',
                 },
             ),
+            html.Div('Probability', style={'display': 'table'}),
+            html.Img(
+                id='t+1-prob',
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            html.Div(['"t+1"'], style={'display': 'table'}),
             ],
             style={
                 'display': 'inline-block',
