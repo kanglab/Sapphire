@@ -725,6 +725,61 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
         }
 
 
+# =======================================
+#  Update the figure in the error-hist.
+# =======================================
+@app.callback(
+        Output('error-hist', 'figure'),
+        [Input('threshold-slider', 'value'),
+         Input('well-selector', 'value'),
+         Input('target-dropdown', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('csv-dropdown', 'value'),
+         State('morpho-dropdown', 'value'),
+         State('result-dropdown', 'value')])
+def callback(threshold, well_idx, rise_or_fall, data_root,
+        env, csv, morpho, result):
+    if env is None or csv is None or morpho is None:
+        return {'data': []}
+
+    signals = store_signals(data_root, env, morpho, result)
+    manual_evals = store_manual_evals(data_root, env, csv)
+
+    if rise_or_fall == 'rise':
+        auto_evals = (signals > threshold).argmax(axis=1)
+    elif rise_or_fall == 'fall':
+        # Scan the signal from the right hand side.
+        auto_evals = signals.shape[1] - (np.fliplr(signals) > threshold).argmax(axis=1)
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == signals.shape[1]] = 0
+
+    errors = auto_evals - manual_evals
+    ns, bins = np.histogram(errors, 1000)
+
+    return {
+            'data': [
+                {
+                    'x': list(bins[1:]),
+                    'y': list(ns),
+                    'mode': 'markers',
+                    'type': 'bar'
+                    'marker': {'size': 5},
+                },
+            ],
+            'layout': {
+                'title': 'Error histogram',
+                'xaxis': {
+                    'title': 'Diff.',
+                },
+                'yaxis': {
+                    'title': 'Count',
+                },
+                'hovermode': 'closest',
+            },
+        }
+
+
 # ======================
 #  Update the t-image.
 # ======================
