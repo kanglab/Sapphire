@@ -243,7 +243,7 @@ app.layout = html.Div([
                 'margin': '10px 10px',
             },
         ),
-        ],
+    ],
     ),
     html.Div([
         dcc.Graph(
@@ -288,10 +288,10 @@ app.layout = html.Div([
             },
         ),
     ]),
-    ],
-    style={
-        'width': '1200px',
-    },
+],
+style={
+    'width': '1200px',
+},
 )
 
 
@@ -644,15 +644,15 @@ def callback(well_idx, threshold, rise_or_fall, time,
                 },
             ],
             'layout': {
-                'title': '',
-                'font': {'size': 25},
+                'title': 'Activity signal',
+                'font': {'size': 15},
                 'xaxis': {
                     'title': 'Time step',
-                    'tickfont': {'size': 25},
+                    'tickfont': {'size': 15},
                 },
                 'yaxis': {
                     'title': 'Signal intensity',
-                    'tickfont': {'size': 25},
+                    'tickfont': {'size': 15},
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
@@ -714,11 +714,14 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
             ],
             'layout': {
                 'title': 'Auto vs Manual',
+                'font': {'size': 15},
                 'xaxis': {
                     'title': 'Auto',
+                    'tickfont': {'size': 15},
                 },
                 'yaxis': {
                     'title': 'Manual',
+                    'tickfont': {'size': 15},
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
@@ -776,12 +779,15 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
             ],
             'layout': {
                 'title': 'Error histogram',
+                'font': {'size': 15},
                 'xaxis': {
                     'title': 'auto - manual',
                     'range': [-len(signals.T), len(signals.T)],
+                    'tickfont': {'size': 15},
                 },
                 'yaxis': {
                     'title': 'Count',
+                    'tickfont': {'size': 15},
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
