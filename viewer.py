@@ -40,62 +40,6 @@ app.layout = html.Div([
     html.Header([html.H1('Viewer')]),
     html.Div([
         html.Div([
-            html.Div(['Image at "t"'], style={'display': 'table'}),
-            html.Img(
-                id='t-image',
-                style={
-                    'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
-                    'padding': '5px',
-                    'display': 'block',
-                },
-            ),
-            html.Img(
-                id='t-label',
-                style={
-                    'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
-                    'padding': '5px',
-                    'display': 'block',
-                },
-            ),
-            ],
-            style={
-                'display': 'inline-block',
-                'margin': '2px 2px',
-            },
-        ),
-        html.Div([
-            html.Div(['"t+1"'], style={'display': 'table'}),
-            html.Img(
-                id='t+1-image',
-                style={
-                    'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
-                    'padding': '5px',
-                    'display': 'block',
-                },
-            ),
-            html.Img(
-                id='t+1-label',
-                style={
-                    'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
-                    'padding': '5px',
-                    'display': 'block',
-                },
-            ),
-            ],
-            style={
-                'display': 'inline-block',
-                'margin': '2px',
-            },
-        ),
-        html.Div([
             'Imaging environment :',
             html.Br(),
             html.Div([
@@ -219,16 +163,72 @@ app.layout = html.Div([
                     min=0,
                     size=5,
                 ),
+                ],
+                style={
+                    'display': 'inline-block',
+                },
+            )
             ],
             style={
                 'display': 'inline-block',
+                'margin': '10px 10px',
             },
-            )
-        ],
-        style={
-            'display': 'inline-block',
-            'margin': '10px 10px',
-        },
+        ),
+        html.Div([
+            html.Div(['Image at "t"'], style={'display': 'table'}),
+            html.Img(
+                id='t-image',
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            html.Img(
+                id='t-label',
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            ],
+            style={
+                'display': 'inline-block',
+                'margin': '2px 2px',
+            },
+        ),
+        html.Div([
+            html.Div(['"t+1"'], style={'display': 'table'}),
+            html.Img(
+                id='t+1-image',
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            html.Img(
+                id='t+1-label',
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'block',
+                },
+            ),
+            ],
+            style={
+                'display': 'inline-block',
+                'margin': '2px',
+            },
         ),
         html.Div([
             'Data root :',
@@ -298,10 +298,10 @@ app.layout = html.Div([
             },
         ),
     ]),
-],
-style={
-    'width': '1200px',
-},
+    ],
+    style={
+        'width': '1200px',
+    },
 )
 
 
