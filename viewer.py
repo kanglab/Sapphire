@@ -746,6 +746,22 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     return {
             'data': [
                 {
+                    'x': [10, len(signals[0, :])],
+                    'y': [0, len(signals[0, :])-10],
+                    'mode': 'lines',
+                    'fill': None,
+                    'line': {'width': .1, 'color': '#ec7676'},
+                    'name': 'Lower bound',
+                },
+                {
+                    'x': [0, len(signals[0, :])],
+                    'y': [10, len(signals[0, :])+10],
+                    'mode': 'lines',
+                    'fill': 'tonexty',
+                    'line': {'width': .1, 'color': '#43d86b'},
+                    'name': 'Upper bound',
+                },
+                {
                     'x': list(auto_evals),
                     'y': list(manual_evals),
                     'mode': 'markers',
