@@ -437,6 +437,7 @@ def store_mask(data_root, env):
 
     return np.load(os.path.join(data_root, env, 'mask.npy'))
 
+
 @cache.memoize()
 def store_luminance_signals(data_root, env):
     if env is None:
@@ -678,7 +679,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'mode': 'lines',
                     'name': 'Manual',
                     'line': {'width': 5, 'color': '#2ca02c'},
-                    'yaxis':'y1',
+                    'yaxis': 'y2',
                 },
                 {
                     # Auto evaluation time (vertical line)
@@ -687,30 +688,26 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'mode': 'lines',
                     'name': 'Auto',
                     'line': {'width': 5, 'color': 'd62728'},
-                    'yaxis':'y1',
+                    'yaxis': 'y2',
                 },
                 {
                     # Signal
                     'x': list(range(len(signals[0, :]))),
                     'y': list(signals[well_idx]),
-                    'mode': 'markers+lines',
-                    'marker': {'size': 5, 'color': '#4169e1'},
+                    'mode': 'lines',
+                    'marker': {'color': '#4169e1'},
                     'name': 'Signal',
-                    'yaxis':'y1',
-                    'opasity':0.4,
+                    'opacity':1.0,
+                    'yaxis': 'y2',
                 },
                 {
-
-                    #luminance
-                    'x':list(range(len(luminance_signals))),
-                    'y':luminance_signals[:,well_idx],
+                    # Luminance signal
+                    'x': list(range(len(luminance_signals))),
+                    'y': list(luminance_signals[:, well_idx]),
                     'mode': 'lines',
                     'line': {'color': '#87ceeb'},
-
-                    'name':'Luminance Signal',
-                    'yaxis':'y2',
-                    'opacity':0.9
-
+                    'name': 'Luminance Signal',
+                    'opacity': 1.0,
                 },
                 {
                     # Threshold (hrizontal line)
@@ -719,7 +716,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'mode': 'lines',
                     'name': 'Threshold',
                     'line': {'width': 5, 'color': '#ff7f0e'},
-                    'yaxis':'y1',
+                    'yaxis': 'y2',
                 },
                 {
                     # Selected data point
@@ -728,6 +725,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'mode': 'markers',
                     'marker': {'size': 10},
                     'name': '',
+                    'yaxis': 'y2',
                 },
             ],
             'layout': {
@@ -737,16 +735,15 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'title': 'Time step',
                     'tickfont': {'size': 15},
                 },
-                'yaxis1': {
+                'yaxis2': {
                     'title': 'Signal intensity',
                     'tickfont': {'size': 15},
-                    'anchor':'free',
-                    'range':[0, signals.max()]
+                    'overlaying':'y',
+                    'range':[0, signals.max()],
                     },
-                'yaxis2': {
+                'yaxis': {
                     'title':'Luminance Signals',
                     'tickfont': {'size': 15},
-                    'overlaying':'y',
                     'side':'right',
                     'range':[0, luminance_signals.max()],
                 },
