@@ -23,7 +23,7 @@ from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 
 
-DATA_ROOT = '/Volumes/sdb-3/Research/Drosophila/data/TsukubaRIKEN/'
+DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
 
 
@@ -438,11 +438,23 @@ def store_mask(data_root, env):
     return np.load(os.path.join(data_root, env, 'mask.npy'))
 
 @cache.memoize()
-def store_luminance_signals():
+def store_luminance_signals(data_root, env):
+    if env is None:
+        return
 
-    luminance_signals = np.load('luminance_signals.npy')
-    
-    return luminance_signals
+    return np.load(os.path.join(data_root, env, 'luminance_signals.npy'))
+
+
+# ======================================================================
+#  Load a luminance signal file when selecting an imaging environment.
+# ======================================================================
+@app.callback(
+        Output('dummy-div','children'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    store_luminance_signals(data_root, env)
+    return ''
 
 
 # ==========================================================
@@ -614,22 +626,6 @@ def callback(click_data):
         return click_data['points'][0]['x']
 
 
-#===========================
-#Loading Luminance Signals
-#===========================
-
-@app.callback(
-    Output('dummy-div','children'),
-    [Input('well-selector','value')])
-
-def callback(well_idx):
-    store_luminance_signals()
-
-    return ''
-
-
-
-
 # =========================================
 #  Update the figure in the signal-graph.
 # =========================================
@@ -660,7 +656,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
-    luminance_signals = store_luminance_signals()
+    luminance_signals = store_luminance_signals(data_root, env)
 
     # Compute event times from signals
     if rise_or_fall == 'rise':
