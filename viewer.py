@@ -741,16 +741,14 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'title': 'Signal intensity',
                     'tickfont': {'size': 15},
                     'anchor':'free',
-                    'range':[0,50]
+                    'range':[0, signals.max()]
                     },
                 'yaxis2': {
                     'title':'Luminance Signals',
                     'tickfont': {'size': 15},
                     'overlaying':'y',
                     'side':'right',
-                    'range':[0,max(luminance_signals[0,:])],
-                    
-                   
+                    'range':[0, luminance_signals.max()],
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
