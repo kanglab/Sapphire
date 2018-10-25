@@ -674,8 +674,8 @@ def callback(well_idx, threshold, rise_or_fall, time,
             'data': [
                 {
                     # Manual evaluation time (vertical line)
-                    'x': [manual_evals[well_idx]] * int(signals.max()),
-                    'y': list(range(256)),
+                    'x': [manual_evals[well_idx], manual_evals[well_idx]],
+                    'y': [0, signals.max()],
                     'mode': 'lines',
                     'name': 'Manual',
                     'line': {'width': 5, 'color': '#2ca02c'},
@@ -683,8 +683,8 @@ def callback(well_idx, threshold, rise_or_fall, time,
                 },
                 {
                     # Auto evaluation time (vertical line)
-                    'x': [auto_evals[well_idx]] * int(signals.max()),
-                    'y': list(range(256)),
+                    'x': [auto_evals[well_idx], auto_evals[well_idx]],
+                    'y': [0, signals.max()],
                     'mode': 'lines',
                     'name': 'Auto',
                     'line': {'width': 5, 'color': 'd62728'},
@@ -711,8 +711,8 @@ def callback(well_idx, threshold, rise_or_fall, time,
                 },
                 {
                     # Threshold (hrizontal line)
-                    'x': list(range(len(signals[0, :]))),
-                    'y': [threshold]*len(signals[0, :]),
+                    'x': [0, len(signals[0, :])],
+                    'y': [threshold, threshold],
                     'mode': 'lines',
                     'name': 'Threshold',
                     'line': {'width': 5, 'color': '#ff7f0e'},
