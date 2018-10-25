@@ -698,18 +698,23 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'x': list(range(len(signals[0, :]))),
                     'y': list(signals[well_idx]),
                     'mode': 'markers+lines',
-                    'marker': {'size': 5, 'color': '#1f77b4'},
+                    'marker': {'size': 5, 'color': '#4169e1'},
                     'name': 'Signal',
-                    'yaxis':'y1'
+                    'yaxis':'y1',
+                    'opasity':0.4,
                 },
                 {
 
                     #luminance
                     'x':list(range(len(luminance_signals))),
                     'y':luminance_signals[:,well_idx],
-                    'mode':'lines',
+                    'mode': 'lines',
+                    'line': {'color': '#87ceeb'},
+
                     'name':'Luminance Signal',
-                    'yaxis':'y2'
+                    'yaxis':'y2',
+                    'opacity':0.9
+
                 },
                 {
                     # Threshold (hrizontal line)
@@ -739,13 +744,17 @@ def callback(well_idx, threshold, rise_or_fall, time,
                 'yaxis1': {
                     'title': 'Signal intensity',
                     'tickfont': {'size': 15},
-                },
+                    'anchor':'free',
+                    'range':[0,50]
+                    },
                 'yaxis2': {
                     'title':'Luminance Signals',
                     'tickfont': {'size': 15},
                     'overlaying':'y',
                     'side':'right',
-                    'position':'1.0',
+                    'range':[0,max(luminance_signals[0,:])],
+                    
+                   
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
