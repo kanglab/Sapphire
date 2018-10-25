@@ -23,8 +23,9 @@ from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 
 
-DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
+DATA_ROOT = '/Volumes/sdb-3/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
+
 
 
 app = dash.Dash()
@@ -325,6 +326,7 @@ app.layout = html.Div([
             },
         ),
     ]),
+    html.Div(id='dummy-div'),
     ],
     style={
         'width': '1200px',
@@ -434,6 +436,13 @@ def store_mask(data_root, env):
         return
 
     return np.load(os.path.join(data_root, env, 'mask.npy'))
+
+@cache.memoize()
+def store_luminance_signals():
+
+    luminance_signals = np.load('luminance_signals.npy')
+    
+    return luminance_signals
 
 
 # ==========================================================
@@ -605,6 +614,22 @@ def callback(click_data):
         return click_data['points'][0]['x']
 
 
+#===========================
+#Loading Luminance Signals
+#===========================
+
+@app.callback(
+    Output('dummy-div','children'),
+    [Input('well-selector','value')])
+
+def callback(well_idx):
+    store_luminance_signals()
+
+    return ''
+
+
+
+
 # =========================================
 #  Update the figure in the signal-graph.
 # =========================================
@@ -635,6 +660,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
+    luminance_signals = store_luminance_signals()
 
     # Compute event times from signals
     if rise_or_fall == 'rise':
@@ -656,6 +682,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'mode': 'lines',
                     'name': 'Manual',
                     'line': {'width': 5, 'color': '#2ca02c'},
+                    'yaxis':'y1',
                 },
                 {
                     # Auto evaluation time (vertical line)
@@ -664,6 +691,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'mode': 'lines',
                     'name': 'Auto',
                     'line': {'width': 5, 'color': 'd62728'},
+                    'yaxis':'y1',
                 },
                 {
                     # Signal
@@ -672,6 +700,16 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'mode': 'markers+lines',
                     'marker': {'size': 5, 'color': '#1f77b4'},
                     'name': 'Signal',
+                    'yaxis':'y1'
+                },
+                {
+
+                    #luminance
+                    'x':list(range(len(luminance_signals))),
+                    'y':luminance_signals[:,well_idx],
+                    'mode':'lines',
+                    'name':'Luminance Signal',
+                    'yaxis':'y2'
                 },
                 {
                     # Threshold (hrizontal line)
@@ -680,6 +718,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'mode': 'lines',
                     'name': 'Threshold',
                     'line': {'width': 5, 'color': '#ff7f0e'},
+                    'yaxis':'y1',
                 },
                 {
                     # Selected data point
@@ -697,13 +736,20 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'title': 'Time step',
                     'tickfont': {'size': 15},
                 },
-                'yaxis': {
+                'yaxis1': {
                     'title': 'Signal intensity',
                     'tickfont': {'size': 15},
                 },
+                'yaxis2': {
+                    'title':'Luminance Signals',
+                    'tickfont': {'size': 15},
+                    'overlaying':'y',
+                    'side':'right',
+                    'position':'1.0',
+                },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
+                'margin': go.Margin(l=50, r=70, b=50, t=50, pad=0),
             },
         }
 
