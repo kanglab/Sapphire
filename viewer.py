@@ -27,6 +27,7 @@ DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
 
 
+
 app = dash.Dash()
 app.css.append_css(
         {'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
@@ -325,6 +326,7 @@ app.layout = html.Div([
             },
         ),
     ]),
+    html.Div(id='dummy-div'),
     ],
     style={
         'width': '1200px',
@@ -434,6 +436,26 @@ def store_mask(data_root, env):
         return
 
     return np.load(os.path.join(data_root, env, 'mask.npy'))
+
+
+@cache.memoize()
+def store_luminance_signals(data_root, env):
+    if env is None:
+        return
+
+    return np.load(os.path.join(data_root, env, 'luminance_signals.npy'))
+
+
+# ======================================================================
+#  Load a luminance signal file when selecting an imaging environment.
+# ======================================================================
+@app.callback(
+        Output('dummy-div','children'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    store_luminance_signals(data_root, env)
+    return ''
 
 
 # ==========================================================
@@ -635,6 +657,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
+    luminance_signals = store_luminance_signals(data_root, env)
 
     # Compute event times from signals
     if rise_or_fall == 'rise':
@@ -651,43 +674,58 @@ def callback(well_idx, threshold, rise_or_fall, time,
             'data': [
                 {
                     # Manual evaluation time (vertical line)
-                    'x': [manual_evals[well_idx]] * int(signals.max()),
-                    'y': list(range(256)),
+                    'x': [manual_evals[well_idx], manual_evals[well_idx]],
+                    'y': [0, signals.max()],
                     'mode': 'lines',
                     'name': 'Manual',
                     'line': {'width': 5, 'color': '#2ca02c'},
+                    'yaxis': 'y2',
                 },
                 {
                     # Auto evaluation time (vertical line)
-                    'x': [auto_evals[well_idx]] * int(signals.max()),
-                    'y': list(range(256)),
+                    'x': [auto_evals[well_idx], auto_evals[well_idx]],
+                    'y': [0, signals.max()],
                     'mode': 'lines',
                     'name': 'Auto',
-                    'line': {'width': 5, 'color': 'd62728'},
+                    'line': {'width': 5, 'color': '#ff7f0e'},
+                    'yaxis': 'y2',
                 },
                 {
                     # Signal
                     'x': list(range(len(signals[0, :]))),
                     'y': list(signals[well_idx]),
-                    'mode': 'markers+lines',
-                    'marker': {'size': 5, 'color': '#1f77b4'},
+                    'mode': 'lines',
+                    'marker': {'color': '#4169e1'},
                     'name': 'Signal',
+                    'opacity':1.0,
+                    'yaxis': 'y2',
+                },
+                {
+                    # Luminance signal
+                    'x': list(range(len(luminance_signals))),
+                    'y': list(luminance_signals[:, well_idx]),
+                    'mode': 'lines',
+                    'line': {'color': '#87ceeb'},
+                    'name': 'Luminance Signal',
+                    'opacity': 1.0,
                 },
                 {
                     # Threshold (hrizontal line)
-                    'x': list(range(len(signals[0, :]))),
-                    'y': [threshold]*len(signals[0, :]),
+                    'x': [0, len(signals[0, :])],
+                    'y': [threshold, threshold],
                     'mode': 'lines',
                     'name': 'Threshold',
-                    'line': {'width': 5, 'color': '#ff7f0e'},
+                    'line': {'width': 1, 'color': '#000000'},
+                    'yaxis': 'y2',
                 },
                 {
                     # Selected data point
                     'x': [x],
                     'y': [y],
                     'mode': 'markers',
-                    'marker': {'size': 10},
+                    'marker': {'size': 10, 'color': '#ff0000'},
                     'name': '',
+                    'yaxis': 'y2',
                 },
             ],
             'layout': {
@@ -697,13 +735,21 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'title': 'Time step',
                     'tickfont': {'size': 15},
                 },
-                'yaxis': {
+                'yaxis2': {
                     'title': 'Signal intensity',
                     'tickfont': {'size': 15},
+                    'overlaying':'y',
+                    'range':[0, signals.max()],
+                    },
+                'yaxis': {
+                    'title':'Luminance Signals',
+                    'tickfont': {'size': 15},
+                    'side':'right',
+                    'range':[0, luminance_signals.max()],
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
+                'margin': go.Margin(l=50, r=70, b=50, t=50, pad=0),
             },
         }
 
@@ -746,23 +792,24 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     return {
             'data': [
                 {
-                    'x': list(auto_evals),
-                    'y': list(manual_evals),
-                    'mode': 'markers',
-                    'marker': {'size': 5},
-                    'name': 'Well',
-                },
-                {
                     'x': [0, len(signals[0, :])],
                     'y': [0, len(signals[0, :])],
                     'mode': 'lines',
+                    'line': {'width': 1, 'color': '#000000'},
                     'name': 'Auto = Manual',
+                },
+                {
+                    'x': list(auto_evals),
+                    'y': list(manual_evals),
+                    'mode': 'markers',
+                    'marker': {'size': 5, 'color': '#4169e1'},
+                    'name': 'Well',
                 },
                 {
                     'x': [auto_evals[well_idx]],
                     'y': [manual_evals[well_idx]],
                     'mode': 'markers',
-                    'marker': {'size': 10},
+                    'marker': {'size': 10, 'color': '#ff0000'},
                     'name': 'Selected well',
                 },
             ],
