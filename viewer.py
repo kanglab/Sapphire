@@ -873,6 +873,10 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
 
+    # Calculate the number of inconsistent wells
+    tmp = np.bincount(abs(errors))
+    n_incons = tmp[11:].sum()
+
     return {
             'data': [
                 {
@@ -890,7 +894,9 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 },
             ],
             'layout': {
-                'title': 'Error histogram (RMS={})'.format(int(rms)),
+                # 'title': 'Error histogram (RMS={})'.format(int(rms)),
+                'title': '#inconsistent wells: {}/{}'.format(
+                        n_incons, len(manual_evals)),
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'auto - manual',
