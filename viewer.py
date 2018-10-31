@@ -875,7 +875,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
 
     # Calculate the number of inconsistent wells
     tmp = np.bincount(abs(errors))
-    n_incons = tmp[11:].sum()
+    n_consist = tmp[:11].sum()
 
     return {
             'data': [
@@ -895,8 +895,9 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
             ],
             'layout': {
                 # 'title': 'Error histogram (RMS={})'.format(int(rms)),
-                'title': '#inconsistent wells: {}/{}'.format(
-                        n_incons, len(manual_evals)),
+                'title': 'Consistency: {:.1f}% ({}/{})'.format(
+                        100 * n_consist / len(manual_evals),
+                        n_consist, len(manual_evals)),
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'auto - manual',
