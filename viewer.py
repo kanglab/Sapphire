@@ -353,6 +353,14 @@ app.layout = html.Div([
                 'width': '25%',
             },
         ),
+        dcc.Graph(
+            id='error-hist2',
+            style={
+                'display': 'inline-block',
+                'height': '400px',
+                'width': '25%',
+            },
+        ),
 
 
 
@@ -641,12 +649,14 @@ def callback(result, data_root, env, morpho):
 @app.callback(
         Output('well-slider', 'value'),
         [Input('current-result', 'children'),
-         Input('summary-graph', 'clickData')])
-def callback(_, click_data):
+         Input('summary-graph', 'clickData'),
+         Input('summary-graph2', 'clickData')])
+def callback(_, click_data, click_data2):
     if click_data is None:
-        return 20
-
-    return click_data['points'][0]['pointNumber']
+        return click_data2['points'][0]['pointNumber']
+        
+    elif click_data2 is None:
+        return click_data['points'][0]['pointNumber']
 
 
 # ====================================================
@@ -700,13 +710,13 @@ def callback(well_idx, threshold,threshold2,rise_or_fall, time,
     if len(figure['data']) == 0:
         x, y = 0, 0
     else:
-        x, y = time, figure['data'][2]['y'][time]
+        x, y = time, figure['data'][3]['y'][time]
 
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
-    luminance_signals = store_luminance_signals(data_root, env)
-
+    luminance_signals = store_luminance_signals(data_root, env).T
+    print(luminance_signals.shape)
     # Compute event times from signals
     if rise_or_fall == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
@@ -764,8 +774,8 @@ def callback(well_idx, threshold,threshold2,rise_or_fall, time,
                 },
                 {
                     # Luminance signal
-                    'x': list(range(len(luminance_signals))),
-                    'y': list(luminance_signals[:, well_idx]),
+                    'x': list(range(luminance_signals.shape[1])),
+                    'y': list(luminance_signals[well_idx,:]),
                     'mode': 'lines',
                     'line': {'color': '#20b2aa'},
                     'name': 'Luminance Signal',
@@ -923,7 +933,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
         return {'data': []}
 
     # Load the data
-    signals = store_luminance_signals(data_root, env)
+    signals = store_luminance_signals(data_root, env).T
     manual_evals = store_manual_evals(data_root, env, csv)
 
     # Compute event times from signals
@@ -940,8 +950,8 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     return {
             'data': [
                 {
-                    'x': [0, len(signals[0, :])],
-                    'y': [0, len(signals[0, :])],
+                    'x': [0, len(signals[0,:])],
+                    'y': [0, len(signals[0,:])],
                     'mode': 'lines',
                     'line': {'width': 1, 'color': '#000000'},
                     'name': 'Auto = Manual',
@@ -1055,6 +1065,84 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
             },
         }
 
+
+# =======================================
+#  Update the figure in the error-hist.(Luminance)
+# =======================================
+@app.callback(
+        Output('error-hist2', 'figure'),
+        [Input('threshold-slider2', 'value'),
+         Input('well-selector', 'value'),
+         Input('target-dropdown', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('csv-dropdown', 'value'),
+         State('morpho-dropdown', 'value'),
+         State('result-dropdown', 'value')])
+def callback(threshold, well_idx, rise_or_fall, data_root,
+        env, csv, morpho, result):
+
+    # Exception handling
+    if env is None or csv is None or morpho is None:
+        return {'data': []}
+
+    # Load the data
+    signals = store_luminance_signals(data_root, env).T
+    manual_evals = store_manual_evals(data_root, env, csv)
+
+    # Compute event times from signals
+    if rise_or_fall == 'rise':
+        auto_evals = (signals > threshold).argmax(axis=1)
+
+    elif rise_or_fall == 'fall':
+        # Scan the signal from the right hand side.
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > threshold).argmax(axis=1))
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == signals.shape[1]] = 0
+
+    # Calculate how many frames auto-evaluation is far from manual's one
+    print(auto_evals.shape)
+    print(manual_evals.shape)    
+    errors = auto_evals - manual_evals
+    ns, bins = np.histogram(errors, 1000)
+
+    # Calculate the root mean square
+    rms = np.sqrt((errors**2).sum() / len(errors))
+
+    return {
+            'data': [
+                {
+                    'x': list(bins[1:]),
+                    'y': list(ns),
+                    'mode': 'markers',
+                    'type': 'bar',
+                    'marker': {'size': 5},
+                },
+                {
+                    'x': [-10, 10],
+                    'y': [ns.max(), ns.max()],
+                    'mode': 'lines',
+                    'fill': 'tozeroy',
+                },
+            ],
+            'layout': {
+                'title': 'Error histogram (RMS={})'.format(int(rms)),
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'auto - manual',
+                    'range': [-len(signals.T), len(signals.T)],
+                    'tickfont': {'size': 15},
+                },
+                'yaxis': {
+                    'title': 'Count',
+                    'tickfont': {'size': 15},
+                },
+                'showlegend': False,
+                'hovermode': 'closest',
+                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
+            },
+        }
 
 # ======================
 #  Update the t-image.
