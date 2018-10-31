@@ -278,7 +278,27 @@ app.layout = html.Div([
                 # 'display': 'inline-block',
                 'display': 'none',
                 'vertical-align': 'top',
-                'margin': '10px 10px',
+                
+            },
+        ),
+
+        html.Div([
+            dcc.Slider(
+                id='threshold-slider1',
+                value=20,
+                min=0,
+                max=300,
+                step=1,
+                updatemode='mouseup',
+                vertical=True,
+            )],
+            style={
+                'display': 'inline-block',
+                'height': '300px',
+                'width': '10px',
+                'padding-bottom': '50px',
+                'margin-left': '30px',
+
             },
         ),
         dcc.Graph(
@@ -291,10 +311,9 @@ app.layout = html.Div([
         ),
         html.Div([
             dcc.Slider(
-                id='threshold-slider',
-                value=20,
+                id='threshold-slider2',
+                value=600000,
                 min=0,
-                max=300,
                 step=1,
                 updatemode='mouseup',
                 vertical=True,
@@ -303,9 +322,10 @@ app.layout = html.Div([
                 'display': 'inline-block',
                 'height': '280px',
                 'width': '10px',
-                'padding-bottom': '70px',
+                'padding-bottom': '50px',
             },
         ),
+
     ],
     ),
     html.Div([
@@ -325,6 +345,17 @@ app.layout = html.Div([
                 'width': '25%',
             },
         ),
+        dcc.Graph(
+            id='summary-graph2',
+            style={
+                'display': 'inline-block',
+                'height': '400px',
+                'width': '25%',
+            },
+        ),
+
+
+
     ]),
     html.Div(id='dummy-div'),
     ],
@@ -537,7 +568,7 @@ def callback(result, data_root, env, morpho):
 #  after loading a signal file.
 # =======================================================
 @app.callback(
-        Output('threshold-slider', 'max'),
+        Output('threshold-slider1', 'max'),
         [Input('current-result', 'children')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
@@ -549,9 +580,25 @@ def callback(result, data_root, env, morpho):
     signals = store_signals(data_root, env, morpho, result)
     return signals.max()
 
+# =======================================================
+#  Initialize the maximum value of the threshold-slider2
+#  after loading a signal file.
+# =======================================================
+@app.callback(
+        Output('threshold-slider2', 'max'),
+        [Input('current-result', 'children')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('morpho-dropdown', 'value')])
+def callback(result, data_root, env, morpho):
+    if env is None or morpho is None:
+        return
+
+    signals = store_luminance_signals(data_root, env)
+    return signals.max()
 
 # =======================================================
-#  Initialize the maximum value of the threshold-slider
+#  Initialize the maximum value of the well-slider
 #  after loading a signal file.
 # =======================================================
 @app.callback(
@@ -633,7 +680,8 @@ def callback(click_data):
 @app.callback(
         Output('signal-graph', 'figure'),
         [Input('well-selector', 'value'),
-         Input('threshold-slider', 'value'),
+         Input('threshold-slider1', 'value'),
+         Input('threshold-slider2', 'value'),
          Input('target-dropdown', 'value'),
          Input('time-selector', 'value')],
         [State('signal-graph', 'figure'),
@@ -642,7 +690,7 @@ def callback(click_data):
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(well_idx, threshold, rise_or_fall, time,
+def callback(well_idx, threshold,threshold2,rise_or_fall, time,
         figure, data_root, env, csv, morpho, result):
 
     # Exception handling
@@ -662,7 +710,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
     # Compute event times from signals
     if rise_or_fall == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
-
+        auto_evals2 = (luminance_signals > threshold2).argmax(axis=1)
     elif rise_or_fall == 'fall':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
@@ -670,6 +718,11 @@ def callback(well_idx, threshold, rise_or_fall, time,
         # If the signal was not more than the threshold.
         auto_evals[auto_evals == signals.shape[1]] = 0
 
+        # Scan the signal from the right hand side.
+        auto_evals2 = (luminance_signals.shape[1]
+                - (np.fliplr(luminance_signals) > threshold2).argmax(axis=1))
+        # If the signal was not more than the threshold.
+        auto_evals2[auto_evals2 == luminance_signals.shape[1]] = 0
     return {
             'data': [
                 {
@@ -678,17 +731,26 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'y': [0, signals.max()],
                     'mode': 'lines',
                     'name': 'Manual',
-                    'line': {'width': 5, 'color': '#2ca02c'},
+                    'line': {'width': 5, 'color': '#ffa500'},
                     'yaxis': 'y2',
                 },
                 {
                     # Auto evaluation time (vertical line)
                     'x': [auto_evals[well_idx], auto_evals[well_idx]],
-                    'y': [0, signals.max()],
+                    'y': [0, signals.max()],            
+                    'name': 'Auto',
+                    'mode':'lines',
+                    'line': {'width':4,'color': '#4169e1','dash':'dot'},
+                    'yaxis': 'y2',
+                },
+                {
+                    # Auto evaluation time (vertical line)
+                    'x': [auto_evals2[well_idx], auto_evals2[well_idx]],
+                    'y': [0, luminance_signals.max()],
                     'mode': 'lines',
                     'name': 'Auto',
-                    'line': {'width': 5, 'color': '#ff7f0e'},
-                    'yaxis': 'y2',
+                    'line': {'width':4,'color': '#20b2aa','dash':'dot'},
+                    
                 },
                 {
                     # Signal
@@ -705,12 +767,12 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'x': list(range(len(luminance_signals))),
                     'y': list(luminance_signals[:, well_idx]),
                     'mode': 'lines',
-                    'line': {'color': '#87ceeb'},
+                    'line': {'color': '#20b2aa'},
                     'name': 'Luminance Signal',
                     'opacity': 1.0,
                 },
                 {
-                    # Threshold (hrizontal line)
+                    # Threshold (horizontal line)
                     'x': [0, len(signals[0, :])],
                     'y': [threshold, threshold],
                     'mode': 'lines',
@@ -718,6 +780,16 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'line': {'width': 1, 'color': '#000000'},
                     'yaxis': 'y2',
                 },
+                {
+                    # Threshold2 (horizontal line)
+                    'x': [0, len(signals[0, :])],
+                    'y': [threshold2, threshold2],
+                    'mode': 'lines',
+                    'name': 'Threshold2',
+                    'line': {'width': 1, 'color': '#000000'},
+                    
+                },
+
                 {
                     # Selected data point
                     'x': [x],
@@ -741,7 +813,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
                     'overlaying':'y',
                     'range':[0, signals.max()],
                     },
-                'yaxis': {
+                'yaxis1': {
                     'title':'Luminance Signals',
                     'tickfont': {'size': 15},
                     'side':'right',
@@ -759,7 +831,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
 # ==========================================
 @app.callback(
         Output('summary-graph', 'figure'),
-        [Input('threshold-slider', 'value'),
+        [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
          Input('target-dropdown', 'value')],
         [State('data-root', 'children'),
@@ -830,13 +902,89 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
             },
         }
 
+# ==========================================
+#  Update the figure in the summary-graph2.
+# ==========================================
+@app.callback(
+        Output('summary-graph2', 'figure'),
+        [Input('threshold-slider2', 'value'),
+         Input('well-selector', 'value'),
+         Input('target-dropdown', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('csv-dropdown', 'value'),
+         State('morpho-dropdown', 'value'),
+         State('result-dropdown', 'value')])
+def callback(threshold, well_idx, rise_or_fall, data_root,
+        env, csv, morpho, result):
+
+    # Exception handling
+    if env is None or csv is None or morpho is None:
+        return {'data': []}
+
+    # Load the data
+    signals = store_luminance_signals(data_root, env)
+    manual_evals = store_manual_evals(data_root, env, csv)
+
+    # Compute event times from signals
+    if rise_or_fall == 'rise':
+        auto_evals = (signals > threshold).argmax(axis=1)
+
+    elif rise_or_fall == 'fall':
+        # Scan the signal from the right hand side.
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > threshold).argmax(axis=1))
+        # If the signal was not more than the threshold.
+        #auto_evals[auto_evals == signals.shape[1]] = 0
+
+    return {
+            'data': [
+                {
+                    'x': [0, len(signals[0, :])],
+                    'y': [0, len(signals[0, :])],
+                    'mode': 'lines',
+                    'line': {'width': 1, 'color': '#000000'},
+                    'name': 'Auto = Manual',
+                },
+                {
+                    'x': list(auto_evals),
+                    'y': list(manual_evals),
+                    'mode': 'markers',
+                    'marker': {'size': 5, 'color': '#20b2aa'},
+                    'name': 'Well',
+                },
+                {
+                    'x': [auto_evals[well_idx]],
+                    'y': [manual_evals[well_idx]],
+                    'mode': 'markers',
+                    'marker': {'size': 10, 'color': '#ff0000'},
+                    'name': 'Selected well',
+                },
+            ],
+            'layout': {
+                'title': 'Auto vs Manual(Luminance)',
+                'font': {'size': 13},
+                'xaxis': {
+                    'title': 'Auto',
+                    'tickfont': {'size': 15},
+                },
+                'yaxis': {
+                    'title': 'Manual',
+                    'tickfont': {'size': 15},
+                },
+                'showlegend': False,
+                'hovermode': 'closest',
+                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
+            },
+        }
+
 
 # =======================================
 #  Update the figure in the error-hist.
 # =======================================
 @app.callback(
         Output('error-hist', 'figure'),
-        [Input('threshold-slider', 'value'),
+        [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
          Input('target-dropdown', 'value')],
         [State('data-root', 'children'),
