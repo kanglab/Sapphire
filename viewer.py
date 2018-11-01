@@ -649,15 +649,13 @@ def callback(result, data_root, env, morpho):
 @app.callback(
         Output('well-slider', 'value'),
         [Input('current-result', 'children'),
-         Input('summary-graph', 'clickData'),
-         Input('summary-graph2', 'clickData')])
-def callback(_, click_data, click_data2):
+         Input('summary-graph', 'clickData')])
+def callback(_, click_data):
     if click_data is None:
-        return click_data2['points'][0]['pointNumber']
-        
-    elif click_data2 is None:
-        return click_data['points'][0]['pointNumber']
+        return 20
 
+    return click_data['points'][0]['pointNumber']
+        
 
 # ====================================================
 #  Initialize the current value of the well-selector
