@@ -16,6 +16,7 @@ import zipfile
 import PIL.Image
 import dash_auth
 import numpy as np
+import my_threshold
 import flask_caching
 import dash_core_components as dcc
 import dash_html_components as html
@@ -659,6 +660,9 @@ def callback(well_idx, threshold, rise_or_fall, time,
     manual_evals = store_manual_evals(data_root, env, csv)
     luminance_signals = store_luminance_signals(data_root, env)
 
+    # Compute thresholds
+    threshold = my_threshold.entire_stats(signals, coef=2)
+
     # Compute event times from signals
     if rise_or_fall == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
@@ -712,7 +716,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
                 {
                     # Threshold (hrizontal line)
                     'x': [0, len(signals[0, :])],
-                    'y': [threshold, threshold],
+                    'y': [threshold[well_idx, 0], threshold[well_idx, 0]],
                     'mode': 'lines',
                     'name': 'Threshold',
                     'line': {'width': 1, 'color': '#000000'},
@@ -729,7 +733,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
                 },
             ],
             'layout': {
-                'title': 'Activity signal (threshold={})'.format(threshold),
+                    'title': 'Activity signal (threshold={:.1f})'.format(threshold[well_idx, 0]),
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'Time step',
@@ -777,6 +781,9 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
+
+    # Compute thresholds
+    threshold = my_threshold.entire_stats(signals, coef=2)
 
     # Compute event times from signals
     if rise_or_fall == 'rise':
@@ -876,6 +883,9 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
+
+    # Compute thresholds
+    threshold = my_threshold.entire_stats(signals, coef=2)
 
     # Compute event times from signals
     if rise_or_fall == 'rise':
