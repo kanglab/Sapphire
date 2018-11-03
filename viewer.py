@@ -789,6 +789,12 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
         # If the signal was not more than the threshold.
         auto_evals[auto_evals == signals.shape[1]] = 0
 
+    # Calculate how many frames auto-evaluation is far from manual's one
+    errors = auto_evals - manual_evals
+
+    # Calculate the root mean square
+    rms = np.sqrt((errors**2).sum() / len(errors))
+
     return {
             'data': [
                 {
@@ -814,7 +820,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 },
             ],
             'layout': {
-                'title': 'Auto vs Manual',
+                'title': 'RMS: {:.1f}'.format(rms),
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'Auto',
@@ -870,9 +876,6 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     errors = auto_evals - manual_evals
     ns, bins = np.histogram(errors, 1000)
 
-    # Calculate the root mean square
-    rms = np.sqrt((errors**2).sum() / len(errors))
-
     # Calculate the number of inconsistent wells
     tmp = np.bincount(abs(errors))
     n_consist = tmp[:11].sum()
@@ -894,7 +897,6 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 },
             ],
             'layout': {
-                # 'title': 'Error histogram (RMS={})'.format(int(rms)),
                 'title': 'Consistency: {:.1f}% ({}/{})'.format(
                         100 * n_consist / len(manual_evals),
                         n_consist, len(manual_evals)),
