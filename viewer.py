@@ -749,7 +749,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.Margin(l=50, r=70, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=50, r=70, b=50, t=50, pad=0),
             },
         }
 
@@ -798,17 +798,33 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     return {
             'data': [
                 {
+                    'x': [10, len(signals[0, :])],
+                    'y': [0, len(signals[0, :])-10],
+                    'mode': 'lines',
+                    'fill': None,
+                    'line': {'width': .1, 'color': '#43d86b'},
+                    'name': 'Lower bound',
+                },
+                {
+                    'x': [-10, len(signals[0, :])],
+                    'y': [0, len(signals[0, :])+10],
+                    'mode': 'lines',
+                    'fill': 'tonexty',
+                    'line': {'width': .1, 'color': '#43d86b'},
+                    'name': 'Upper bound',
+                },
+                {
                     'x': [0, len(signals[0, :])],
                     'y': [0, len(signals[0, :])],
                     'mode': 'lines',
-                    'line': {'width': 1, 'color': '#000000'},
+                    'line': {'width': .5, 'color': '#000000'},
                     'name': 'Auto = Manual',
                 },
                 {
                     'x': list(auto_evals),
                     'y': list(manual_evals),
                     'mode': 'markers',
-                    'marker': {'size': 5, 'color': '#4169e1'},
+                    'marker': {'size': 4, 'color': '#1f77b4'},
                     'name': 'Well',
                 },
                 {
@@ -832,7 +848,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=50, pad=0),
             },
         }
 
@@ -883,17 +899,18 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     return {
             'data': [
                 {
-                    'x': list(bins[1:]),
-                    'y': list(ns),
-                    'mode': 'markers',
-                    'type': 'bar',
-                    'marker': {'size': 5},
-                },
-                {
                     'x': [-10, 10],
                     'y': [ns.max(), ns.max()],
                     'mode': 'lines',
                     'fill': 'tozeroy',
+                    'line': {'width': 0, 'color': '#43d86b'},
+                },
+                {
+                    'x': list(bins[1:]),
+                    'y': list(ns),
+                    'mode': 'markers',
+                    'type': 'bar',
+                    'marker': {'size': 5, 'color': '#1f77b4'},
                 },
             ],
             'layout': {
@@ -912,7 +929,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=50, pad=0),
             },
         }
 
