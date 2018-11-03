@@ -749,7 +749,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.Margin(l=50, r=70, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=50, r=70, b=50, t=50, pad=0),
             },
         }
 
@@ -848,7 +848,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=50, pad=0),
             },
         }
 
@@ -929,7 +929,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=50, pad=0),
             },
         }
 
