@@ -1049,16 +1049,15 @@ def callback(time, well_idx, data_root, env, morpho, result):
     if env is None or morpho is None or result is None:
         return ''
 
-    # Load a zip file storing label images
-    # and get a label image
-    zipfile_path = os.path.join(
-            data_root, env, 'inference', morpho, result, 'labels',
-            '{:03d}.zip'.format(well_idx))
-    with zipfile.ZipFile(zipfile_path, 'r') as labels_zip:
-        filenames = sorted(
-                [info.filename for info in labels_zip.infolist()])
-        with labels_zip.open(filenames[time]) as label_file:
-            label_image = PIL.Image.open(label_file)
+    # Load a npz file storing prob images
+    # and get a prob image
+    npzfile_path = os.path.join(
+            data_root, env, 'inference', morpho, result, 'probs',
+            '{:03d}.npz'.format(well_idx))
+    npz = np.load(npzfile_path)
+    probs = npz['arr_0'].astype(np.int32)
+    prob = (probs[time] > THETA) * 255
+    label_image = PIL.Image.fromarray(prob).convert('L')
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
@@ -1085,16 +1084,15 @@ def callback(time, well_idx, data_root, env, morpho, result):
     if env is None or morpho is None or result is None:
         return ''
 
-    # Load a zip file storing label images
-    # and get a label image
-    zipfile_path = os.path.join(
-            data_root, env, 'inference', morpho, result, 'labels',
-            '{:03d}.zip'.format(well_idx))
-    with zipfile.ZipFile(zipfile_path, 'r') as labels_zip:
-        filenames = sorted(
-                [info.filename for info in labels_zip.infolist()])
-        with labels_zip.open(filenames[time+1]) as label_file:
-            label_image = PIL.Image.open(label_file)
+    # Load a npz file storing prob images
+    # and get a prob image
+    npzfile_path = os.path.join(
+            data_root, env, 'inference', morpho, result, 'probs',
+            '{:03d}.npz'.format(well_idx))
+    npz = np.load(npzfile_path)
+    probs = npz['arr_0'].astype(np.int32)
+    prob = (probs[time+1] > THETA) * 255
+    label_image = PIL.Image.fromarray(prob).convert('L')
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
@@ -1121,22 +1119,20 @@ def callback(time, well_idx, data_root, env, morpho, result):
     if env is None or morpho is None or result is None:
         return ''
 
-    # Load a zip file storing prob images
+    # Load a npz file storing prob images
     # and get a prob image
-    zipfile_path = os.path.join(
+    npzfile_path = os.path.join(
             data_root, env, 'inference', morpho, result, 'probs',
-            '{:03d}.zip'.format(well_idx))
-    with zipfile.ZipFile(zipfile_path, 'r') as probs_zip:
-        filenames = sorted(
-                [info.filename for info in probs_zip.infolist()])
-        with probs_zip.open(filenames[time]) as prob_file:
-            prob_image = PIL.Image.open(prob_file)
+            '{:03d}.npz'.format(well_idx))
+    npz = np.load(npzfile_path)
+    probs = npz['arr_0'].astype(np.int32)
+    prob_image = PIL.Image.fromarray(probs[time] / 100 * 255).convert('L')
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
-    prob_image.save(buf, format='PNG')
+    prob_image.save(buf, format='JPEG')
 
-    return 'data:image/png;base64,{}'.format(
+    return 'data:image/jpeg;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
@@ -1157,16 +1153,14 @@ def callback(time, well_idx, data_root, env, morpho, result):
     if env is None or morpho is None or result is None:
         return ''
 
-    # Load a zip file storing prob images
+    # Load a npz file storing prob images
     # and get a prob image
-    zipfile_path = os.path.join(
+    npzfile_path = os.path.join(
             data_root, env, 'inference', morpho, result, 'probs',
-            '{:03d}.zip'.format(well_idx))
-    with zipfile.ZipFile(zipfile_path, 'r') as probs_zip:
-        filenames = sorted(
-                [info.filename for info in probs_zip.infolist()])
-        with probs_zip.open(filenames[time+1]) as prob_file:
-            prob_image = PIL.Image.open(prob_file)
+            '{:03d}.npz'.format(well_idx))
+    npz = np.load(npzfile_path)
+    probs = npz['arr_0'].astype(np.int32)
+    prob_image = PIL.Image.fromarray(probs[time+1] / 100 * 255).convert('L')
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
