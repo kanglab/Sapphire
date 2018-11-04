@@ -293,10 +293,10 @@ app.layout = html.Div([
         html.Div([
             dcc.Slider(
                 id='threshold-slider',
-                value=20,
-                min=0,
-                max=300,
-                step=1,
+                value=2,
+                min=-10,
+                max=10,
+                step=0.1,
                 updatemode='mouseup',
                 vertical=True,
             )],
@@ -533,6 +533,7 @@ def callback(result, data_root, env, morpho):
     return signals.shape[1] - 1
 
 
+'''
 # =======================================================
 #  Initialize the maximum value of the threshold-slider
 #  after loading a signal file.
@@ -549,6 +550,19 @@ def callback(result, data_root, env, morpho):
 
     signals = store_signals(data_root, env, morpho, result)
     return signals.max()
+'''
+
+
+# =======================================================
+#  Initialize the current value of the threshold-slider
+#  after loading a signal file.
+# =======================================================
+@app.callback(
+        Output('threshold-slider', 'value'),
+        [Input('current-result', 'children')])
+def callback(result):
+
+    return 2
 
 
 # =======================================================
@@ -643,7 +657,7 @@ def callback(click_data):
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(well_idx, threshold, rise_or_fall, time,
+def callback(well_idx, coef, rise_or_fall, time,
         figure, data_root, env, csv, morpho, result):
 
     # Exception handling
@@ -661,7 +675,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
     luminance_signals = store_luminance_signals(data_root, env)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(signals, coef=2)
+    threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
     if rise_or_fall == 'rise':
@@ -771,7 +785,7 @@ def callback(well_idx, threshold, rise_or_fall, time,
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, rise_or_fall, data_root,
+def callback(coef, well_idx, rise_or_fall, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -783,7 +797,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     manual_evals = store_manual_evals(data_root, env, csv)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(signals, coef=2)
+    threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
     if rise_or_fall == 'rise':
@@ -873,7 +887,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, rise_or_fall, data_root,
+def callback(coef, well_idx, rise_or_fall, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -885,7 +899,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     manual_evals = store_manual_evals(data_root, env, csv)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(signals, coef=2)
+    threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
     if rise_or_fall == 'rise':
