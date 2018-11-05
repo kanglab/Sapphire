@@ -1086,9 +1086,9 @@ def callback(coef, well_idx, rise_or_fall, data_root,
         }
 
 
-# =======================================
+# ==================================================
 #  Update the figure in the error-hist.(Luminance)
-# =======================================
+# ==================================================
 @app.callback(
         Output('error-hist2', 'figure'),
         [Input('threshold-slider2', 'value'),
@@ -1125,8 +1125,9 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     errors = auto_evals - manual_evals
     ns, bins = np.histogram(errors, 1000)
 
-    # Calculate the root mean square
-    rms = np.sqrt((errors**2).sum() / len(errors))
+    # Calculate the number of inconsistent wells
+    tmp = np.bincount(abs(errors))
+    n_consist = tmp[:11].sum()
 
     return {
             'data': [
@@ -1145,7 +1146,9 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 },
             ],
             'layout': {
-                'title': 'Error histogram (RMS={})'.format(int(rms)),
+                'title': 'Consistency: {:.1f}% ({}/{})'.format(
+                        100 * n_consist / len(manual_evals),
+                        n_consist, len(manual_evals)),
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'auto - manual',
