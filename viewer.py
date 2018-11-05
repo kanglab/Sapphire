@@ -701,20 +701,26 @@ def callback(well_idx, coef, threshold2, rise_or_fall, time,
 
     # Compute event times from signals
     if rise_or_fall == 'rise':
+
         auto_evals = (signals > threshold).argmax(axis=1)
         auto_evals2 = (luminance_signals > threshold2).argmax(axis=1)
+
     elif rise_or_fall == 'fall':
+
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
+
         # If the signal was not more than the threshold.
         auto_evals[auto_evals == signals.shape[1]] = 0
 
         # Scan the signal from the right hand side.
         auto_evals2 = (luminance_signals.shape[1]
                 - (np.fliplr(luminance_signals) > threshold2).argmax(axis=1))
+
         # If the signal was not more than the threshold.
         auto_evals2[auto_evals2 == luminance_signals.shape[1]] = 0
+
     return {
             'data': [
                 {
@@ -793,7 +799,7 @@ def callback(well_idx, coef, threshold2, rise_or_fall, time,
                 },
             ],
             'layout': {
-                    'title': 'Activity signal (threshold={:.1f})'.format(threshold[well_idx, 0]),
+                    'title': 'Threshold: {:.1f} (blue), {:.1f} (green)'.format(threshold[well_idx, 0], threshold2),
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'Time step',
