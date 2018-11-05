@@ -799,23 +799,29 @@ def callback(well_idx, coef, threshold2, rise_or_fall, time,
                 },
             ],
             'layout': {
-                    'title': 'Threshold: {:.1f} (blue), {:.1f} (green)'.format(threshold[well_idx, 0], threshold2),
-                'font': {'size': 15},
-                'xaxis': {
-                    'title': 'Time step',
-                    'tickfont': {'size': 15},
-                },
-                'yaxis2': {
-                    'title': 'Signal intensity',
-                    'tickfont': {'size': 15},
-                    'overlaying':'y',
-                    'range':[0, signals.max()],
+                    'title': 'Threshold: {:.1f}={:.1f}{:+.1f}*{:.1f} (blue), {:.1f} (green)'.format(
+                        threshold[well_idx, 0],
+                        signals.mean(),
+                        coef,
+                        signals.std(),
+                        threshold2
+                    ),
+                    'font': {'size': 15},
+                    'xaxis': {
+                        'title': 'Time step',
+                        'tickfont': {'size': 15},
                     },
-                'yaxis1': {
-                    'title':'Luminance Signals',
-                    'tickfont': {'size': 15},
-                    'side':'right',
-                    'range':[0, luminance_signals.max()],
+                    'yaxis2': {
+                        'title': 'Signal intensity',
+                        'tickfont': {'size': 15},
+                        'overlaying':'y',
+                        'range':[0, signals.max()],
+                        },
+                    'yaxis1': {
+                        'title':'Luminance Signals',
+                        'tickfont': {'size': 15},
+                        'side':'right',
+                        'range':[0, luminance_signals.max()],
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
