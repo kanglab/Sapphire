@@ -1199,7 +1199,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                     'y': list(ns),
                     'mode': 'markers',
                     'type': 'bar',
-                    'marker': {'size': 5, 'color': '#1f77b4'},
+                    'marker': {'size': 5, 'color': '#20b2aa'},
                 },
             ],
             'layout': {
