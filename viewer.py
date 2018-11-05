@@ -288,7 +288,7 @@ app.layout = html.Div([
                 id='threshold-slider1',
                 value=2,
                 min=-5,
-                max=5,
+                max=10,
                 step=.1,
                 updatemode='mouseup',
                 vertical=True,
@@ -1049,7 +1049,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=50, pad=0),
             },
         }
 
