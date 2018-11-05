@@ -361,9 +361,6 @@ app.layout = html.Div([
                 'width': '25%',
             },
         ),
-
-
-
     ]),
     html.Div(id='dummy-div'),
     ],
@@ -714,7 +711,7 @@ def callback(well_idx, threshold,threshold2,rise_or_fall, time,
     signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
     luminance_signals = store_luminance_signals(data_root, env).T
-    print(luminance_signals.shape)
+
     # Compute event times from signals
     if rise_or_fall == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
@@ -1100,8 +1097,6 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
         auto_evals[auto_evals == signals.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    print(auto_evals.shape)
-    print(manual_evals.shape)    
     errors = auto_evals - manual_evals
     ns, bins = np.histogram(errors, 1000)
 
@@ -1141,6 +1136,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
             },
         }
+
 
 # ======================
 #  Update the t-image.
