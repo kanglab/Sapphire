@@ -952,7 +952,13 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
         # If the signal was not more than the threshold.
-        #auto_evals[auto_evals == signals.shape[1]] = 0
+        auto_evals[auto_evals == signals.shape[1]] = 0
+
+    # Calculate how many frames auto-evaluation is far from manual's one
+    errors = auto_evals - manual_evals
+
+    # Calculate the root mean square
+    rms = np.sqrt((errors**2).sum() / len(errors))
 
     return {
             'data': [
@@ -979,7 +985,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 },
             ],
             'layout': {
-                'title': 'Auto vs Manual(Luminance)',
+                'title': 'RMS: {:.1f}'.format(rms),
                 'font': {'size': 13},
                 'xaxis': {
                     'title': 'Auto',
