@@ -701,20 +701,26 @@ def callback(well_idx, coef, threshold2, rise_or_fall, time,
 
     # Compute event times from signals
     if rise_or_fall == 'rise':
+
         auto_evals = (signals > threshold).argmax(axis=1)
         auto_evals2 = (luminance_signals > threshold2).argmax(axis=1)
+
     elif rise_or_fall == 'fall':
+
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
+
         # If the signal was not more than the threshold.
         auto_evals[auto_evals == signals.shape[1]] = 0
 
         # Scan the signal from the right hand side.
         auto_evals2 = (luminance_signals.shape[1]
                 - (np.fliplr(luminance_signals) > threshold2).argmax(axis=1))
+
         # If the signal was not more than the threshold.
         auto_evals2[auto_evals2 == luminance_signals.shape[1]] = 0
+
     return {
             'data': [
                 {
@@ -793,7 +799,7 @@ def callback(well_idx, coef, threshold2, rise_or_fall, time,
                 },
             ],
             'layout': {
-                    'title': 'Activity signal (threshold={:.1f})'.format(threshold[well_idx, 0]),
+                    'title': 'Threshold: {:.1f} (blue), {:.1f} (green)'.format(threshold[well_idx, 0], threshold2),
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'Time step',
@@ -919,9 +925,9 @@ def callback(coef, well_idx, rise_or_fall, data_root,
             },
         }
 
-# ==========================================
+# ===========================================
 #  Update the figure in the summary-graph2.
-# ==========================================
+# ===========================================
 @app.callback(
         Output('summary-graph2', 'figure'),
         [Input('threshold-slider2', 'value'),
@@ -952,15 +958,37 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
         # If the signal was not more than the threshold.
-        #auto_evals[auto_evals == signals.shape[1]] = 0
+        auto_evals[auto_evals == signals.shape[1]] = 0
+
+    # Calculate how many frames auto-evaluation is far from manual's one
+    errors = auto_evals - manual_evals
+
+    # Calculate the root mean square
+    rms = np.sqrt((errors**2).sum() / len(errors))
 
     return {
             'data': [
                 {
+                    'x': [10, len(signals[0, :])],
+                    'y': [0, len(signals[0, :])-10],
+                    'mode': 'lines',
+                    'fill': None,
+                    'line': {'width': .1, 'color': '#43d86b'},
+                    'name': 'Lower bound',
+                },
+                {
+                    'x': [-10, len(signals[0, :])],
+                    'y': [0, len(signals[0, :])+10],
+                    'mode': 'lines',
+                    'fill': 'tonexty',
+                    'line': {'width': .1, 'color': '#43d86b'},
+                    'name': 'Upper bound',
+                },
+                {
                     'x': [0, len(signals[0,:])],
                     'y': [0, len(signals[0,:])],
                     'mode': 'lines',
-                    'line': {'width': 1, 'color': '#000000'},
+                    'line': {'width': .5, 'color': '#000000'},
                     'name': 'Auto = Manual',
                 },
                 {
@@ -979,8 +1007,8 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 },
             ],
             'layout': {
-                'title': 'Auto vs Manual(Luminance)',
-                'font': {'size': 13},
+                'title': 'RMS: {:.1f}'.format(rms),
+                'font': {'size': 15},
                 'xaxis': {
                     'title': 'Auto',
                     'tickfont': {'size': 15},
@@ -1080,9 +1108,9 @@ def callback(coef, well_idx, rise_or_fall, data_root,
         }
 
 
-# =======================================
+# ==================================================
 #  Update the figure in the error-hist.(Luminance)
-# =======================================
+# ==================================================
 @app.callback(
         Output('error-hist2', 'figure'),
         [Input('threshold-slider2', 'value'),
@@ -1119,27 +1147,31 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     errors = auto_evals - manual_evals
     ns, bins = np.histogram(errors, 1000)
 
-    # Calculate the root mean square
-    rms = np.sqrt((errors**2).sum() / len(errors))
+    # Calculate the number of inconsistent wells
+    tmp = np.bincount(abs(errors))
+    n_consist = tmp[:11].sum()
 
     return {
             'data': [
-                {
-                    'x': list(bins[1:]),
-                    'y': list(ns),
-                    'mode': 'markers',
-                    'type': 'bar',
-                    'marker': {'size': 5},
-                },
                 {
                     'x': [-10, 10],
                     'y': [ns.max(), ns.max()],
                     'mode': 'lines',
                     'fill': 'tozeroy',
+                    'line': {'width': 0, 'color': '#43d86b'},
+                },
+                {
+                    'x': list(bins[1:]),
+                    'y': list(ns),
+                    'mode': 'markers',
+                    'type': 'bar',
+                    'marker': {'size': 5, 'color': '#1f77b4'},
                 },
             ],
             'layout': {
-                'title': 'Error histogram (RMS={})'.format(int(rms)),
+                'title': 'Consistency: {:.1f}% ({}/{})'.format(
+                        100 * n_consist / len(manual_evals),
+                        n_consist, len(manual_evals)),
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'auto - manual',
