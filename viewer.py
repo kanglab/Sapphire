@@ -919,9 +919,9 @@ def callback(coef, well_idx, rise_or_fall, data_root,
             },
         }
 
-# ==========================================
+# ===========================================
 #  Update the figure in the summary-graph2.
-# ==========================================
+# ===========================================
 @app.callback(
         Output('summary-graph2', 'figure'),
         [Input('threshold-slider2', 'value'),
@@ -963,10 +963,26 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     return {
             'data': [
                 {
+                    'x': [10, len(signals[0, :])],
+                    'y': [0, len(signals[0, :])-10],
+                    'mode': 'lines',
+                    'fill': None,
+                    'line': {'width': .1, 'color': '#43d86b'},
+                    'name': 'Lower bound',
+                },
+                {
+                    'x': [-10, len(signals[0, :])],
+                    'y': [0, len(signals[0, :])+10],
+                    'mode': 'lines',
+                    'fill': 'tonexty',
+                    'line': {'width': .1, 'color': '#43d86b'},
+                    'name': 'Upper bound',
+                },
+                {
                     'x': [0, len(signals[0,:])],
                     'y': [0, len(signals[0,:])],
                     'mode': 'lines',
-                    'line': {'width': 1, 'color': '#000000'},
+                    'line': {'width': .5, 'color': '#000000'},
                     'name': 'Auto = Manual',
                 },
                 {
@@ -986,7 +1002,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
             ],
             'layout': {
                 'title': 'RMS: {:.1f}'.format(rms),
-                'font': {'size': 13},
+                'font': {'size': 15},
                 'xaxis': {
                     'title': 'Auto',
                     'tickfont': {'size': 15},
@@ -1132,17 +1148,18 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     return {
             'data': [
                 {
-                    'x': list(bins[1:]),
-                    'y': list(ns),
-                    'mode': 'markers',
-                    'type': 'bar',
-                    'marker': {'size': 5},
-                },
-                {
                     'x': [-10, 10],
                     'y': [ns.max(), ns.max()],
                     'mode': 'lines',
                     'fill': 'tozeroy',
+                    'line': {'width': 0, 'color': '#43d86b'},
+                },
+                {
+                    'x': list(bins[1:]),
+                    'y': list(ns),
+                    'mode': 'markers',
+                    'type': 'bar',
+                    'marker': {'size': 5, 'color': '#1f77b4'},
                 },
             ],
             'layout': {
