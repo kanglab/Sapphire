@@ -871,16 +871,28 @@ def callback(coef, well_idx, rise_or_fall, data_root,
     return {
             'data': [
                 {
-                    'x': [10, len(signals[0, :])],
-                    'y': [0, len(signals[0, :])-10],
+                    'x': [
+                        round(0.05 * len(signals[0, :])),
+                        len(signals[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(signals[0, :])-round(0.05 * len(signals[0, :]))
+                    ],
                     'mode': 'lines',
                     'fill': None,
                     'line': {'width': .1, 'color': '#43d86b'},
                     'name': 'Lower bound',
                 },
                 {
-                    'x': [-10, len(signals[0, :])],
-                    'y': [0, len(signals[0, :])+10],
+                    'x': [
+                        -round(0.05 * len(signals[0, :])),
+                        len(signals[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(signals[0, :])+round(0.05 * len(signals[0, :]))
+                    ],
                     'mode': 'lines',
                     'fill': 'tonexty',
                     'line': {'width': .1, 'color': '#43d86b'},
@@ -969,16 +981,28 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     return {
             'data': [
                 {
-                    'x': [10, len(signals[0, :])],
-                    'y': [0, len(signals[0, :])-10],
+                    'x': [
+                        round(0.05 * len(signals[0, :])),
+                        len(signals[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(signals[0, :])-round(0.05 * len(signals[0, :]))
+                    ],
                     'mode': 'lines',
                     'fill': None,
                     'line': {'width': .1, 'color': '#43d86b'},
                     'name': 'Lower bound',
                 },
                 {
-                    'x': [-10, len(signals[0, :])],
-                    'y': [0, len(signals[0, :])+10],
+                    'x': [
+                        -round(0.05 * len(signals[0, :])),
+                        len(signals[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(signals[0, :])+round(0.05 * len(signals[0, :]))
+                    ],
                     'mode': 'lines',
                     'fill': 'tonexty',
                     'line': {'width': .1, 'color': '#43d86b'},
@@ -1068,12 +1092,17 @@ def callback(coef, well_idx, rise_or_fall, data_root,
 
     # Calculate the number of inconsistent wells
     tmp = np.bincount(abs(errors))
-    n_consist = tmp[:11].sum()
+    n_consist_5percent = tmp[:round(0.05 * signals.shape[1])].sum()
+    n_consist_1percent = tmp[:round(0.01 * signals.shape[1])].sum()
+    n_consist_10frames = tmp[:11].sum()
 
     return {
             'data': [
                 {
-                    'x': [-10, 10],
+                    'x': [
+                        -round(0.05 * signals.shape[1]),
+                        round(0.05 * signals.shape[1])
+                    ],
                     'y': [ns.max(), ns.max()],
                     'mode': 'lines',
                     'fill': 'tozeroy',
@@ -1088,9 +1117,48 @@ def callback(coef, well_idx, rise_or_fall, data_root,
                 },
             ],
             'layout': {
-                'title': 'Consistency: {:.1f}% ({}/{})'.format(
-                        100 * n_consist / len(manual_evals),
-                        n_consist, len(manual_evals)),
+                'title': 'Error histogram',
+                'annotations': [
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 1.0 * ns.max(),
+                        'text': '#frames: consistency',
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 0.9 * ns.max(),
+                        'text': '{} (5%): {:.1f}% ({}/{})'.format(
+                            round(0.05 * signals.shape[1]),
+                            100 * n_consist_5percent / len(manual_evals),
+                            n_consist_5percent,
+                            len(manual_evals)),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 0.8 * ns.max(),
+                        'text': '{} (1%): {:.1f}% ({}/{})'.format(
+                            round(0.01 * signals.shape[1]),
+                            100 * n_consist_1percent / len(manual_evals),
+                            n_consist_1percent,
+                            len(manual_evals)),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 0.7 * ns.max(),
+                        'text': '10: {:.1f}% ({}/{})'.format(
+                            100 * n_consist_10frames / len(manual_evals),
+                            n_consist_10frames,
+                            len(manual_evals)),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                ],
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'auto - manual',
@@ -1149,12 +1217,17 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
 
     # Calculate the number of inconsistent wells
     tmp = np.bincount(abs(errors))
-    n_consist = tmp[:11].sum()
+    n_consist_5percent = tmp[:round(0.05 * signals.shape[1])].sum()
+    n_consist_1percent = tmp[:round(0.01 * signals.shape[1])].sum()
+    n_consist_10frames = tmp[:11].sum()
 
     return {
             'data': [
                 {
-                    'x': [-10, 10],
+                    'x': [
+                        -round(0.05 * signals.shape[1]),
+                        round(0.05 * signals.shape[1])
+                    ],
                     'y': [ns.max(), ns.max()],
                     'mode': 'lines',
                     'fill': 'tozeroy',
@@ -1165,13 +1238,51 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                     'y': list(ns),
                     'mode': 'markers',
                     'type': 'bar',
-                    'marker': {'size': 5, 'color': '#1f77b4'},
+                    'marker': {'size': 5, 'color': '#20b2aa'},
                 },
             ],
             'layout': {
-                'title': 'Consistency: {:.1f}% ({}/{})'.format(
-                        100 * n_consist / len(manual_evals),
-                        n_consist, len(manual_evals)),
+                'annotations': [
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 1.0 * ns.max(),
+                        'text': '#frames: consistency',
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 0.9 * ns.max(),
+                        'text': '{} (5%): {:.1f}% ({}/{})'.format(
+                            round(0.05 * signals.shape[1]),
+                            100 * n_consist_5percent / len(manual_evals),
+                            n_consist_5percent,
+                            len(manual_evals)),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 0.8 * ns.max(),
+                        'text': '{} (1%): {:.1f}% ({}/{})'.format(
+                            round(0.01 * signals.shape[1]),
+                            100 * n_consist_1percent / len(manual_evals),
+                            n_consist_1percent,
+                            len(manual_evals)),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 0.7 * ns.max(),
+                        'text': '10: {:.1f}% ({}/{})'.format(
+                            100 * n_consist_10frames / len(manual_evals),
+                            n_consist_10frames,
+                            len(manual_evals)),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                ],
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'auto - manual',
