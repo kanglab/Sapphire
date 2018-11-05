@@ -785,7 +785,7 @@ def callback(well_idx, threshold,threshold2,rise_or_fall, time,
                     'y': [threshold, threshold],
                     'mode': 'lines',
                     'name': 'Threshold',
-                    'line': {'width': 1, 'color': '#000000'},
+                    'line': {'width': 2, 'color': '#4169e1'},
                     'yaxis': 'y2',
                 },
                 {
@@ -794,7 +794,7 @@ def callback(well_idx, threshold,threshold2,rise_or_fall, time,
                     'y': [threshold2, threshold2],
                     'mode': 'lines',
                     'name': 'Threshold2',
-                    'line': {'width': 1, 'color': '#000000'},
+                    'line': {'width': 2, 'color': '#20b2aa'},
                     
                 },
 
