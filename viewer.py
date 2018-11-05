@@ -1068,8 +1068,8 @@ def callback(coef, well_idx, rise_or_fall, data_root,
 
     # Calculate the number of inconsistent wells
     tmp = np.bincount(abs(errors))
-    n_consist_1percent = tmp[:int(0.01 * signals.shape[1])].sum()
-    n_consist_5percent = tmp[:int(0.05 * signals.shape[1])].sum()
+    n_consist_5percent = tmp[:round(0.05 * signals.shape[1])].sum()
+    n_consist_1percent = tmp[:round(0.01 * signals.shape[1])].sum()
     n_consist_10frames = tmp[:11].sum()
 
     return {
@@ -1094,8 +1094,16 @@ def callback(coef, well_idx, rise_or_fall, data_root,
                 'annotations': [
                     {
                         'x': 0.9 * signals.shape[1],
+                        'y': 1.0 * ns.max(),
+                        'text': '#frames: consistency',
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * signals.shape[1],
                         'y': 0.9 * ns.max(),
-                        'text': '5%: {:.1f}% ({}/{})'.format(
+                        'text': '{} (5%): {:.1f}% ({}/{})'.format(
+                            round(0.05 * signals.shape[1]),
                             100 * n_consist_5percent / len(manual_evals),
                             n_consist_5percent,
                             len(manual_evals)),
@@ -1105,7 +1113,8 @@ def callback(coef, well_idx, rise_or_fall, data_root,
                     {
                         'x': 0.9 * signals.shape[1],
                         'y': 0.8 * ns.max(),
-                        'text': '1%: {:.1f}% ({}/{})'.format(
+                        'text': '{} (1%): {:.1f}% ({}/{})'.format(
+                            round(0.01 * signals.shape[1]),
                             100 * n_consist_1percent / len(manual_evals),
                             n_consist_1percent,
                             len(manual_evals)),
@@ -1115,7 +1124,7 @@ def callback(coef, well_idx, rise_or_fall, data_root,
                     {
                         'x': 0.9 * signals.shape[1],
                         'y': 0.7 * ns.max(),
-                        'text': '10frames: {:.1f}% ({}/{})'.format(
+                        'text': '10: {:.1f}% ({}/{})'.format(
                             100 * n_consist_10frames / len(manual_evals),
                             n_consist_10frames,
                             len(manual_evals)),
@@ -1181,8 +1190,8 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
 
     # Calculate the number of inconsistent wells
     tmp = np.bincount(abs(errors))
-    n_consist_1percent = tmp[:int(0.01 * signals.shape[1])].sum()
-    n_consist_5percent = tmp[:int(0.05 * signals.shape[1])].sum()
+    n_consist_5percent = tmp[:round(0.05 * signals.shape[1])].sum()
+    n_consist_1percent = tmp[:round(0.01 * signals.shape[1])].sum()
     n_consist_10frames = tmp[:11].sum()
 
     return {
@@ -1206,8 +1215,16 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                 'annotations': [
                     {
                         'x': 0.9 * signals.shape[1],
+                        'y': 1.0 * ns.max(),
+                        'text': '#frames: consistency',
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * signals.shape[1],
                         'y': 0.9 * ns.max(),
-                        'text': '5%: {:.1f}% ({}/{})'.format(
+                        'text': '{} (5%): {:.1f}% ({}/{})'.format(
+                            round(0.05 * signals.shape[1]),
                             100 * n_consist_5percent / len(manual_evals),
                             n_consist_5percent,
                             len(manual_evals)),
@@ -1217,7 +1234,8 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                     {
                         'x': 0.9 * signals.shape[1],
                         'y': 0.8 * ns.max(),
-                        'text': '1%: {:.1f}% ({}/{})'.format(
+                        'text': '{} (1%): {:.1f}% ({}/{})'.format(
+                            round(0.01 * signals.shape[1]),
                             100 * n_consist_1percent / len(manual_evals),
                             n_consist_1percent,
                             len(manual_evals)),
@@ -1227,7 +1245,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
                     {
                         'x': 0.9 * signals.shape[1],
                         'y': 0.7 * ns.max(),
-                        'text': '10frames: {:.1f}% ({}/{})'.format(
+                        'text': '10: {:.1f}% ({}/{})'.format(
                             100 * n_consist_10frames / len(manual_evals),
                             n_consist_10frames,
                             len(manual_evals)),
