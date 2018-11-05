@@ -871,16 +871,28 @@ def callback(coef, well_idx, rise_or_fall, data_root,
     return {
             'data': [
                 {
-                    'x': [10, len(signals[0, :])],
-                    'y': [0, len(signals[0, :])-10],
+                    'x': [
+                        round(0.05 * len(signals[0, :])),
+                        len(signals[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(signals[0, :])-round(0.05 * len(signals[0, :]))
+                    ],
                     'mode': 'lines',
                     'fill': None,
                     'line': {'width': .1, 'color': '#43d86b'},
                     'name': 'Lower bound',
                 },
                 {
-                    'x': [-10, len(signals[0, :])],
-                    'y': [0, len(signals[0, :])+10],
+                    'x': [
+                        -round(0.05 * len(signals[0, :])),
+                        len(signals[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(signals[0, :])+round(0.05 * len(signals[0, :]))
+                    ],
                     'mode': 'lines',
                     'fill': 'tonexty',
                     'line': {'width': .1, 'color': '#43d86b'},
@@ -969,16 +981,28 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     return {
             'data': [
                 {
-                    'x': [10, len(signals[0, :])],
-                    'y': [0, len(signals[0, :])-10],
+                    'x': [
+                        round(0.05 * len(signals[0, :])),
+                        len(signals[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(signals[0, :])-round(0.05 * len(signals[0, :]))
+                    ],
                     'mode': 'lines',
                     'fill': None,
                     'line': {'width': .1, 'color': '#43d86b'},
                     'name': 'Lower bound',
                 },
                 {
-                    'x': [-10, len(signals[0, :])],
-                    'y': [0, len(signals[0, :])+10],
+                    'x': [
+                        -round(0.05 * len(signals[0, :])),
+                        len(signals[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(signals[0, :])+round(0.05 * len(signals[0, :]))
+                    ],
                     'mode': 'lines',
                     'fill': 'tonexty',
                     'line': {'width': .1, 'color': '#43d86b'},
@@ -1075,7 +1099,10 @@ def callback(coef, well_idx, rise_or_fall, data_root,
     return {
             'data': [
                 {
-                    'x': [-10, 10],
+                    'x': [
+                        -round(0.05 * signals.shape[1]),
+                        round(0.05 * signals.shape[1])
+                    ],
                     'y': [ns.max(), ns.max()],
                     'mode': 'lines',
                     'fill': 'tozeroy',
@@ -1197,7 +1224,10 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     return {
             'data': [
                 {
-                    'x': [-10, 10],
+                    'x': [
+                        -round(0.05 * signals.shape[1]),
+                        round(0.05 * signals.shape[1])
+                    ],
                     'y': [ns.max(), ns.max()],
                     'mode': 'lines',
                     'fill': 'tozeroy',
