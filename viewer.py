@@ -279,7 +279,27 @@ app.layout = html.Div([
                 # 'display': 'inline-block',
                 'display': 'none',
                 'vertical-align': 'top',
-                'margin': '10px 10px',
+                
+            },
+        ),
+
+        html.Div([
+            dcc.Slider(
+                id='threshold-slider1',
+                value=2,
+                min=-5,
+                max=10,
+                step=.1,
+                updatemode='mouseup',
+                vertical=True,
+            )],
+            style={
+                'display': 'inline-block',
+                'height': '300px',
+                'width': '10px',
+                'padding-bottom': '50px',
+                'margin-left': '30px',
+
             },
         ),
         dcc.Graph(
@@ -292,11 +312,10 @@ app.layout = html.Div([
         ),
         html.Div([
             dcc.Slider(
-                id='threshold-slider',
-                value=2,
-                min=-10,
-                max=10,
-                step=0.1,
+                id='threshold-slider2',
+                value=600000,
+                min=0,
+                step=1,
                 updatemode='mouseup',
                 vertical=True,
             )],
@@ -304,9 +323,10 @@ app.layout = html.Div([
                 'display': 'inline-block',
                 'height': '280px',
                 'width': '10px',
-                'padding-bottom': '70px',
+                'padding-bottom': '50px',
             },
         ),
+
     ],
     ),
     html.Div([
@@ -320,6 +340,22 @@ app.layout = html.Div([
         ),
         dcc.Graph(
             id='error-hist',
+            style={
+                'display': 'inline-block',
+                'height': '400px',
+                'width': '25%',
+            },
+        ),
+        dcc.Graph(
+            id='summary-graph2',
+            style={
+                'display': 'inline-block',
+                'height': '400px',
+                'width': '25%',
+            },
+        ),
+        dcc.Graph(
+            id='error-hist2',
             style={
                 'display': 'inline-block',
                 'height': '400px',
@@ -533,13 +569,12 @@ def callback(result, data_root, env, morpho):
     return signals.shape[1] - 1
 
 
-'''
 # =======================================================
-#  Initialize the maximum value of the threshold-slider
+#  Initialize the maximum value of the threshold-slider2
 #  after loading a signal file.
 # =======================================================
 @app.callback(
-        Output('threshold-slider', 'max'),
+        Output('threshold-slider2', 'max'),
         [Input('current-result', 'children')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
@@ -548,25 +583,11 @@ def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    signals = store_signals(data_root, env, morpho, result)
+    signals = store_luminance_signals(data_root, env)
     return signals.max()
-'''
-
 
 # =======================================================
-#  Initialize the current value of the threshold-slider
-#  after loading a signal file.
-# =======================================================
-@app.callback(
-        Output('threshold-slider', 'value'),
-        [Input('current-result', 'children')])
-def callback(result):
-
-    return 2
-
-
-# =======================================================
-#  Initialize the maximum value of the threshold-slider
+#  Initialize the maximum value of the well-slider
 #  after loading a signal file.
 # =======================================================
 @app.callback(
@@ -615,7 +636,7 @@ def callback(_, click_data):
         return 20
 
     return click_data['points'][0]['pointNumber']
-
+        
 
 # ====================================================
 #  Initialize the current value of the well-selector
@@ -648,7 +669,8 @@ def callback(click_data):
 @app.callback(
         Output('signal-graph', 'figure'),
         [Input('well-selector', 'value'),
-         Input('threshold-slider', 'value'),
+         Input('threshold-slider1', 'value'),
+         Input('threshold-slider2', 'value'),
          Input('target-dropdown', 'value'),
          Input('time-selector', 'value')],
         [State('signal-graph', 'figure'),
@@ -657,7 +679,7 @@ def callback(click_data):
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(well_idx, coef, rise_or_fall, time,
+def callback(well_idx, coef, threshold2, rise_or_fall, time,
         figure, data_root, env, csv, morpho, result):
 
     # Exception handling
@@ -667,26 +689,37 @@ def callback(well_idx, coef, rise_or_fall, time,
     if len(figure['data']) == 0:
         x, y = 0, 0
     else:
-        x, y = time, figure['data'][2]['y'][time]
+        x, y = time, figure['data'][3]['y'][time]
 
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
-    luminance_signals = store_luminance_signals(data_root, env)
+    luminance_signals = store_luminance_signals(data_root, env).T
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
     if rise_or_fall == 'rise':
+
         auto_evals = (signals > threshold).argmax(axis=1)
+        auto_evals2 = (luminance_signals > threshold2).argmax(axis=1)
 
     elif rise_or_fall == 'fall':
+
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
+
         # If the signal was not more than the threshold.
         auto_evals[auto_evals == signals.shape[1]] = 0
+
+        # Scan the signal from the right hand side.
+        auto_evals2 = (luminance_signals.shape[1]
+                - (np.fliplr(luminance_signals) > threshold2).argmax(axis=1))
+
+        # If the signal was not more than the threshold.
+        auto_evals2[auto_evals2 == luminance_signals.shape[1]] = 0
 
     return {
             'data': [
@@ -696,17 +729,26 @@ def callback(well_idx, coef, rise_or_fall, time,
                     'y': [0, signals.max()],
                     'mode': 'lines',
                     'name': 'Manual',
-                    'line': {'width': 5, 'color': '#2ca02c'},
+                    'line': {'width': 5, 'color': '#ffa500'},
                     'yaxis': 'y2',
                 },
                 {
                     # Auto evaluation time (vertical line)
                     'x': [auto_evals[well_idx], auto_evals[well_idx]],
-                    'y': [0, signals.max()],
+                    'y': [0, signals.max()],            
+                    'name': 'Auto',
+                    'mode':'lines',
+                    'line': {'width':4,'color': '#4169e1','dash':'dot'},
+                    'yaxis': 'y2',
+                },
+                {
+                    # Auto evaluation time (vertical line)
+                    'x': [auto_evals2[well_idx], auto_evals2[well_idx]],
+                    'y': [0, luminance_signals.max()],
                     'mode': 'lines',
                     'name': 'Auto',
-                    'line': {'width': 5, 'color': '#ff7f0e'},
-                    'yaxis': 'y2',
+                    'line': {'width':4,'color': '#20b2aa','dash':'dot'},
+                    
                 },
                 {
                     # Signal
@@ -720,22 +762,32 @@ def callback(well_idx, coef, rise_or_fall, time,
                 },
                 {
                     # Luminance signal
-                    'x': list(range(len(luminance_signals))),
-                    'y': list(luminance_signals[:, well_idx]),
+                    'x': list(range(luminance_signals.shape[1])),
+                    'y': list(luminance_signals[well_idx,:]),
                     'mode': 'lines',
-                    'line': {'color': '#87ceeb'},
+                    'line': {'color': '#20b2aa'},
                     'name': 'Luminance Signal',
                     'opacity': 1.0,
                 },
                 {
-                    # Threshold (hrizontal line)
+                    # Threshold (horizontal line)
                     'x': [0, len(signals[0, :])],
                     'y': [threshold[well_idx, 0], threshold[well_idx, 0]],
                     'mode': 'lines',
                     'name': 'Threshold',
-                    'line': {'width': 1, 'color': '#000000'},
+                    'line': {'width': 2, 'color': '#4169e1'},
                     'yaxis': 'y2',
                 },
+                {
+                    # Threshold2 (horizontal line)
+                    'x': [0, len(signals[0, :])],
+                    'y': [threshold2, threshold2],
+                    'mode': 'lines',
+                    'name': 'Threshold2',
+                    'line': {'width': 2, 'color': '#20b2aa'},
+                    
+                },
+
                 {
                     # Selected data point
                     'x': [x],
@@ -747,23 +799,29 @@ def callback(well_idx, coef, rise_or_fall, time,
                 },
             ],
             'layout': {
-                    'title': 'Activity signal (threshold={:.1f})'.format(threshold[well_idx, 0]),
-                'font': {'size': 15},
-                'xaxis': {
-                    'title': 'Time step',
-                    'tickfont': {'size': 15},
-                },
-                'yaxis2': {
-                    'title': 'Signal intensity',
-                    'tickfont': {'size': 15},
-                    'overlaying':'y',
-                    'range':[0, signals.max()],
+                    'title': 'Threshold: {:.1f}={:.1f}{:+.1f}*{:.1f} (blue), {:.1f} (green)'.format(
+                        threshold[well_idx, 0],
+                        signals.mean(),
+                        coef,
+                        signals.std(),
+                        threshold2
+                    ),
+                    'font': {'size': 15},
+                    'xaxis': {
+                        'title': 'Time step',
+                        'tickfont': {'size': 15},
                     },
-                'yaxis': {
-                    'title':'Luminance Signals',
-                    'tickfont': {'size': 15},
-                    'side':'right',
-                    'range':[0, luminance_signals.max()],
+                    'yaxis2': {
+                        'title': 'Signal intensity',
+                        'tickfont': {'size': 15},
+                        'overlaying':'y',
+                        'range':[0, signals.max()],
+                        },
+                    'yaxis1': {
+                        'title':'Luminance Signals',
+                        'tickfont': {'size': 15},
+                        'side':'right',
+                        'range':[0, luminance_signals.max()],
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
@@ -777,7 +835,7 @@ def callback(well_idx, coef, rise_or_fall, time,
 # ==========================================
 @app.callback(
         Output('summary-graph', 'figure'),
-        [Input('threshold-slider', 'value'),
+        [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
          Input('target-dropdown', 'value')],
         [State('data-root', 'children'),
@@ -819,16 +877,28 @@ def callback(coef, well_idx, rise_or_fall, data_root,
     return {
             'data': [
                 {
-                    'x': [10, len(signals[0, :])],
-                    'y': [0, len(signals[0, :])-10],
+                    'x': [
+                        round(0.05 * len(signals[0, :])),
+                        len(signals[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(signals[0, :])-round(0.05 * len(signals[0, :]))
+                    ],
                     'mode': 'lines',
                     'fill': None,
                     'line': {'width': .1, 'color': '#43d86b'},
                     'name': 'Lower bound',
                 },
                 {
-                    'x': [-10, len(signals[0, :])],
-                    'y': [0, len(signals[0, :])+10],
+                    'x': [
+                        -round(0.05 * len(signals[0, :])),
+                        len(signals[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(signals[0, :])+round(0.05 * len(signals[0, :]))
+                    ],
                     'mode': 'lines',
                     'fill': 'tonexty',
                     'line': {'width': .1, 'color': '#43d86b'},
@@ -873,13 +943,123 @@ def callback(coef, well_idx, rise_or_fall, data_root,
             },
         }
 
+# ===========================================
+#  Update the figure in the summary-graph2.
+# ===========================================
+@app.callback(
+        Output('summary-graph2', 'figure'),
+        [Input('threshold-slider2', 'value'),
+         Input('well-selector', 'value'),
+         Input('target-dropdown', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('csv-dropdown', 'value'),
+         State('morpho-dropdown', 'value'),
+         State('result-dropdown', 'value')])
+def callback(threshold, well_idx, rise_or_fall, data_root,
+        env, csv, morpho, result):
+
+    # Exception handling
+    if env is None or csv is None or morpho is None:
+        return {'data': []}
+
+    # Load the data
+    signals = store_luminance_signals(data_root, env).T
+    manual_evals = store_manual_evals(data_root, env, csv)
+
+    # Compute event times from signals
+    if rise_or_fall == 'rise':
+        auto_evals = (signals > threshold).argmax(axis=1)
+
+    elif rise_or_fall == 'fall':
+        # Scan the signal from the right hand side.
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > threshold).argmax(axis=1))
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == signals.shape[1]] = 0
+
+    # Calculate how many frames auto-evaluation is far from manual's one
+    errors = auto_evals - manual_evals
+
+    # Calculate the root mean square
+    rms = np.sqrt((errors**2).sum() / len(errors))
+
+    return {
+            'data': [
+                {
+                    'x': [
+                        round(0.05 * len(signals[0, :])),
+                        len(signals[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(signals[0, :])-round(0.05 * len(signals[0, :]))
+                    ],
+                    'mode': 'lines',
+                    'fill': None,
+                    'line': {'width': .1, 'color': '#43d86b'},
+                    'name': 'Lower bound',
+                },
+                {
+                    'x': [
+                        -round(0.05 * len(signals[0, :])),
+                        len(signals[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(signals[0, :])+round(0.05 * len(signals[0, :]))
+                    ],
+                    'mode': 'lines',
+                    'fill': 'tonexty',
+                    'line': {'width': .1, 'color': '#43d86b'},
+                    'name': 'Upper bound',
+                },
+                {
+                    'x': [0, len(signals[0,:])],
+                    'y': [0, len(signals[0,:])],
+                    'mode': 'lines',
+                    'line': {'width': .5, 'color': '#000000'},
+                    'name': 'Auto = Manual',
+                },
+                {
+                    'x': list(auto_evals),
+                    'y': list(manual_evals),
+                    'mode': 'markers',
+                    'marker': {'size': 5, 'color': '#20b2aa'},
+                    'name': 'Well',
+                },
+                {
+                    'x': [auto_evals[well_idx]],
+                    'y': [manual_evals[well_idx]],
+                    'mode': 'markers',
+                    'marker': {'size': 10, 'color': '#ff0000'},
+                    'name': 'Selected well',
+                },
+            ],
+            'layout': {
+                'title': 'RMS: {:.1f}'.format(rms),
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'Auto',
+                    'tickfont': {'size': 15},
+                },
+                'yaxis': {
+                    'title': 'Manual',
+                    'tickfont': {'size': 15},
+                },
+                'showlegend': False,
+                'hovermode': 'closest',
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=50, pad=0),
+            },
+        }
+
 
 # =======================================
 #  Update the figure in the error-hist.
 # =======================================
 @app.callback(
         Output('error-hist', 'figure'),
-        [Input('threshold-slider', 'value'),
+        [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
          Input('target-dropdown', 'value')],
         [State('data-root', 'children'),
@@ -918,12 +1098,17 @@ def callback(coef, well_idx, rise_or_fall, data_root,
 
     # Calculate the number of inconsistent wells
     tmp = np.bincount(abs(errors))
-    n_consist = tmp[:11].sum()
+    n_consist_5percent = tmp[:round(0.05 * signals.shape[1])].sum()
+    n_consist_1percent = tmp[:round(0.01 * signals.shape[1])].sum()
+    n_consist_10frames = tmp[:11].sum()
 
     return {
             'data': [
                 {
-                    'x': [-10, 10],
+                    'x': [
+                        -round(0.05 * signals.shape[1]),
+                        round(0.05 * signals.shape[1])
+                    ],
                     'y': [ns.max(), ns.max()],
                     'mode': 'lines',
                     'fill': 'tozeroy',
@@ -938,9 +1123,48 @@ def callback(coef, well_idx, rise_or_fall, data_root,
                 },
             ],
             'layout': {
-                'title': 'Consistency: {:.1f}% ({}/{})'.format(
-                        100 * n_consist / len(manual_evals),
-                        n_consist, len(manual_evals)),
+                'title': 'Error histogram',
+                'annotations': [
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 1.0 * ns.max(),
+                        'text': '#frames: consistency',
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 0.9 * ns.max(),
+                        'text': '{} (5%): {:.1f}% ({}/{})'.format(
+                            round(0.05 * signals.shape[1]),
+                            100 * n_consist_5percent / len(manual_evals),
+                            n_consist_5percent,
+                            len(manual_evals)),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 0.8 * ns.max(),
+                        'text': '{} (1%): {:.1f}% ({}/{})'.format(
+                            round(0.01 * signals.shape[1]),
+                            100 * n_consist_1percent / len(manual_evals),
+                            n_consist_1percent,
+                            len(manual_evals)),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 0.7 * ns.max(),
+                        'text': '10: {:.1f}% ({}/{})'.format(
+                            100 * n_consist_10frames / len(manual_evals),
+                            n_consist_10frames,
+                            len(manual_evals)),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                ],
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'auto - manual',
@@ -954,6 +1178,130 @@ def callback(coef, well_idx, rise_or_fall, data_root,
                 'showlegend': False,
                 'hovermode': 'closest',
                 'margin': go.layout.Margin(l=50, r=0, b=50, t=50, pad=0),
+            },
+        }
+
+
+# ==================================================
+#  Update the figure in the error-hist.(Luminance)
+# ==================================================
+@app.callback(
+        Output('error-hist2', 'figure'),
+        [Input('threshold-slider2', 'value'),
+         Input('well-selector', 'value'),
+         Input('target-dropdown', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('csv-dropdown', 'value'),
+         State('morpho-dropdown', 'value'),
+         State('result-dropdown', 'value')])
+def callback(threshold, well_idx, rise_or_fall, data_root,
+        env, csv, morpho, result):
+
+    # Exception handling
+    if env is None or csv is None or morpho is None:
+        return {'data': []}
+
+    # Load the data
+    signals = store_luminance_signals(data_root, env).T
+    manual_evals = store_manual_evals(data_root, env, csv)
+
+    # Compute event times from signals
+    if rise_or_fall == 'rise':
+        auto_evals = (signals > threshold).argmax(axis=1)
+
+    elif rise_or_fall == 'fall':
+        # Scan the signal from the right hand side.
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > threshold).argmax(axis=1))
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == signals.shape[1]] = 0
+
+    # Calculate how many frames auto-evaluation is far from manual's one
+    errors = auto_evals - manual_evals
+    ns, bins = np.histogram(errors, 1000)
+
+    # Calculate the number of inconsistent wells
+    tmp = np.bincount(abs(errors))
+    n_consist_5percent = tmp[:round(0.05 * signals.shape[1])].sum()
+    n_consist_1percent = tmp[:round(0.01 * signals.shape[1])].sum()
+    n_consist_10frames = tmp[:11].sum()
+
+    return {
+            'data': [
+                {
+                    'x': [
+                        -round(0.05 * signals.shape[1]),
+                        round(0.05 * signals.shape[1])
+                    ],
+                    'y': [ns.max(), ns.max()],
+                    'mode': 'lines',
+                    'fill': 'tozeroy',
+                    'line': {'width': 0, 'color': '#43d86b'},
+                },
+                {
+                    'x': list(bins[1:]),
+                    'y': list(ns),
+                    'mode': 'markers',
+                    'type': 'bar',
+                    'marker': {'size': 5, 'color': '#20b2aa'},
+                },
+            ],
+            'layout': {
+                'annotations': [
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 1.0 * ns.max(),
+                        'text': '#frames: consistency',
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 0.9 * ns.max(),
+                        'text': '{} (5%): {:.1f}% ({}/{})'.format(
+                            round(0.05 * signals.shape[1]),
+                            100 * n_consist_5percent / len(manual_evals),
+                            n_consist_5percent,
+                            len(manual_evals)),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 0.8 * ns.max(),
+                        'text': '{} (1%): {:.1f}% ({}/{})'.format(
+                            round(0.01 * signals.shape[1]),
+                            100 * n_consist_1percent / len(manual_evals),
+                            n_consist_1percent,
+                            len(manual_evals)),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * signals.shape[1],
+                        'y': 0.7 * ns.max(),
+                        'text': '10: {:.1f}% ({}/{})'.format(
+                            100 * n_consist_10frames / len(manual_evals),
+                            n_consist_10frames,
+                            len(manual_evals)),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                ],
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'auto - manual',
+                    'range': [-len(signals.T), len(signals.T)],
+                    'tickfont': {'size': 15},
+                },
+                'yaxis': {
+                    'title': 'Count',
+                    'tickfont': {'size': 15},
+                },
+                'showlegend': False,
+                'hovermode': 'closest',
+                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
             },
         }
 
