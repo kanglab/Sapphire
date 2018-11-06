@@ -60,7 +60,7 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Manual detection fire (csv) :',
+            'Manual detection file (csv) :',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
