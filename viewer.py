@@ -44,12 +44,12 @@ app.layout = html.Div([
     html.Header([html.H1('Sapphire', style={'margin': '0px'})]),
     html.Div([
         html.Div([
-            'Image datasets :',
+            'Dataset:',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
                     id='env-dropdown',
-                    placeholder='Select imaging env...',
+                    placeholder='Select a dataset...',
                     clearable=False,
                 ),
                 ],
@@ -60,12 +60,12 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Manual detection file (csv) :',
+            'Manual Detection File (CSV):',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
                     id='csv-dropdown',
-                    placeholder='Select CSV file...',
+                    placeholder='Select a CSV file...',
                     clearable=False,
                 ),
                 ],
@@ -76,12 +76,12 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Target Morphology of segmentation :',
+            'Target Morphology:',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
                     id='morpho-dropdown',
-                    placeholder='Select morpho...',
+                    placeholder='Select a morpho...',
                     clearable=False,
                 ),
                 ],
@@ -92,12 +92,12 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Load inference data :',
+            'Inference Data:',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
                     id='result-dropdown',
-                    placeholder='Select result dir...',
+                    placeholder='Select a result dir...',
                     clearable=False,
                 ),
                 ],
@@ -108,14 +108,14 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Type of thretholding:',
+            'Thresholding:',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
                     id='target-dropdown',
                     options=[
-                        {'label': 'positive derivative at cross point', 'value': 'positive'},
-                        {'label': 'negative derivative at cross point ', 'value': 'negative'},
+                        {'label': 'rising up', 'value': 'rise'},
+                        {'label': 'falling down', 'value': 'fall'},
                     ],
                     value='positive derivative at crosss point',
                     placeholder='Detect...',
@@ -126,7 +126,7 @@ app.layout = html.Div([
                     'width': '200px',
                 },
             ),
-            'Well index :',
+            'Well Index:',
             html.Br(),
             html.Div([
                 dcc.Input(
@@ -157,7 +157,7 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Time :',
+            'Time Step:',
             html.Br(),
             html.Div([
                 dcc.Input(
@@ -179,7 +179,7 @@ app.layout = html.Div([
             },
         ),
         html.Div([
-            html.Div('Original image', style={'display': 'table'}),
+            html.Div('Original Image', style={'display': 'table'}),
             html.Img(
                 id='t-image',
                 style={
