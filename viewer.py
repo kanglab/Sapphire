@@ -41,10 +41,10 @@ cache.init_app(
 #  Definition of the viewer page
 # ================================
 app.layout = html.Div([
-    html.Header([html.H1('Viewer', style={'margin': '0px'})]),
+    html.Header([html.H1('Sapphire', style={'margin': '0px'})]),
     html.Div([
         html.Div([
-            'Imaging environment :',
+            'Image datasets :',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
@@ -60,7 +60,7 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'CSV file :',
+            'Manual detection fire (csv) :',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
@@ -76,7 +76,7 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Morpho :',
+            'Target Morphology of segmentation :',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
@@ -92,7 +92,7 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Inference result :',
+            'Load inference data :',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
@@ -108,22 +108,22 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Target to detect :',
+            'Type of thretholding:',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
                     id='target-dropdown',
                     options=[
-                        {'label': 'rise', 'value': 'rise'},
-                        {'label': 'fall', 'value': 'fall'},
+                        {'label': 'positive derivative at cross point', 'value': 'positive'},
+                        {'label': 'negative derivative at cross point ', 'value': 'negative'},
                     ],
-                    value='rise',
+                    value='positive derivative at crosss point',
                     placeholder='Detect...',
                     clearable=False,
                 ),
                 ],
                 style={
-                    'width': '100px',
+                    'width': '200px',
                 },
             ),
             'Well index :',
@@ -307,7 +307,7 @@ app.layout = html.Div([
             style={
                 'display': 'inline-block',
                 'height': '400px',
-                # 'width': '40%',
+                #'width': '60%',
             },
         ),
         html.Div([
@@ -366,7 +366,7 @@ app.layout = html.Div([
     html.Div(id='dummy-div'),
     ],
     style={
-        'width': '1200px',
+        'width': '1300px',
     },
 )
 
@@ -679,7 +679,7 @@ def callback(click_data):
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(well_idx, coef, threshold2, rise_or_fall, time,
+def callback(well_idx, coef, threshold2, positive_or_negative, time,
         figure, data_root, env, csv, morpho, result):
 
     # Exception handling
@@ -700,12 +700,12 @@ def callback(well_idx, coef, threshold2, rise_or_fall, time,
     threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
-    if rise_or_fall == 'rise':
+    if positive_or_negative == 'positive':
 
         auto_evals = (signals > threshold).argmax(axis=1)
         auto_evals2 = (luminance_signals > threshold2).argmax(axis=1)
 
-    elif rise_or_fall == 'fall':
+    elif positive_or_negative == 'negative':
 
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
@@ -843,7 +843,7 @@ def callback(well_idx, coef, threshold2, rise_or_fall, time,
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, rise_or_fall, data_root,
+def callback(coef, well_idx, positive_or_negative, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -858,10 +858,10 @@ def callback(coef, well_idx, rise_or_fall, data_root,
     threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
-    if rise_or_fall == 'rise':
+    if positive_or_negative == 'positive':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif rise_or_fall == 'fall':
+    elif positive_or_negative == 'negative':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
@@ -956,7 +956,7 @@ def callback(coef, well_idx, rise_or_fall, data_root,
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, rise_or_fall, data_root,
+def callback(threshold, well_idx, positive_or_negative, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -968,10 +968,10 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     manual_evals = store_manual_evals(data_root, env, csv)
 
     # Compute event times from signals
-    if rise_or_fall == 'rise':
+    if positive_or_negative == 'positive':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif rise_or_fall == 'fall':
+    elif positive_or_negative == 'negative':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
@@ -1067,7 +1067,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, rise_or_fall, data_root,
+def callback(coef, well_idx, positive_or_negative, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -1082,10 +1082,10 @@ def callback(coef, well_idx, rise_or_fall, data_root,
     threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
-    if rise_or_fall == 'rise':
+    if positive_or_negative == 'positive':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif rise_or_fall == 'fall':
+    elif positive_or_negative == 'negative':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
@@ -1195,7 +1195,7 @@ def callback(coef, well_idx, rise_or_fall, data_root,
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, rise_or_fall, data_root,
+def callback(threshold, well_idx, positive_or_negative, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -1207,10 +1207,10 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     manual_evals = store_manual_evals(data_root, env, csv)
 
     # Compute event times from signals
-    if rise_or_fall == 'rise':
+    if positive_or_negative == 'positive':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif rise_or_fall == 'fall':
+    elif positive_or_negative == 'negative':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
@@ -1405,6 +1405,7 @@ def callback(time, well_idx, data_root, env, morpho, result):
     npz = np.load(npzfile_path)
     probs = npz['arr_0'].astype(np.int32)
     prob = (probs[time] > THETA) * 255
+    prob = prob.astype(np.uint8)
     label_image = PIL.Image.fromarray(prob).convert('L')
 
     # Buffer the well image as byte stream
@@ -1440,6 +1441,7 @@ def callback(time, well_idx, data_root, env, morpho, result):
     npz = np.load(npzfile_path)
     probs = npz['arr_0'].astype(np.int32)
     prob = (probs[time+1] > THETA) * 255
+    prob = prob.astype(np.uint8)
     label_image = PIL.Image.fromarray(prob).convert('L')
 
     # Buffer the well image as byte stream
