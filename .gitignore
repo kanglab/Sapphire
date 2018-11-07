@@ -56,3 +56,8 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# User definition
+static/mask.npy
+static/mask_params.json
+cache/
