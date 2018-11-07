@@ -41,15 +41,15 @@ cache.init_app(
 #  Definition of the viewer page
 # ================================
 app.layout = html.Div([
-    html.Header([html.H1('Viewer', style={'margin': '0px'})]),
+    html.Header([html.H1('Sapphire', style={'margin': '0px'})]),
     html.Div([
         html.Div([
-            'Imaging environment :',
+            'Dataset:',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
                     id='env-dropdown',
-                    placeholder='Select imaging env...',
+                    placeholder='Select a dataset...',
                     clearable=False,
                 ),
                 ],
@@ -60,12 +60,12 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'CSV file :',
+            'Manual Detection File (CSV):',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
                     id='csv-dropdown',
-                    placeholder='Select CSV file...',
+                    placeholder='Select a CSV file...',
                     clearable=False,
                 ),
                 ],
@@ -76,12 +76,12 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Morpho :',
+            'Target Morphology:',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
                     id='morpho-dropdown',
-                    placeholder='Select morpho...',
+                    placeholder='Select a morpho...',
                     clearable=False,
                 ),
                 ],
@@ -92,12 +92,12 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Inference result :',
+            'Inference Data:',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
                     id='result-dropdown',
-                    placeholder='Select result dir...',
+                    placeholder='Select a result dir...',
                     clearable=False,
                 ),
                 ],
@@ -108,25 +108,24 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Target to detect :',
+            'Thresholding:',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
                     id='target-dropdown',
                     options=[
-                        {'label': 'rise', 'value': 'rise'},
-                        {'label': 'fall', 'value': 'fall'},
+                        {'label': 'rising up', 'value': 'rise'},
+                        {'label': 'falling down', 'value': 'fall'},
                     ],
-                    value='rise',
                     placeholder='Detect...',
                     clearable=False,
                 ),
                 ],
                 style={
-                    'width': '100px',
+                    'width': '200px',
                 },
             ),
-            'Well index :',
+            'Well Index:',
             html.Br(),
             html.Div([
                 dcc.Input(
@@ -157,7 +156,7 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Time :',
+            'Time Step:',
             html.Br(),
             html.Div([
                 dcc.Input(
@@ -179,7 +178,7 @@ app.layout = html.Div([
             },
         ),
         html.Div([
-            html.Div('Original image', style={'display': 'table'}),
+            html.Div('Original Image', style={'display': 'table'}),
             html.Img(
                 id='t-image',
                 style={
@@ -307,7 +306,7 @@ app.layout = html.Div([
             style={
                 'display': 'inline-block',
                 'height': '400px',
-                # 'width': '40%',
+                #'width': '60%',
             },
         ),
         html.Div([
@@ -366,7 +365,7 @@ app.layout = html.Div([
     html.Div(id='dummy-div'),
     ],
     style={
-        'width': '1200px',
+        'width': '1300px',
     },
 )
 
@@ -679,7 +678,7 @@ def callback(click_data):
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(well_idx, coef, threshold2, rise_or_fall, time,
+def callback(well_idx, coef, threshold2, positive_or_negative, time,
         figure, data_root, env, csv, morpho, result):
 
     # Exception handling
@@ -700,12 +699,12 @@ def callback(well_idx, coef, threshold2, rise_or_fall, time,
     threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
-    if rise_or_fall == 'rise':
+    if positive_or_negative == 'rise':
 
         auto_evals = (signals > threshold).argmax(axis=1)
         auto_evals2 = (luminance_signals > threshold2).argmax(axis=1)
 
-    elif rise_or_fall == 'fall':
+    elif positive_or_negative == 'fall':
 
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
@@ -812,13 +811,13 @@ def callback(well_idx, coef, threshold2, rise_or_fall, time,
                         'tickfont': {'size': 15},
                     },
                     'yaxis2': {
-                        'title': 'Signal intensity',
+                        'title': 'Label Change',
                         'tickfont': {'size': 15},
                         'overlaying':'y',
                         'range':[0, signals.max()],
                         },
                     'yaxis1': {
-                        'title':'Luminance Signals',
+                        'title':'Luminance Change',
                         'tickfont': {'size': 15},
                         'side':'right',
                         'range':[0, luminance_signals.max()],
@@ -843,7 +842,7 @@ def callback(well_idx, coef, threshold2, rise_or_fall, time,
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, rise_or_fall, data_root,
+def callback(coef, well_idx, positive_or_negative, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -858,10 +857,10 @@ def callback(coef, well_idx, rise_or_fall, data_root,
     threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
-    if rise_or_fall == 'rise':
+    if positive_or_negative == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif rise_or_fall == 'fall':
+    elif positive_or_negative == 'fall':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
@@ -956,7 +955,7 @@ def callback(coef, well_idx, rise_or_fall, data_root,
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, rise_or_fall, data_root,
+def callback(threshold, well_idx, positive_or_negative, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -968,10 +967,10 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     manual_evals = store_manual_evals(data_root, env, csv)
 
     # Compute event times from signals
-    if rise_or_fall == 'rise':
+    if positive_or_negative == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif rise_or_fall == 'fall':
+    elif positive_or_negative == 'fall':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
@@ -1067,7 +1066,7 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, rise_or_fall, data_root,
+def callback(coef, well_idx, positive_or_negative, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -1082,10 +1081,10 @@ def callback(coef, well_idx, rise_or_fall, data_root,
     threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
-    if rise_or_fall == 'rise':
+    if positive_or_negative == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif rise_or_fall == 'fall':
+    elif positive_or_negative == 'fall':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
@@ -1195,7 +1194,7 @@ def callback(coef, well_idx, rise_or_fall, data_root,
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, rise_or_fall, data_root,
+def callback(threshold, well_idx, positive_or_negative, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -1207,10 +1206,10 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     manual_evals = store_manual_evals(data_root, env, csv)
 
     # Compute event times from signals
-    if rise_or_fall == 'rise':
+    if positive_or_negative == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif rise_or_fall == 'fall':
+    elif positive_or_negative == 'fall':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
@@ -1405,6 +1404,7 @@ def callback(time, well_idx, data_root, env, morpho, result):
     npz = np.load(npzfile_path)
     probs = npz['arr_0'].astype(np.int32)
     prob = (probs[time] > THETA) * 255
+    prob = prob.astype(np.uint8)
     label_image = PIL.Image.fromarray(prob).convert('L')
 
     # Buffer the well image as byte stream
@@ -1440,6 +1440,7 @@ def callback(time, well_idx, data_root, env, morpho, result):
     npz = np.load(npzfile_path)
     probs = npz['arr_0'].astype(np.int32)
     prob = (probs[time+1] > THETA) * 255
+    prob = prob.astype(np.uint8)
     label_image = PIL.Image.fromarray(prob).convert('L')
 
     # Buffer the well image as byte stream
