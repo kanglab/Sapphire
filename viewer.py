@@ -117,7 +117,6 @@ app.layout = html.Div([
                         {'label': 'rising up', 'value': 'rise'},
                         {'label': 'falling down', 'value': 'fall'},
                     ],
-                    value='positive derivative at crosss point',
                     placeholder='Detect...',
                     clearable=False,
                 ),
@@ -700,12 +699,12 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time,
     threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
-    if positive_or_negative == 'positive':
+    if positive_or_negative == 'rise':
 
         auto_evals = (signals > threshold).argmax(axis=1)
         auto_evals2 = (luminance_signals > threshold2).argmax(axis=1)
 
-    elif positive_or_negative == 'negative':
+    elif positive_or_negative == 'fall':
 
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
@@ -812,13 +811,13 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time,
                         'tickfont': {'size': 15},
                     },
                     'yaxis2': {
-                        'title': 'Signal intensity',
+                        'title': 'Label Change',
                         'tickfont': {'size': 15},
                         'overlaying':'y',
                         'range':[0, signals.max()],
                         },
                     'yaxis1': {
-                        'title':'Luminance Signals',
+                        'title':'Luminance Change',
                         'tickfont': {'size': 15},
                         'side':'right',
                         'range':[0, luminance_signals.max()],
@@ -858,10 +857,10 @@ def callback(coef, well_idx, positive_or_negative, data_root,
     threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
-    if positive_or_negative == 'positive':
+    if positive_or_negative == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif positive_or_negative == 'negative':
+    elif positive_or_negative == 'fall':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
@@ -968,10 +967,10 @@ def callback(threshold, well_idx, positive_or_negative, data_root,
     manual_evals = store_manual_evals(data_root, env, csv)
 
     # Compute event times from signals
-    if positive_or_negative == 'positive':
+    if positive_or_negative == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif positive_or_negative == 'negative':
+    elif positive_or_negative == 'fall':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
@@ -1082,10 +1081,10 @@ def callback(coef, well_idx, positive_or_negative, data_root,
     threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
-    if positive_or_negative == 'positive':
+    if positive_or_negative == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif positive_or_negative == 'negative':
+    elif positive_or_negative == 'fall':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
@@ -1207,10 +1206,10 @@ def callback(threshold, well_idx, positive_or_negative, data_root,
     manual_evals = store_manual_evals(data_root, env, csv)
 
     # Compute event times from signals
-    if positive_or_negative == 'positive':
+    if positive_or_negative == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif positive_or_negative == 'negative':
+    elif positive_or_negative == 'fall':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
