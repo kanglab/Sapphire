@@ -215,7 +215,8 @@ app.layout = html.Div([
             ],
             style={
                 'display': 'inline-block',
-                'margin': '2px 2px',
+                'margin-right': '5px',
+                'margin-left': '5px',
             },
         ),
         html.Div([
@@ -255,7 +256,8 @@ app.layout = html.Div([
             ],
             style={
                 'display': 'inline-block',
-                'margin': '2px',
+                'margin-right': '5px',
+                'margin-left': '5px',
             },
         ),
 
@@ -272,6 +274,7 @@ app.layout = html.Div([
             ],
             style={
                 'display': 'inline-block',
+                'margin-left': '5px',
             },
         ),
 
@@ -382,7 +385,7 @@ app.layout = html.Div([
     html.Div(id='dummy-div'),
     ],
     style={
-        'width': '1300px',
+        'width': '1600px',
     },
 )
 
