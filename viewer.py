@@ -41,15 +41,15 @@ cache.init_app(
 #  Definition of the viewer page
 # ================================
 app.layout = html.Div([
-    html.Header([html.H1('Viewer', style={'margin': '0px'})]),
+    html.Header([html.H1('Sapphire', style={'margin': '0px'})]),
     html.Div([
         html.Div([
-            'Imaging environment :',
+            'Dataset:',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
                     id='env-dropdown',
-                    placeholder='Select imaging env...',
+                    placeholder='Select a dataset...',
                     clearable=False,
                 ),
                 ],
@@ -60,12 +60,12 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'CSV file :',
+            'Manual Detection File (CSV):',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
                     id='csv-dropdown',
-                    placeholder='Select CSV file...',
+                    placeholder='Select a CSV file...',
                     clearable=False,
                 ),
                 ],
@@ -76,12 +76,12 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Morpho :',
+            'Target Morphology:',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
                     id='morpho-dropdown',
-                    placeholder='Select morpho...',
+                    placeholder='Select a morpho...',
                     clearable=False,
                 ),
                 ],
@@ -92,12 +92,12 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Inference result :',
+            'Inference Data:',
             html.Br(),
             html.Div([
                 dcc.Dropdown(
                     id='result-dropdown',
-                    placeholder='Select result dir...',
+                    placeholder='Select a result dir...',
                     clearable=False,
                 ),
                 ],
@@ -108,25 +108,17 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Target to detect :',
+            'Thresholding:',
             html.Br(),
-            html.Div([
-                dcc.Dropdown(
-                    id='target-dropdown',
-                    options=[
-                        {'label': 'rise', 'value': 'rise'},
-                        {'label': 'fall', 'value': 'fall'},
-                    ],
-                    value='rise',
-                    placeholder='Detect...',
-                    clearable=False,
-                ),
+            dcc.RadioItems(
+                id='rise-or-fall',
+                options=[
+                    {'label': 'Rising Up', 'value': 'rise'},
+                    {'label': 'Falling Down', 'value': 'fall'},
                 ],
-                style={
-                    'width': '100px',
-                },
+                value='rise',
             ),
-            'Well index :',
+            'Well Index:',
             html.Br(),
             html.Div([
                 dcc.Input(
@@ -157,7 +149,7 @@ app.layout = html.Div([
                 },
             ),
             html.Br(),
-            'Time :',
+            'Time Step:',
             html.Br(),
             html.Div([
                 dcc.Input(
@@ -179,7 +171,7 @@ app.layout = html.Div([
             },
         ),
         html.Div([
-            html.Div('Original image', style={'display': 'table'}),
+            html.Div('Original Image', style={'display': 'table'}),
             html.Img(
                 id='t-image',
                 style={
@@ -216,7 +208,8 @@ app.layout = html.Div([
             ],
             style={
                 'display': 'inline-block',
-                'margin': '2px 2px',
+                'margin-right': '5px',
+                'margin-left': '5px',
             },
         ),
         html.Div([
@@ -256,9 +249,28 @@ app.layout = html.Div([
             ],
             style={
                 'display': 'inline-block',
-                'margin': '2px',
+                'margin-right': '5px',
+                'margin-left': '5px',
             },
         ),
+
+        html.Div([
+                html.Img(
+                    id='current-well',
+                    style={
+                        'background': '#555555',
+                        'height': 'auto',
+                        'width': '200px',
+                        'padding': '5px',
+                    },
+                ),
+            ],
+            style={
+                'display': 'inline-block',
+                'margin-left': '5px',
+            },
+        ),
+
         html.Div([
             'Data root :',
             html.Div(DATA_ROOT, id='data-root'),
@@ -307,7 +319,7 @@ app.layout = html.Div([
             style={
                 'display': 'inline-block',
                 'height': '400px',
-                # 'width': '40%',
+                #'width': '60%',
             },
         ),
         html.Div([
@@ -366,7 +378,7 @@ app.layout = html.Div([
     html.Div(id='dummy-div'),
     ],
     style={
-        'width': '1200px',
+        'width': '1600px',
     },
 )
 
@@ -671,7 +683,7 @@ def callback(click_data):
         [Input('well-selector', 'value'),
          Input('threshold-slider1', 'value'),
          Input('threshold-slider2', 'value'),
-         Input('target-dropdown', 'value'),
+         Input('rise-or-fall', 'value'),
          Input('time-selector', 'value')],
         [State('signal-graph', 'figure'),
          State('data-root', 'children'),
@@ -679,11 +691,11 @@ def callback(click_data):
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(well_idx, coef, threshold2, rise_or_fall, time,
+def callback(well_idx, coef, threshold2, positive_or_negative, time,
         figure, data_root, env, csv, morpho, result):
 
     # Exception handling
-    if env is None or csv is None or morpho is None:
+    if env is None or morpho is None:
         return {'data': []}
 
     if len(figure['data']) == 0:
@@ -693,19 +705,18 @@ def callback(well_idx, coef, threshold2, rise_or_fall, time,
 
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
-    manual_evals = store_manual_evals(data_root, env, csv)
     luminance_signals = store_luminance_signals(data_root, env).T
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
-    if rise_or_fall == 'rise':
+    if positive_or_negative == 'rise':
 
         auto_evals = (signals > threshold).argmax(axis=1)
         auto_evals2 = (luminance_signals > threshold2).argmax(axis=1)
 
-    elif rise_or_fall == 'fall':
+    elif positive_or_negative == 'fall':
 
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
@@ -721,8 +732,17 @@ def callback(well_idx, coef, threshold2, rise_or_fall, time,
         # If the signal was not more than the threshold.
         auto_evals2[auto_evals2 == luminance_signals.shape[1]] = 0
 
-    return {
-            'data': [
+    # Load a manual data and prepare data to be drawn
+    # If a manual data exists, draw it
+    manual_data = []
+
+    if csv is None:
+        pass
+
+    else:
+        manual_evals = store_manual_evals(data_root, env, csv)
+
+        manual_data = [
                 {
                     # Manual evaluation time (vertical line)
                     'x': [manual_evals[well_idx], manual_evals[well_idx]],
@@ -731,7 +751,11 @@ def callback(well_idx, coef, threshold2, rise_or_fall, time,
                     'name': 'Manual',
                     'line': {'width': 5, 'color': '#ffa500'},
                     'yaxis': 'y2',
-                },
+                }
+            ]
+
+    return {
+            'data': manual_data + [
                 {
                     # Auto evaluation time (vertical line)
                     'x': [auto_evals[well_idx], auto_evals[well_idx]],
@@ -812,13 +836,13 @@ def callback(well_idx, coef, threshold2, rise_or_fall, time,
                         'tickfont': {'size': 15},
                     },
                     'yaxis2': {
-                        'title': 'Signal intensity',
+                        'title': 'Diff. of ROI',
                         'tickfont': {'size': 15},
                         'overlaying':'y',
                         'range':[0, signals.max()],
                         },
                     'yaxis1': {
-                        'title':'Luminance Signals',
+                        'title':'Diff. of Luminance',
                         'tickfont': {'size': 15},
                         'side':'right',
                         'range':[0, luminance_signals.max()],
@@ -837,13 +861,13 @@ def callback(well_idx, coef, threshold2, rise_or_fall, time,
         Output('summary-graph', 'figure'),
         [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
-         Input('target-dropdown', 'value')],
+         Input('rise-or-fall', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, rise_or_fall, data_root,
+def callback(coef, well_idx, positive_or_negative, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -858,10 +882,10 @@ def callback(coef, well_idx, rise_or_fall, data_root,
     threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
-    if rise_or_fall == 'rise':
+    if positive_or_negative == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif rise_or_fall == 'fall':
+    elif positive_or_negative == 'fall':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
@@ -950,13 +974,13 @@ def callback(coef, well_idx, rise_or_fall, data_root,
         Output('summary-graph2', 'figure'),
         [Input('threshold-slider2', 'value'),
          Input('well-selector', 'value'),
-         Input('target-dropdown', 'value')],
+         Input('rise-or-fall', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, rise_or_fall, data_root,
+def callback(threshold, well_idx, positive_or_negative, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -968,10 +992,10 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     manual_evals = store_manual_evals(data_root, env, csv)
 
     # Compute event times from signals
-    if rise_or_fall == 'rise':
+    if positive_or_negative == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif rise_or_fall == 'fall':
+    elif positive_or_negative == 'fall':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
@@ -1061,13 +1085,13 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
         Output('error-hist', 'figure'),
         [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
-         Input('target-dropdown', 'value')],
+         Input('rise-or-fall', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, rise_or_fall, data_root,
+def callback(coef, well_idx, positive_or_negative, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -1082,10 +1106,10 @@ def callback(coef, well_idx, rise_or_fall, data_root,
     threshold = my_threshold.entire_stats(signals, coef=coef)
 
     # Compute event times from signals
-    if rise_or_fall == 'rise':
+    if positive_or_negative == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif rise_or_fall == 'fall':
+    elif positive_or_negative == 'fall':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
@@ -1189,13 +1213,13 @@ def callback(coef, well_idx, rise_or_fall, data_root,
         Output('error-hist2', 'figure'),
         [Input('threshold-slider2', 'value'),
          Input('well-selector', 'value'),
-         Input('target-dropdown', 'value')],
+         Input('rise-or-fall', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, rise_or_fall, data_root,
+def callback(threshold, well_idx, positive_or_negative, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -1207,10 +1231,10 @@ def callback(threshold, well_idx, rise_or_fall, data_root,
     manual_evals = store_manual_evals(data_root, env, csv)
 
     # Compute event times from signals
-    if rise_or_fall == 'rise':
+    if positive_or_negative == 'rise':
         auto_evals = (signals > threshold).argmax(axis=1)
 
-    elif rise_or_fall == 'fall':
+    elif positive_or_negative == 'fall':
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
                 - (np.fliplr(signals) > threshold).argmax(axis=1))
@@ -1405,13 +1429,14 @@ def callback(time, well_idx, data_root, env, morpho, result):
     npz = np.load(npzfile_path)
     probs = npz['arr_0'].astype(np.int32)
     prob = (probs[time] > THETA) * 255
+    prob = prob.astype(np.uint8)
     label_image = PIL.Image.fromarray(prob).convert('L')
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
-    label_image.save(buf, format='PNG')
+    label_image.save(buf, format='JPEG')
 
-    return 'data:image/png;base64,{}'.format(
+    return 'data:image/jpeg;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
@@ -1440,13 +1465,14 @@ def callback(time, well_idx, data_root, env, morpho, result):
     npz = np.load(npzfile_path)
     probs = npz['arr_0'].astype(np.int32)
     prob = (probs[time+1] > THETA) * 255
+    prob = prob.astype(np.uint8)
     label_image = PIL.Image.fromarray(prob).convert('L')
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
-    label_image.save(buf, format='PNG')
+    label_image.save(buf, format='JPEG')
 
-    return 'data:image/png;base64,{}'.format(
+    return 'data:image/jpeg;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
@@ -1512,9 +1538,48 @@ def callback(time, well_idx, data_root, env, morpho, result):
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
-    prob_image.save(buf, format='PNG')
+    prob_image.save(buf, format='JPEG')
 
-    return 'data:image/png;base64,{}'.format(
+    return 'data:image/jpeg;base64,{}'.format(
+            base64.b64encode(buf.getvalue()).decode('utf-8'))
+
+
+# ===========================
+#  Update the current-well.
+# ===========================
+@app.callback(
+        Output('current-well', 'src'),
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('current-morpho', 'children'),
+         State('current-result', 'children')])
+def callback(time, well_idx, data_root, env, morpho, result):
+
+    # Exception handling
+    if env is None or morpho is None or result is None:
+        return ''
+
+    # Load the mask
+    mask = store_mask(data_root, env)
+
+    # Load an original image
+    orgimg_paths = sorted(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg')))
+    org_img = np.array(
+            PIL.Image.open(orgimg_paths[time]).convert('RGB'), dtype=np.uint8)
+
+    r, c = np.where(mask == well_idx)
+    org_img[r.min():r.max(), c.min():c.max(), [0, ]] = 255
+    org_img[r.min():r.max(), c.min():c.max(), [1, 2]] = 0
+    org_img = PIL.Image.fromarray(org_img).convert('RGB')
+
+    # Buffer the well image as byte stream
+    buf = io.BytesIO()
+    org_img.save(buf, format='JPEG')
+
+    return 'data:image/jpeg;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
