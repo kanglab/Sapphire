@@ -693,14 +693,15 @@ def callback(click_data):
          Input('threshold-slider1', 'value'),
          Input('threshold-slider2', 'value'),
          Input('rise-or-fall', 'value'),
-         Input('time-selector', 'value')],
+         Input('time-selector', 'value'),
+         Input('filter-check', 'values')],
         [State('signal-graph', 'figure'),
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(well_idx, coef, threshold2, positive_or_negative, time,
+def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
         figure, data_root, env, csv, morpho, result):
 
     # Exception handling
@@ -714,9 +715,12 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time,
 
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
-    signals = my_filter(signals, sigma=5)
     luminance_signals = store_luminance_signals(data_root, env).T
-    luminance_signals = my_filter(luminance_signals, sigma=5)
+
+    # Smooth the signals
+    if len(checks) != 0:
+        signals = my_filter(signals, sigma=5)
+        luminance_signals = my_filter(luminance_signals, sigma=5)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
@@ -872,13 +876,14 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time,
         Output('summary-graph', 'figure'),
         [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
-         Input('rise-or-fall', 'value')],
+         Input('rise-or-fall', 'value'),
+         Input('filter-check', 'values')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, positive_or_negative, data_root,
+def callback(coef, well_idx, positive_or_negative, checks, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -887,8 +892,11 @@ def callback(coef, well_idx, positive_or_negative, data_root,
 
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
-    signals = my_filter(signals, sigma=5)
     manual_evals = store_manual_evals(data_root, env, csv)
+
+    # Smooth the signals
+    if len(checks) != 0:
+        signals = my_filter(signals, sigma=5)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
@@ -986,13 +994,14 @@ def callback(coef, well_idx, positive_or_negative, data_root,
         Output('summary-graph2', 'figure'),
         [Input('threshold-slider2', 'value'),
          Input('well-selector', 'value'),
-         Input('rise-or-fall', 'value')],
+         Input('rise-or-fall', 'value'),
+         Input('filter-check', 'values')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, positive_or_negative, data_root,
+def callback(threshold, well_idx, positive_or_negative, checks, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -1002,6 +1011,10 @@ def callback(threshold, well_idx, positive_or_negative, data_root,
     # Load the data
     signals = store_luminance_signals(data_root, env).T
     manual_evals = store_manual_evals(data_root, env, csv)
+
+    # Smooth the signals
+    if len(checks) != 0:
+        signals = my_filter(signals, sigma=5)
 
     # Compute event times from signals
     if positive_or_negative == 'rise':
@@ -1097,13 +1110,14 @@ def callback(threshold, well_idx, positive_or_negative, data_root,
         Output('error-hist', 'figure'),
         [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
-         Input('rise-or-fall', 'value')],
+         Input('rise-or-fall', 'value'),
+         Input('filter-check', 'values')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, positive_or_negative, data_root,
+def callback(coef, well_idx, positive_or_negative, checks, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -1112,8 +1126,11 @@ def callback(coef, well_idx, positive_or_negative, data_root,
 
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
-    signals = my_filter(signals, sigma=5)
     manual_evals = store_manual_evals(data_root, env, csv)
+
+    # Smooth the signals
+    if len(checks) != 0:
+        signals = my_filter(signals, sigma=5)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
@@ -1226,13 +1243,14 @@ def callback(coef, well_idx, positive_or_negative, data_root,
         Output('error-hist2', 'figure'),
         [Input('threshold-slider2', 'value'),
          Input('well-selector', 'value'),
-         Input('rise-or-fall', 'value')],
+         Input('rise-or-fall', 'value'),
+         Input('filter-check', 'values')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, positive_or_negative, data_root,
+def callback(threshold, well_idx, positive_or_negative, checks, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -1242,6 +1260,10 @@ def callback(threshold, well_idx, positive_or_negative, data_root,
     # Load the data
     signals = store_luminance_signals(data_root, env).T
     manual_evals = store_manual_evals(data_root, env, csv)
+
+    # Smooth the signals
+    if len(checks) != 0:
+        signals = my_filter(signals, sigma=5)
 
     # Compute event times from signals
     if positive_or_negative == 'rise':
