@@ -44,11 +44,11 @@ n_clms = dcc.Input(
 n_plates = dcc.Input(
         id='n-plates', type='number', value=3, max=10, min=0, size=5)
 row_gap = dcc.Input(
-        id='row-gap', type='number', value=1, max=10, min=0, size=5)
+        id='row-gap', type='number', value=1, max=10, min=0, size=5, step=0.1)
 clm_gap = dcc.Input(
-        id='clm-gap', type='number', value=1, max=10, min=0, size=5)
+        id='clm-gap', type='number', value=1, max=10, min=0, size=5, step=0.1)
 plate_gap = dcc.Input(
-        id='plate-gap', type='number', value=71, max=100, min=0, size=5)
+        id='plate-gap', type='number', value=71, max=800, min=0, size=5)
 x = dcc.Input(
         id='x', type='number', value=0, max=1500, min=0, size=5)
 y = dcc.Input(
@@ -221,8 +221,8 @@ def draw_images(
     for n in range(n_plates):
         for idx_r in range(n_rows):
             for idx_c in range(n_clms):
-                c1 = x + idx_c*(well_w + gap_c)
-                r1 = y + idx_r*(well_h + gap_r) + n*(n_rows*well_h + gap_p) + gap_r*(n - 1)
+                c1 = x + round(idx_c*(well_w + gap_c))
+                r1 = y + round(idx_r*(well_h + gap_r)) + n*(n_rows*well_h + gap_p) + round(gap_r*(n - 1))
                 c1, r1 = np.dot(
                         np.array(
                             [[np.cos(angle), -np.sin(angle)],
@@ -261,7 +261,7 @@ def draw_images(
             'y': y,
             'well-w': well_w,
             'well-h': well_h,
-            'angle': angle,
+            'angle': np.rad2deg(angle),
             }
     with open('static/mask_params.json', 'w') as f:
         json.dump(params_dict, f, indent=4)
