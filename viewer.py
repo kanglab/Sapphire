@@ -110,20 +110,13 @@ app.layout = html.Div([
             html.Br(),
             'Thresholding:',
             html.Br(),
-            html.Div([
-                dcc.Dropdown(
-                    id='target-dropdown',
-                    options=[
-                        {'label': 'rising up', 'value': 'rise'},
-                        {'label': 'falling down', 'value': 'fall'},
-                    ],
-                    placeholder='Detect...',
-                    clearable=False,
-                ),
+            dcc.RadioItems(
+                id='target-dropdown',
+                options=[
+                    {'label': 'Rising Up', 'value': 'rise'},
+                    {'label': 'Falling Down', 'value': 'fall'},
                 ],
-                style={
-                    'width': '200px',
-                },
+                value='rise',
             ),
             'Well Index:',
             html.Br(),
