@@ -1596,21 +1596,16 @@ def callback(time, well_idx, data_root, env, morpho, result):
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
-def my_filter(signals, sigma=5, valid=True):
+def my_filter(signals, sigma=5):
     
-    if valid:
+    window = scipy.signal.gaussian(10, sigma)
 
-        window = scipy.signal.gaussian(10, sigma)
+    signals = np.array(
+            [np.convolve(signal, window, mode='same')
+                for signal in signals])
 
-        signals = np.array(
-                [np.convolve(signal, window, mode='same')
-                    for signal in signals])
+    return signals
 
-        return signals
-    
-    else:
-
-        return signals
 
 if __name__ == '__main__':
     app.run_server(debug=True)
