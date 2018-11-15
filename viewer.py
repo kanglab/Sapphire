@@ -45,126 +45,134 @@ app.layout = html.Div([
     html.Header([html.H1('Sapphire', style={'margin': '0px'})]),
     html.Div([
         html.Div([
-            'Dataset:',
-            html.Br(),
-            html.Div([
-                dcc.Dropdown(
-                    id='env-dropdown',
-                    placeholder='Select a dataset...',
-                    clearable=False,
+                'Dataset:',
+                html.Br(),
+                html.Div([
+                    dcc.Dropdown(
+                        id='env-dropdown',
+                        placeholder='Select a dataset...',
+                        clearable=False,
+                    ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                        'width': '200px',
+                        'vertical-align': 'middle',
+                    },
                 ),
-                ],
-                style={
-                    'display': 'inline-block',
-                    'width': '200px',
-                    'vertical-align': 'middle',
-                },
-            ),
-            html.Br(),
-            'Manual Detection File (CSV):',
-            html.Br(),
-            html.Div([
-                dcc.Dropdown(
-                    id='csv-dropdown',
-                    placeholder='Select a CSV file...',
-                    clearable=False,
+                html.Br(),
+                'Manual Detection File (CSV):',
+                html.Br(),
+                html.Div([
+                    dcc.Dropdown(
+                        id='csv-dropdown',
+                        placeholder='Select a CSV file...',
+                        clearable=False,
+                    ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                        'width': '200px',
+                        'vertical-align': 'middle',
+                    },
                 ),
-                ],
-                style={
-                    'display': 'inline-block',
-                    'width': '200px',
-                    'vertical-align': 'middle',
-                },
-            ),
-            html.Br(),
-            'Target Morphology:',
-            html.Br(),
-            html.Div([
-                dcc.Dropdown(
-                    id='morpho-dropdown',
-                    placeholder='Select a morpho...',
-                    clearable=False,
+                html.Br(),
+                'Target Morphology:',
+                html.Br(),
+                html.Div([
+                    dcc.Dropdown(
+                        id='morpho-dropdown',
+                        placeholder='Select a morpho...',
+                        clearable=False,
+                    ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                        'width': '200px',
+                        'vertical-align': 'middle',
+                    },
                 ),
-                ],
-                style={
-                    'display': 'inline-block',
-                    'width': '200px',
-                    'vertical-align': 'middle',
-                },
-            ),
-            html.Br(),
-            'Inference Data:',
-            html.Br(),
-            html.Div([
-                dcc.Dropdown(
-                    id='result-dropdown',
-                    placeholder='Select a result dir...',
-                    clearable=False,
+                html.Br(),
+                'Inference Data:',
+                html.Br(),
+                html.Div([
+                    dcc.Dropdown(
+                        id='result-dropdown',
+                        placeholder='Select a result dir...',
+                        clearable=False,
+                    ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                        'width': '200px',
+                        'vertical-align': 'middle',
+                    },
                 ),
-                ],
-                style={
-                    'display': 'inline-block',
-                    'width': '200px',
-                    'vertical-align': 'middle',
-                },
-            ),
-            html.Br(),
-            'Thresholding:',
-            html.Br(),
-            dcc.RadioItems(
-                id='rise-or-fall',
-                options=[
-                    {'label': 'Rising Up', 'value': 'rise'},
-                    {'label': 'Falling Down', 'value': 'fall'},
-                ],
-                value='rise',
-            ),
-            'Well Index:',
-            html.Br(),
-            html.Div([
-                dcc.Input(
-                    id='well-selector',
-                    type='number',
-                    value=0,
-                    min=0,
-                    size=5,
+                html.Br(),
+                'Thresholding:',
+                html.Br(),
+                dcc.RadioItems(
+                    id='rise-or-fall',
+                    options=[
+                        {'label': 'Rising Up', 'value': 'rise'},
+                        {'label': 'Falling Down', 'value': 'fall'},
+                    ],
+                    value='rise',
                 ),
-                ],
-                style={
-                    'display': 'inline-block',
-                },
-            ),
-            html.Br(),
-            html.Div([
-                dcc.Slider(
-                    id='well-slider',
-                    value=0,
-                    min=0,
-                    step=1,
+                'Well Index:',
+                html.Br(),
+                html.Div([
+                    dcc.Input(
+                        id='well-selector',
+                        type='number',
+                        value=0,
+                        min=0,
+                        size=5,
+                    ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                    },
                 ),
-                ],
-                style={
-                    'display': 'inline-block',
-                    'width': '200px',
-                    # 'margin-left': '20px',
-                },
-            ),
-            html.Br(),
-            'Time Step:',
-            html.Br(),
-            html.Div([
-                dcc.Input(
-                    id='time-selector',
-                    type='number',
-                    value=0,
-                    min=0,
-                    size=5,
+                html.Br(),
+                html.Div([
+                    dcc.Slider(
+                        id='well-slider',
+                        value=0,
+                        min=0,
+                        step=1,
+                    ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                        'width': '200px',
+                        # 'margin-left': '20px',
+                    },
                 ),
-                ],
-                style={
-                    'display': 'inline-block',
-                },
-            )
+                html.Br(),
+                'Time Step:',
+                html.Br(),
+                html.Div([
+                    dcc.Input(
+                        id='time-selector',
+                        type='number',
+                        value=0,
+                        min=0,
+                        size=5,
+                    ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                    },
+                ),
+                html.Br(),
+
+                'Smoothing:',
+                dcc.Checklist(
+                    id='filter-check',
+                    options=[{'label': 'Apply', 'value': True}],
+                    values=[],
+                ),
             ],
             style={
                 'display': 'inline-block',
