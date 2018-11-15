@@ -1441,9 +1441,9 @@ def callback(time, well_idx, data_root, env, morpho, result):
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
-    label_image.save(buf, format='PNG')
+    label_image.save(buf, format='JPEG')
 
-    return 'data:image/png;base64,{}'.format(
+    return 'data:image/jpeg;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
@@ -1477,9 +1477,9 @@ def callback(time, well_idx, data_root, env, morpho, result):
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
-    label_image.save(buf, format='PNG')
+    label_image.save(buf, format='JPEG')
 
-    return 'data:image/png;base64,{}'.format(
+    return 'data:image/jpeg;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
@@ -1545,9 +1545,9 @@ def callback(time, well_idx, data_root, env, morpho, result):
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
-    prob_image.save(buf, format='PNG')
+    prob_image.save(buf, format='JPEG')
 
-    return 'data:image/png;base64,{}'.format(
+    return 'data:image/jpeg;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
@@ -1584,9 +1584,9 @@ def callback(time, well_idx, data_root, env, morpho, result):
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
-    org_img.save(buf, format='PNG')
+    org_img.save(buf, format='JPEG')
 
-    return 'data:image/png;base64,{}'.format(
+    return 'data:image/jpeg;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
