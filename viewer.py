@@ -16,6 +16,7 @@ import zipfile
 import PIL.Image
 import dash_auth
 import numpy as np
+import scipy.signal
 import my_threshold
 import flask_caching
 import dash_core_components as dcc
@@ -44,126 +45,143 @@ app.layout = html.Div([
     html.Header([html.H1('Sapphire', style={'margin': '0px'})]),
     html.Div([
         html.Div([
-            'Dataset:',
-            html.Br(),
-            html.Div([
-                dcc.Dropdown(
-                    id='env-dropdown',
-                    placeholder='Select a dataset...',
-                    clearable=False,
+                'Dataset:',
+                html.Br(),
+                html.Div([
+                    dcc.Dropdown(
+                        id='env-dropdown',
+                        placeholder='Select a dataset...',
+                        clearable=False,
+                    ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                        'width': '200px',
+                        'vertical-align': 'middle',
+                    },
                 ),
-                ],
-                style={
-                    'display': 'inline-block',
-                    'width': '200px',
-                    'vertical-align': 'middle',
-                },
-            ),
-            html.Br(),
-            'Manual Detection File (CSV):',
-            html.Br(),
-            html.Div([
-                dcc.Dropdown(
-                    id='csv-dropdown',
-                    placeholder='Select a CSV file...',
-                    clearable=False,
+                html.Br(),
+                'Manual Detection File (CSV):',
+                html.Br(),
+                html.Div([
+                    dcc.Dropdown(
+                        id='csv-dropdown',
+                        placeholder='Select a CSV file...',
+                        clearable=False,
+                    ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                        'width': '200px',
+                        'vertical-align': 'middle',
+                    },
                 ),
-                ],
-                style={
-                    'display': 'inline-block',
-                    'width': '200px',
-                    'vertical-align': 'middle',
-                },
-            ),
-            html.Br(),
-            'Target Morphology:',
-            html.Br(),
-            html.Div([
-                dcc.Dropdown(
-                    id='morpho-dropdown',
-                    placeholder='Select a morpho...',
-                    clearable=False,
+                html.Br(),
+                'Target Morphology:',
+                html.Br(),
+                html.Div([
+                    dcc.Dropdown(
+                        id='morpho-dropdown',
+                        placeholder='Select a morpho...',
+                        clearable=False,
+                    ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                        'width': '200px',
+                        'vertical-align': 'middle',
+                    },
                 ),
-                ],
-                style={
-                    'display': 'inline-block',
-                    'width': '200px',
-                    'vertical-align': 'middle',
-                },
-            ),
-            html.Br(),
-            'Inference Data:',
-            html.Br(),
-            html.Div([
-                dcc.Dropdown(
-                    id='result-dropdown',
-                    placeholder='Select a result dir...',
-                    clearable=False,
+                html.Br(),
+                'Inference Data:',
+                html.Br(),
+                html.Div([
+                    dcc.Dropdown(
+                        id='result-dropdown',
+                        placeholder='Select a result dir...',
+                        clearable=False,
+                    ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                        'width': '200px',
+                        'vertical-align': 'middle',
+                    },
                 ),
-                ],
-                style={
-                    'display': 'inline-block',
-                    'width': '200px',
-                    'vertical-align': 'middle',
-                },
-            ),
-            html.Br(),
-            'Thresholding:',
-            html.Br(),
-            dcc.RadioItems(
-                id='rise-or-fall',
-                options=[
-                    {'label': 'Rising Up', 'value': 'rise'},
-                    {'label': 'Falling Down', 'value': 'fall'},
-                ],
-                value='rise',
-            ),
-            'Well Index:',
-            html.Br(),
-            html.Div([
+                html.Br(),
+                'Thresholding:',
+                html.Br(),
+                dcc.RadioItems(
+                    id='rise-or-fall',
+                    options=[
+                        {'label': 'Rising Up', 'value': 'rise'},
+                        {'label': 'Falling Down', 'value': 'fall'},
+                    ],
+                    value='rise',
+                ),
+                'Well Index:',
+                html.Br(),
+                html.Div([
+                    dcc.Input(
+                        id='well-selector',
+                        type='number',
+                        value=0,
+                        min=0,
+                        size=5,
+                    ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                    },
+                ),
+                html.Br(),
+                html.Div([
+                    dcc.Slider(
+                        id='well-slider',
+                        value=0,
+                        min=0,
+                        step=1,
+                    ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                        'width': '200px',
+                        # 'margin-left': '20px',
+                    },
+                ),
+                html.Br(),
+                'Time Step:',
+                html.Br(),
+                html.Div([
+                        dcc.Input(
+                            id='time-selector',
+                            type='number',
+                            value=0,
+                            min=0,
+                            size=5,
+                        ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                    },
+                ),
+                html.Br(),
+
+                'Smoothing:',
+                dcc.Checklist(
+                    id='filter-check',
+                    options=[{'label': 'Apply', 'value': True}],
+                    values=[],
+                ),
+                'Sigma:',
                 dcc.Input(
-                    id='well-selector',
+                    id='gaussian-sigma',
                     type='number',
-                    value=0,
+                    value=5,
                     min=0,
                     size=5,
+                    step=0.1,
                 ),
-                ],
-                style={
-                    'display': 'inline-block',
-                },
-            ),
-            html.Br(),
-            html.Div([
-                dcc.Slider(
-                    id='well-slider',
-                    value=0,
-                    min=0,
-                    step=1,
-                ),
-                ],
-                style={
-                    'display': 'inline-block',
-                    'width': '200px',
-                    # 'margin-left': '20px',
-                },
-            ),
-            html.Br(),
-            'Time Step:',
-            html.Br(),
-            html.Div([
-                dcc.Input(
-                    id='time-selector',
-                    type='number',
-                    value=0,
-                    min=0,
-                    size=5,
-                ),
-                ],
-                style={
-                    'display': 'inline-block',
-                },
-            )
             ],
             style={
                 'display': 'inline-block',
@@ -684,15 +702,17 @@ def callback(click_data):
          Input('threshold-slider1', 'value'),
          Input('threshold-slider2', 'value'),
          Input('rise-or-fall', 'value'),
-         Input('time-selector', 'value')],
+         Input('time-selector', 'value'),
+         Input('filter-check', 'values'),
+         Input('gaussian-sigma', 'value')],
         [State('signal-graph', 'figure'),
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(well_idx, coef, threshold2, positive_or_negative, time,
-        figure, data_root, env, csv, morpho, result):
+def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
+        sigma, figure, data_root, env, csv, morpho, result):
 
     # Exception handling
     if env is None or morpho is None:
@@ -706,6 +726,11 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time,
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
     luminance_signals = store_luminance_signals(data_root, env).T
+
+    # Smooth the signals
+    if len(checks) != 0:
+        signals = my_filter(signals, sigma=sigma)
+        luminance_signals = my_filter(luminance_signals, sigma=sigma)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
@@ -861,13 +886,15 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time,
         Output('summary-graph', 'figure'),
         [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
-         Input('rise-or-fall', 'value')],
+         Input('rise-or-fall', 'value'),
+         Input('filter-check', 'values'),
+         Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, positive_or_negative, data_root,
+def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -877,6 +904,10 @@ def callback(coef, well_idx, positive_or_negative, data_root,
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
+
+    # Smooth the signals
+    if len(checks) != 0:
+        signals = my_filter(signals, sigma=sigma)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
@@ -974,14 +1005,16 @@ def callback(coef, well_idx, positive_or_negative, data_root,
         Output('summary-graph2', 'figure'),
         [Input('threshold-slider2', 'value'),
          Input('well-selector', 'value'),
-         Input('rise-or-fall', 'value')],
+         Input('rise-or-fall', 'value'),
+         Input('filter-check', 'values'),
+         Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, positive_or_negative, data_root,
-        env, csv, morpho, result):
+def callback(threshold, well_idx, positive_or_negative, checks, sigma,
+        data_root, env, csv, morpho, result):
 
     # Exception handling
     if env is None or csv is None or morpho is None:
@@ -990,6 +1023,10 @@ def callback(threshold, well_idx, positive_or_negative, data_root,
     # Load the data
     signals = store_luminance_signals(data_root, env).T
     manual_evals = store_manual_evals(data_root, env, csv)
+
+    # Smooth the signals
+    if len(checks) != 0:
+        signals = my_filter(signals, sigma=sigma)
 
     # Compute event times from signals
     if positive_or_negative == 'rise':
@@ -1085,13 +1122,15 @@ def callback(threshold, well_idx, positive_or_negative, data_root,
         Output('error-hist', 'figure'),
         [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
-         Input('rise-or-fall', 'value')],
+         Input('rise-or-fall', 'value'),
+         Input('filter-check', 'values'),
+         Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, positive_or_negative, data_root,
+def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -1101,6 +1140,10 @@ def callback(coef, well_idx, positive_or_negative, data_root,
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
     manual_evals = store_manual_evals(data_root, env, csv)
+
+    # Smooth the signals
+    if len(checks) != 0:
+        signals = my_filter(signals, sigma=sigma)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
@@ -1213,14 +1256,16 @@ def callback(coef, well_idx, positive_or_negative, data_root,
         Output('error-hist2', 'figure'),
         [Input('threshold-slider2', 'value'),
          Input('well-selector', 'value'),
-         Input('rise-or-fall', 'value')],
+         Input('rise-or-fall', 'value'),
+         Input('filter-check', 'values'),
+         Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, positive_or_negative, data_root,
-        env, csv, morpho, result):
+def callback(threshold, well_idx, positive_or_negative, checks, sigma,
+        data_root, env, csv, morpho, result):
 
     # Exception handling
     if env is None or csv is None or morpho is None:
@@ -1229,6 +1274,10 @@ def callback(threshold, well_idx, positive_or_negative, data_root,
     # Load the data
     signals = store_luminance_signals(data_root, env).T
     manual_evals = store_manual_evals(data_root, env, csv)
+
+    # Smooth the signals
+    if len(checks) != 0:
+        signals = my_filter(signals, sigma=sigma)
 
     # Compute event times from signals
     if positive_or_negative == 'rise':
@@ -1581,6 +1630,35 @@ def callback(time, well_idx, data_root, env, morpho, result):
 
     return 'data:image/jpeg;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
+
+
+# ======================================================
+#  Toggle validation or invalidation of gaussian-sigma
+# ======================================================
+@app.callback(
+        Output('gaussian-sigma', 'disabled'),
+        [Input('filter-check', 'values')])
+def callback(checks):
+
+    if len(checks) == 0:
+        return True
+
+    else:
+        return False
+
+
+# =========================================
+#  Smoothing signals with gaussian window
+# =========================================
+def my_filter(signals, sigma=5):
+    
+    window = scipy.signal.gaussian(10, sigma)
+
+    signals = np.array(
+            [np.convolve(signal, window, mode='same')
+                for signal in signals])
+
+    return signals
 
 
 if __name__ == '__main__':
