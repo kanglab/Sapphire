@@ -682,7 +682,7 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time,
         figure, data_root, env, csv, morpho, result):
 
     # Exception handling
-    if env is None or csv is None or morpho is None:
+    if env is None or morpho is None:
         return {'data': []}
 
     if len(figure['data']) == 0:
@@ -692,7 +692,6 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time,
 
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
-    manual_evals = store_manual_evals(data_root, env, csv)
     luminance_signals = store_luminance_signals(data_root, env).T
 
     # Compute thresholds
@@ -720,8 +719,17 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time,
         # If the signal was not more than the threshold.
         auto_evals2[auto_evals2 == luminance_signals.shape[1]] = 0
 
-    return {
-            'data': [
+    # Load a manual data and prepare data to be drawn
+    # If a manual data exists, draw it
+    manual_data = []
+
+    if csv is None:
+        pass
+
+    else:
+        manual_evals = store_manual_evals(data_root, env, csv)
+
+        manual_data = [
                 {
                     # Manual evaluation time (vertical line)
                     'x': [manual_evals[well_idx], manual_evals[well_idx]],
@@ -730,7 +738,11 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time,
                     'name': 'Manual',
                     'line': {'width': 5, 'color': '#ffa500'},
                     'yaxis': 'y2',
-                },
+                }
+            ]
+
+    return {
+            'data': manual_data + [
                 {
                     # Auto evaluation time (vertical line)
                     'x': [auto_evals[well_idx], auto_evals[well_idx]],
