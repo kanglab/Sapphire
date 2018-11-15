@@ -44,7 +44,7 @@ cache.init_app(
 app.layout = html.Div([
     html.Header([html.H1('Sapphire', style={'margin': '10px'})]),
     dcc.Tabs(id='tabs', value='tab-1', children=[
-        dcc.Tab(label='Tab 1', value='tab-1', children=[
+        dcc.Tab(id='tab-1', label='Tab 1', value='tab-1', children=[
             html.Div([
                 html.Div([
                         'Dataset:',
@@ -397,7 +397,7 @@ app.layout = html.Div([
             ]),
             html.Div(id='dummy-div'),
         ]),
-        dcc.Tab(label='Tab 2', value='tab-2', children='children'),
+        dcc.Tab(id='tab-2', label='Tab 2', value='tab-2', children='children'),
     ]),
 
 ], style={'width': '1600px',},)
@@ -1647,6 +1647,17 @@ def callback(checks):
 
     else:
         return False
+
+
+# ======================================================
+#  
+# ======================================================
+@app.callback(
+        Output('tab-2', 'children'),
+        [Input('tabs', 'value')])
+def callback(tab_name):
+    if tab_name == 'tab-2':
+        return 'called'
 
 
 # =========================================
