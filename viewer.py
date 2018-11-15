@@ -16,6 +16,7 @@ import zipfile
 import PIL.Image
 import dash_auth
 import numpy as np
+import scipy.signal
 import my_threshold
 import flask_caching
 import dash_core_components as dcc
@@ -705,7 +706,9 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time,
 
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
+    signals = my_filter(signals, sigma=5)
     luminance_signals = store_luminance_signals(data_root, env).T
+    luminance_signals = my_filter(luminance_signals, sigma=5)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
@@ -876,6 +879,7 @@ def callback(coef, well_idx, positive_or_negative, data_root,
 
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
+    signals = my_filter(signals, sigma=5)
     manual_evals = store_manual_evals(data_root, env, csv)
 
     # Compute thresholds
@@ -1100,6 +1104,7 @@ def callback(coef, well_idx, positive_or_negative, data_root,
 
     # Load the data
     signals = store_signals(data_root, env, morpho, result)
+    signals = my_filter(signals, sigma=5)
     manual_evals = store_manual_evals(data_root, env, csv)
 
     # Compute thresholds
@@ -1582,6 +1587,22 @@ def callback(time, well_idx, data_root, env, morpho, result):
     return 'data:image/jpeg;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
+
+def my_filter(signals, sigma=5, valid=True):
+    
+    if valid:
+
+        window = scipy.signal.gaussian(10, sigma)
+
+        signals = np.array(
+                [np.convolve(signal, window, mode='same')
+                    for signal in signals])
+
+        return signals
+    
+    else:
+
+        return signals
 
 if __name__ == '__main__':
     app.run_server(debug=True)
