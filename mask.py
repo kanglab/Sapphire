@@ -48,7 +48,7 @@ row_gap = dcc.Input(
 clm_gap = dcc.Input(
         id='clm-gap', type='number', value=1, max=10, min=0, size=5)
 plate_gap = dcc.Input(
-        id='plate-gap', type='number', value=71, max=100, min=0, size=5)
+        id='plate-gap', type='number', value=71, max=800, min=0, size=5)
 x = dcc.Input(
         id='x', type='number', value=0, max=1500, min=0, size=5)
 y = dcc.Input(
