@@ -258,6 +258,23 @@ app.layout = html.Div([
                 'margin': '2px',
             },
         ),
+
+        html.Div([
+                html.Img(
+                    id='current-well',
+                    style={
+                        'background': '#555555',
+                        'height': 'auto',
+                        'width': '200px',
+                        'padding': '5px',
+                    },
+                ),
+            ],
+            style={
+                'display': 'inline-block',
+            },
+        ),
+
         html.Div([
             'Data root :',
             html.Div(DATA_ROOT, id='data-root'),
@@ -1526,6 +1543,45 @@ def callback(time, well_idx, data_root, env, morpho, result):
     # Buffer the well image as byte stream
     buf = io.BytesIO()
     prob_image.save(buf, format='PNG')
+
+    return 'data:image/png;base64,{}'.format(
+            base64.b64encode(buf.getvalue()).decode('utf-8'))
+
+
+# ===========================
+#  Update the current-well.
+# ===========================
+@app.callback(
+        Output('current-well', 'src'),
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('current-morpho', 'children'),
+         State('current-result', 'children')])
+def callback(time, well_idx, data_root, env, morpho, result):
+
+    # Exception handling
+    if env is None or morpho is None or result is None:
+        return ''
+
+    # Load the mask
+    mask = store_mask(data_root, env)
+
+    # Load an original image
+    orgimg_paths = sorted(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg')))
+    org_img = np.array(
+            PIL.Image.open(orgimg_paths[time]).convert('RGB'), dtype=np.uint8)
+
+    r, c = np.where(mask == well_idx)
+    org_img[r.min():r.max(), c.min():c.max(), [0, ]] = 255
+    org_img[r.min():r.max(), c.min():c.max(), [1, 2]] = 0
+    org_img = PIL.Image.fromarray(org_img).convert('RGB')
+
+    # Buffer the well image as byte stream
+    buf = io.BytesIO()
+    org_img.save(buf, format='PNG')
 
     return 'data:image/png;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
