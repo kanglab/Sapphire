@@ -247,7 +247,7 @@ def draw_images(
     os.makedirs('static/', exist_ok=True)
 
     # save the mask
-    np.save('static/mask.npy', mask.astype(np.int16))
+    np.save('static/mask.npy', np.flipud(mask).astype(np.int16))
 
     # save the parameters
     params_dict = {
