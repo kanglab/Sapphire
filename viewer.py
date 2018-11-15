@@ -153,13 +153,13 @@ app.layout = html.Div([
                 'Time Step:',
                 html.Br(),
                 html.Div([
-                    dcc.Input(
-                        id='time-selector',
-                        type='number',
-                        value=0,
-                        min=0,
-                        size=5,
-                    ),
+                        dcc.Input(
+                            id='time-selector',
+                            type='number',
+                            value=0,
+                            min=0,
+                            size=5,
+                        ),
                     ],
                     style={
                         'display': 'inline-block',
@@ -172,6 +172,15 @@ app.layout = html.Div([
                     id='filter-check',
                     options=[{'label': 'Apply', 'value': True}],
                     values=[],
+                ),
+                'Sigma:',
+                dcc.Input(
+                    id='gaussian-sigma',
+                    type='number',
+                    value=5,
+                    min=0,
+                    size=5,
+                    step=0.1,
                 ),
             ],
             style={
@@ -694,7 +703,8 @@ def callback(click_data):
          Input('threshold-slider2', 'value'),
          Input('rise-or-fall', 'value'),
          Input('time-selector', 'value'),
-         Input('filter-check', 'values')],
+         Input('filter-check', 'values'),
+         Input('gaussian-sigma', 'value')],
         [State('signal-graph', 'figure'),
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
@@ -702,7 +712,7 @@ def callback(click_data):
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
 def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
-        figure, data_root, env, csv, morpho, result):
+        sigma, figure, data_root, env, csv, morpho, result):
 
     # Exception handling
     if env is None or morpho is None:
@@ -719,8 +729,8 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
 
     # Smooth the signals
     if len(checks) != 0:
-        signals = my_filter(signals, sigma=5)
-        luminance_signals = my_filter(luminance_signals, sigma=5)
+        signals = my_filter(signals, sigma=sigma)
+        luminance_signals = my_filter(luminance_signals, sigma=sigma)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
@@ -877,13 +887,14 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
         [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
          Input('rise-or-fall', 'value'),
-         Input('filter-check', 'values')],
+         Input('filter-check', 'values'),
+         Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, positive_or_negative, checks, data_root,
+def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -896,7 +907,7 @@ def callback(coef, well_idx, positive_or_negative, checks, data_root,
 
     # Smooth the signals
     if len(checks) != 0:
-        signals = my_filter(signals, sigma=5)
+        signals = my_filter(signals, sigma=sigma)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
@@ -995,14 +1006,15 @@ def callback(coef, well_idx, positive_or_negative, checks, data_root,
         [Input('threshold-slider2', 'value'),
          Input('well-selector', 'value'),
          Input('rise-or-fall', 'value'),
-         Input('filter-check', 'values')],
+         Input('filter-check', 'values'),
+         Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, positive_or_negative, checks, data_root,
-        env, csv, morpho, result):
+def callback(threshold, well_idx, positive_or_negative, checks, sigma,
+        data_root, env, csv, morpho, result):
 
     # Exception handling
     if env is None or csv is None or morpho is None:
@@ -1014,7 +1026,7 @@ def callback(threshold, well_idx, positive_or_negative, checks, data_root,
 
     # Smooth the signals
     if len(checks) != 0:
-        signals = my_filter(signals, sigma=5)
+        signals = my_filter(signals, sigma=sigma)
 
     # Compute event times from signals
     if positive_or_negative == 'rise':
@@ -1111,13 +1123,14 @@ def callback(threshold, well_idx, positive_or_negative, checks, data_root,
         [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
          Input('rise-or-fall', 'value'),
-         Input('filter-check', 'values')],
+         Input('filter-check', 'values'),
+         Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, positive_or_negative, checks, data_root,
+def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
         env, csv, morpho, result):
 
     # Exception handling
@@ -1130,7 +1143,7 @@ def callback(coef, well_idx, positive_or_negative, checks, data_root,
 
     # Smooth the signals
     if len(checks) != 0:
-        signals = my_filter(signals, sigma=5)
+        signals = my_filter(signals, sigma=sigma)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
@@ -1244,14 +1257,15 @@ def callback(coef, well_idx, positive_or_negative, checks, data_root,
         [Input('threshold-slider2', 'value'),
          Input('well-selector', 'value'),
          Input('rise-or-fall', 'value'),
-         Input('filter-check', 'values')],
+         Input('filter-check', 'values'),
+         Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, positive_or_negative, checks, data_root,
-        env, csv, morpho, result):
+def callback(threshold, well_idx, positive_or_negative, checks, sigma,
+        data_root, env, csv, morpho, result):
 
     # Exception handling
     if env is None or csv is None or morpho is None:
@@ -1263,7 +1277,7 @@ def callback(threshold, well_idx, positive_or_negative, checks, data_root,
 
     # Smooth the signals
     if len(checks) != 0:
-        signals = my_filter(signals, sigma=5)
+        signals = my_filter(signals, sigma=sigma)
 
     # Compute event times from signals
     if positive_or_negative == 'rise':
@@ -1618,6 +1632,24 @@ def callback(time, well_idx, data_root, env, morpho, result):
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
+# ======================================================
+#  Toggle validation or invalidation of gaussian-sigma
+# ======================================================
+@app.callback(
+        Output('gaussian-sigma', 'disabled'),
+        [Input('filter-check', 'values')])
+def callback(checks):
+
+    if len(checks) == 0:
+        return True
+
+    else:
+        return False
+
+
+# =========================================
+#  Smoothing signals with gaussian window
+# =========================================
 def my_filter(signals, sigma=5):
     
     window = scipy.signal.gaussian(10, sigma)
