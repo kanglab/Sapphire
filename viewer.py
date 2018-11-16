@@ -1657,15 +1657,11 @@ def callback(checks):
         Output('tab-2', 'children'),
         [Input('tabs', 'value')])
 def callback(tab_name):
-    import pandas as pd
-
-    df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/solar.csv')
-
     if tab_name == 'tab-2':
         return [dash_table.DataTable(
             id='table',
-            columns=[{"name": i, "id": i} for i in df.columns],
-            data=df.to_dict("rows"),
+            columns=[{"name": i, "id": i} for i in range(5)],
+            data=pd.DataFrame(np.random.randint(0, 100, (5, 5))).to_dict('rows'),
         )]
 
 
