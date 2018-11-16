@@ -254,7 +254,7 @@ def draw_images(
     label = PIL.Image.fromarray(
             np.where(mask>=0, 255, 0).astype(np.uint8))
     mask_buf = io.BytesIO()
-    label.save(mask_buf, format='PNG')
+    label.save(mask_buf, format='JPEG')
 
     # make the directory for saving
     os.makedirs('static/', exist_ok=True)
@@ -303,7 +303,7 @@ def draw_images(
                     'sizing': 'stretch',
                     'sizex': width,
                     'sizey': height,
-                    'source': 'data:image/png;base64,{}'.format(
+                    'source': 'data:image/jpeg;base64,{}'.format(
                         base64.b64encode(mask_buf.getvalue()).decode('utf-8')),
                 }],
                 'dragmode': 'select',
@@ -369,7 +369,7 @@ def draw_images(
     masked = PIL.Image.fromarray(
             np.where(mask>=0, 1, 0).astype(np.uint8) * org_img)
     masked_buf = io.BytesIO()
-    masked.save(masked_buf, format='PNG')
+    masked.save(masked_buf, format='JPEG')
 
     return {
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
@@ -394,7 +394,7 @@ def draw_images(
                     'sizing': 'stretch',
                     'sizex': width,
                     'sizey': height,
-                    'source': 'data:image/png;base64,{}'.format(
+                    'source': 'data:image/jpeg;base64,{}'.format(
                         base64.b64encode(masked_buf.getvalue()).decode('utf-8')),
                 }],
                 'dragmode': 'select',
