@@ -15,6 +15,7 @@ import base64
 import zipfile
 import PIL.Image
 import dash_auth
+import dash_table
 import numpy as np
 import scipy.signal
 import my_threshold
@@ -1656,8 +1657,16 @@ def callback(checks):
         Output('tab-2', 'children'),
         [Input('tabs', 'value')])
 def callback(tab_name):
+    import pandas as pd
+
+    df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/solar.csv')
+
     if tab_name == 'tab-2':
-        return 'called'
+        return [dash_table.DataTable(
+            id='table',
+            columns=[{"name": i, "id": i} for i in df.columns],
+            data=df.to_dict("rows"),
+        )]
 
 
 # =========================================
