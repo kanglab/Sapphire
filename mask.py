@@ -239,13 +239,13 @@ def draw_images(
 
     mask = np.flipud(mask)
 
-    grayed = PIL.Image.fromarray(
+    label = PIL.Image.fromarray(
             np.where(mask>=0, 255, 0).astype(np.uint8))
     masked = PIL.Image.fromarray(
             np.where(mask>=0, 1, 0).astype(np.uint8) * org_img)
     mask_buf = io.BytesIO()
     masked_buf = io.BytesIO()
-    grayed.save(mask_buf, format='PNG')
+    label.save(mask_buf, format='PNG')
     masked.save(masked_buf, format='PNG')
 
     # make the directory for saving
