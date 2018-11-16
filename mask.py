@@ -227,30 +227,10 @@ def draw_images(
     # Transform hash to ndarray
     org_img = np.array(PIL.Image.open(io.BytesIO(base64.b64decode(imghash))))
 
-    # Parameters
-    height, width = org_img.shape[0], org_img.shape[1]
-    count = 0
-
-    # Mask create loop
-    angle = np.deg2rad(angle)
-    mask = -1 * np.ones_like(org_img)
-    for n in range(n_plates):
-        for idx_r in range(n_rows):
-            for idx_c in range(n_clms):
-                c1 = x + round(idx_c*(well_w + gap_c))
-                r1 = y + round(idx_r*(well_h + gap_r)) + n*(n_rows*well_h + gap_p) + round(gap_r*(n - 1))
-                c1, r1 = np.dot(
-                        np.array(
-                            [[np.cos(angle), -np.sin(angle)],
-                             [np.sin(angle),  np.cos(angle)]]),
-                        np.array([c1-x, r1-y])) + np.array([x, y])
-                c1, r1 = np.round([c1, r1]).astype(int)
-                c2 = c1 + well_w
-                r2 = r1 + well_h
-                mask[r1:r2, c1:c2] = count
-                count += 1
-
-    mask = np.flipud(mask)
+    # Create a mask
+    mask = create_mask(
+            org_img.shape, n_rows, n_clms, n_plates,
+            gap_r, gap_c, gap_p, x, y, well_w, well_h, np.deg2rad(angle))
 
     label = PIL.Image.fromarray(
             np.where(mask>=0, 255, 0).astype(np.uint8))
@@ -289,7 +269,7 @@ def draw_images(
 
     else:
         xaxis = {
-                'range': (0, width),
+                'range': (0, org_img.shape[1]),
                 'scaleanchor': 'y',
                 'scaleratio': 1,
         }
@@ -301,7 +281,7 @@ def draw_images(
 
     else:
         yaxis = {
-                'range': (0, height),
+                'range': (0, org_img.shape[0]),
         }
 
     # define the graphs to draw
@@ -320,8 +300,8 @@ def draw_images(
                     'y': 0,
                     'yanchor': 'bottom',
                     'sizing': 'stretch',
-                    'sizex': width,
-                    'sizey': height,
+                    'sizex': org_img.shape[1],
+                    'sizey': org_img.shape[0],
                     'source': 'data:image/jpeg;base64,{}'.format(
                         base64.b64encode(mask_buf.getvalue()).decode('utf-8')),
                 }],
@@ -361,30 +341,10 @@ def draw_images(
     # Transform hash to ndarray
     org_img = np.array(PIL.Image.open(io.BytesIO(base64.b64decode(imghash))))
 
-    # Parameters
-    height, width = org_img.shape[0], org_img.shape[1]
-    count = 0
-
-    # Mask create loop
-    angle = np.deg2rad(angle)
-    mask = -1 * np.ones_like(org_img)
-    for n in range(n_plates):
-        for idx_r in range(n_rows):
-            for idx_c in range(n_clms):
-                c1 = x + round(idx_c*(well_w + gap_c))
-                r1 = y + round(idx_r*(well_h + gap_r)) + n*(n_rows*well_h + gap_p) + round(gap_r*(n - 1))
-                c1, r1 = np.dot(
-                        np.array(
-                            [[np.cos(angle), -np.sin(angle)],
-                             [np.sin(angle),  np.cos(angle)]]),
-                        np.array([c1-x, r1-y])) + np.array([x, y])
-                c1, r1 = np.round([c1, r1]).astype(int)
-                c2 = c1 + well_w
-                r2 = r1 + well_h
-                mask[r1:r2, c1:c2] = count
-                count += 1
-
-    mask = np.flipud(mask)
+    # Create a mask
+    mask = create_mask(
+            org_img.shape, n_rows, n_clms, n_plates,
+            gap_r, gap_c, gap_p, x, y, well_w, well_h, np.deg2rad(angle))
 
     masked = PIL.Image.fromarray(
             np.where(mask>=0, 1, 0).astype(np.uint8) * org_img)
@@ -400,7 +360,7 @@ def draw_images(
 
     else:
         xaxis = {
-                'range': (0, width),
+                'range': (0, org_img.shape[1]),
                 'scaleanchor': 'y',
                 'scaleratio': 1,
         }
@@ -412,7 +372,7 @@ def draw_images(
 
     else:
         yaxis = {
-                'range': (0, height),
+                'range': (0, org_img.shape[0]),
         }
 
     return {
@@ -430,14 +390,39 @@ def draw_images(
                     'y': 0,
                     'yanchor': 'bottom',
                     'sizing': 'stretch',
-                    'sizex': width,
-                    'sizey': height,
+                    'sizex': org_img.shape[1],
+                    'sizey': org_img.shape[0],
                     'source': 'data:image/jpeg;base64,{}'.format(
                         base64.b64encode(masked_buf.getvalue()).decode('utf-8')),
                 }],
                 'dragmode': 'select',
             }
         }
+
+
+def create_mask(
+        shape, n_rows, n_clms, n_plates,
+        gap_r, gap_c, gap_p, x, y, well_w, well_h, angle):
+
+    count = 0
+    mask = -1 * np.ones(shape)
+    for n in range(n_plates):
+        for idx_r in range(n_rows):
+            for idx_c in range(n_clms):
+                c1 = x + round(idx_c*(well_w + gap_c))
+                r1 = y + round(idx_r*(well_h + gap_r)) + n*(n_rows*well_h + gap_p) + round(gap_r*(n - 1))
+                c1, r1 = np.dot(
+                        np.array(
+                            [[np.cos(angle), -np.sin(angle)],
+                             [np.sin(angle),  np.cos(angle)]]),
+                        np.array([c1-x, r1-y])) + np.array([x, y])
+                c1, r1 = np.round([c1, r1]).astype(int)
+                c2 = c1 + well_w
+                r2 = r1 + well_h
+                mask[r1:r2, c1:c2] = count
+                count += 1
+
+    return np.flipud(mask)
 
 
 if __name__ == '__main__':
