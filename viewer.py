@@ -1660,28 +1660,37 @@ def callback(checks):
         [Input('tabs', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('csv-dropdown', 'value')])
-def callback(tab_name, data_root, dataset_name, csv_name):
+         State('csv-dropdown', 'value'),
+         State('morpho-dropdown', 'value'),
+         State('result-dropdown', 'value'),
+         State('rise-or-fall', 'value'),
+         State('threshold-slider1', 'value'),
+         State('gaussian-sigma', 'value'),
+         State('filter-check', 'values')])
+def callback(
+        tab_name, data_root, env, csv, morpho, result, rise_fall,
+        coef, sigma, checks):
 
     # Guard
     if data_root is None:
         return
-    if dataset_name is None:
+    if env is None:
         return
-    if csv_name is None:
+    if csv is None:
         return 'Not available.'
 
     # Load a mask params
-    with open(os.path.join(data_root, dataset_name, 'mask_params.json')) as f:
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
         params = json.load(f)
     n_wells = params['n-rows'] * params['n-clms'] * params['n-plates']
 
     # Load a manual data
-    manual_evals = store_manual_evals(data_root, dataset_name, csv_name)
+    manual_evals = store_manual_evals(data_root, env, csv)
     manual_evals = manual_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
 
     if tab_name == 'tab-2':
+
         style = [{
                 'if': {
                     'column_id': '{}'.format(clm),
@@ -1696,8 +1705,7 @@ def callback(tab_name, data_root, dataset_name, csv_name):
                 np.linspace(0, 255, len(range(0, manual_evals.max(), 100))))
         ]
 
-        return html.Div([
-
+        children = [
                 html.Div([
 
                     html.H3('Manual'),
@@ -1711,8 +1719,34 @@ def callback(tab_name, data_root, dataset_name, csv_name):
                         style_table={'width': '400px'}
                     ),
                 ], style={'display': 'inline-block'}),
+            ]
 
-                html.Div([
+        if morpho is not None and result is not None:
+
+            signals = store_signals(data_root, env, morpho, result)
+
+            # Smooth the signals
+            if len(checks) != 0:
+                signals = my_filter(signals, sigma=sigma)
+
+            # Compute thresholds
+            threshold = my_threshold.entire_stats(signals, coef=coef)
+
+            # Compute event times from signals
+            if rise_fall == 'rise':
+                auto_evals = (signals > threshold).argmax(axis=1)
+
+            elif rise_fall == 'fall':
+                # Scan the signal from the right hand side.
+                auto_evals = (signals.shape[1]
+                        - (np.fliplr(signals) > threshold).argmax(axis=1))
+                # If the signal was not more than the threshold.
+                auto_evals[auto_evals == signals.shape[1]] = 0
+
+            auto_evals = auto_evals.reshape(
+                    params['n-rows']*params['n-plates'], params['n-clms'])
+
+            children.append(html.Div([
 
                     html.H3('Auto'),
 
@@ -1720,13 +1754,14 @@ def callback(tab_name, data_root, dataset_name, csv_name):
                         id='table',
                         columns=[{'name': str(clm), 'id': str(clm)}
                                 for clm in range(params['n-clms'])],
-                        data=pd.DataFrame(manual_evals).to_dict('rows'),
+                        data=pd.DataFrame(auto_evals).to_dict('rows'),
                         style_data_conditional=style,
                         style_table={'width': '400px'}
                     ),
                 ], style={'display': 'inline-block'}),
+            )
 
-            ], style={'width': '1200px'})
+        return html.Div(children, style={'width': '1200px'})
 
 
 # =========================================
