@@ -1678,13 +1678,29 @@ def callback(tab_name, data_root, dataset_name, csv_name):
 
     # Load a manual data
     manual_evals = store_manual_evals(data_root, dataset_name, csv_name)
-    manual_evals = manual_evals.reshape(params['n-rows']*params['n-plates'], params['n-clms'])
+    manual_evals = manual_evals.reshape(
+            params['n-rows']*params['n-plates'], params['n-clms'])
 
     if tab_name == 'tab-2':
+        style = [
+                {
+                    'if': {
+                        'column_id': '{}'.format(clm),
+                        'filter': 'num({2}) > {0} && {1} >= num({3})'.format(clm, clm, int(t)+100, int(t)),
+                    },
+                    'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
+                    'color': 'black',
+                }
+                for clm in range(params['n-clms'])
+                for t, c in zip(range(0, manual_evals.max(), 100), np.linspace(0, 255, len(range(0, manual_evals.max(), 100))))
+            ]
+
         return [dash_table.DataTable(
             id='table',
-            columns=[{"name": i, "id": i} for i in range(params['n-clms'])],
+            columns=[{'name': str(clm), 'id': str(clm)}
+                    for clm in range(params['n-clms'])],
             data=pd.DataFrame(manual_evals).to_dict('rows'),
+            style_data_conditional=style,
         )]
 
 
