@@ -67,7 +67,7 @@ input_div = html.Div(
             row_gap, clm_gap, plate_gap, x, y, well_w, well_h, angle])
 
 org_div = html.Div(
-        [dcc.Graph(id='org-img', style={'visibility': 'hidden'})],
+        [dcc.Graph(id='org-img')],
         id='org-div',
         style={
             'display': 'inline-block',
@@ -76,6 +76,8 @@ org_div = html.Div(
     )
 
 mask_div = html.Div(
+        [dcc.Graph(id='masked-img', style={'visibility': 'hidden'}),
+         dcc.Graph(id='mask-img', style={'visibility': 'hidden'})],
         id='mask-div',
         style={
             'display': 'inline-block',
@@ -97,8 +99,9 @@ app.css.append_css(
 
 @app.callback(
         Output('org-div', 'children'),
-        [Input('uploader', 'contents')])
-def update_images_div(data_uri):
+        [Input('uploader', 'contents')],
+        [State('mask-img', 'relayoutData')])
+def update_images_div(data_uri, layout):
     if data_uri is None:
         return
     imghash = data_uri.split(',')[1]
@@ -198,10 +201,13 @@ def update_well_h(selected_data):
             Input('well_w', 'value'),
             Input('well_h', 'value'),
             Input('angle', 'value')],
-        [State('org-img', 'figure')])
+        [State('org-img', 'figure'),
+         State('org-img', 'relayoutData'),
+         State('org-img', 'relayoutData')])
 def draw_images(
         n_rows, n_clms, n_plates,
-        gap_r, gap_c, gap_p, x, y, well_w, well_h, angle, figure):
+        gap_r, gap_c, gap_p, x, y, well_w, well_h, angle,
+        figure, masked_layout, mask_layout):
 
     # Guard
     if figure is None:
