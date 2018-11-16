@@ -66,28 +66,43 @@ input_div = html.Div(
             uploader, 'test string', n_rows, n_clms, n_plates,
             row_gap, clm_gap, plate_gap, x, y, well_w, well_h, angle])
 
-org_div = html.Div(
-        [dcc.Graph(id='org-img')],
-        id='org-div',
+org_img = dcc.Graph(
+        id='org-img',
+        figure={
+            'data': [],
+            'layout':{},
+        },
+        style={
+            'display': 'inline-block',
+            'width': '33%',
+        },
+    )
+masked_img = dcc.Graph(
+        id='masked-img',
+        figure={
+            'data': [],
+            'layout':{},
+        },
+        style={
+            'display': 'inline-block',
+            'width': '33%',
+        },
+    )
+mask_img = dcc.Graph(
+        id='mask-img',
+        figure={
+            'data': [],
+            'layout':{},
+        },
         style={
             'display': 'inline-block',
             'width': '33%',
         },
     )
 
-mask_div = html.Div(
-        [dcc.Graph(id='masked-img', style={'visibility': 'hidden'}),
-         dcc.Graph(id='mask-img', style={'visibility': 'hidden'})],
-        id='mask-div',
-        style={
-            'display': 'inline-block',
-            'width': '66%',
-        },
-    )
-
 images_div = html.Div(
         id='images-div',
-        children=[org_div, mask_div],
+        children=[org_img, masked_img, mask_img],
         style={'width': '1200px'},  # for 1280x1024 display
     )
 
@@ -98,19 +113,19 @@ app.css.append_css(
 
 
 @app.callback(
-        Output('org-div', 'children'),
-        [Input('uploader', 'contents')],
-        [State('mask-img', 'relayoutData')])
-def update_images_div(data_uri, layout):
+        Output('org-img', 'figure'),
+        [Input('uploader', 'contents')])
+def update_images_div(data_uri):
+
     if data_uri is None:
-        return
+        return {'data': [], 'layout': {}}
+
     imghash = data_uri.split(',')[1]
     img = PIL.Image.open(io.BytesIO(base64.b64decode(imghash)))
     height = np.array(img).shape[0]
     width = np.array(img).shape[1]
-    graph = dcc.Graph(
-        id='org-img',
-        figure = {
+
+    return {
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
             'layout': {
                 'width': 400,
@@ -137,14 +152,7 @@ def update_images_div(data_uri, layout):
                 }],
                 'dragmode': 'select',
             }
-        },
-        style={
-            'display': 'inline-block',
-            'width': '100%',
-            'visibility': 'visible',
         }
-    )
-    return [graph]
 
 
 @app.callback(
@@ -189,7 +197,7 @@ def update_well_h(selected_data):
 
 
 @app.callback(
-        Output('mask-div', 'children'),
+        Output('mask-img', 'figure'),
         [Input('n-rows', 'value'),
             Input('n-clms', 'value'),
             Input('n-plates', 'value'),
@@ -201,17 +209,15 @@ def update_well_h(selected_data):
             Input('well_w', 'value'),
             Input('well_h', 'value'),
             Input('angle', 'value')],
-        [State('org-img', 'figure'),
-         State('org-img', 'relayoutData'),
-         State('org-img', 'relayoutData')])
+        [State('org-img', 'figure')])
 def draw_images(
         n_rows, n_clms, n_plates,
         gap_r, gap_c, gap_p, x, y, well_w, well_h, angle,
-        figure, masked_layout, mask_layout):
+        figure):
 
     # Guard
-    if figure is None:
-        return
+    if 'images' not in figure['layout']:
+        return {'data': [], 'layout': {}}
 
     # Get base64ed hash of original image
     orgimg_uri = figure['layout']['images'][0]['source']
@@ -247,12 +253,8 @@ def draw_images(
 
     label = PIL.Image.fromarray(
             np.where(mask>=0, 255, 0).astype(np.uint8))
-    masked = PIL.Image.fromarray(
-            np.where(mask>=0, 1, 0).astype(np.uint8) * org_img)
     mask_buf = io.BytesIO()
-    masked_buf = io.BytesIO()
     label.save(mask_buf, format='PNG')
-    masked.save(masked_buf, format='PNG')
 
     # make the directory for saving
     os.makedirs('static/', exist_ok=True)
@@ -278,9 +280,7 @@ def draw_images(
         json.dump(params_dict, f, indent=4)
 
     # define the graphs to draw
-    mask_img = dcc.Graph(
-        id='mask-img',
-        figure={
+    return {
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
             'layout': {
                 'width': 400,
@@ -308,16 +308,70 @@ def draw_images(
                 }],
                 'dragmode': 'select',
             }
-        },
-        style={
-            'display': 'inline-block',
-            'width': '50%',
         }
-    )
 
-    masked_img = dcc.Graph(
-        id='masked-img',
-        figure={
+
+@app.callback(
+        Output('masked-img', 'figure'),
+        [Input('n-rows', 'value'),
+            Input('n-clms', 'value'),
+            Input('n-plates', 'value'),
+            Input('row-gap', 'value'),
+            Input('clm-gap', 'value'),
+            Input('plate-gap', 'value'),
+            Input('x', 'value'),
+            Input('y', 'value'),
+            Input('well_w', 'value'),
+            Input('well_h', 'value'),
+            Input('angle', 'value')],
+        [State('org-img', 'figure')])
+def draw_images(
+        n_rows, n_clms, n_plates,
+        gap_r, gap_c, gap_p, x, y, well_w, well_h, angle,
+        figure):
+
+    # Guard
+    if 'images' not in figure['layout']:
+        return {'data': [], 'layout': {}}
+
+    # Get base64ed hash of original image
+    orgimg_uri = figure['layout']['images'][0]['source']
+    imghash = orgimg_uri.split(',')[1]
+
+    # Transform hash to ndarray
+    org_img = np.array(PIL.Image.open(io.BytesIO(base64.b64decode(imghash))))
+
+    # Parameters
+    height, width = org_img.shape[0], org_img.shape[1]
+    count = 0
+
+    # Mask create loop
+    angle = np.deg2rad(angle)
+    mask = -1 * np.ones_like(org_img)
+    for n in range(n_plates):
+        for idx_r in range(n_rows):
+            for idx_c in range(n_clms):
+                c1 = x + round(idx_c*(well_w + gap_c))
+                r1 = y + round(idx_r*(well_h + gap_r)) + n*(n_rows*well_h + gap_p) + round(gap_r*(n - 1))
+                c1, r1 = np.dot(
+                        np.array(
+                            [[np.cos(angle), -np.sin(angle)],
+                             [np.sin(angle),  np.cos(angle)]]),
+                        np.array([c1-x, r1-y])) + np.array([x, y])
+                c1, r1 = np.round([c1, r1]).astype(int)
+                c2 = c1 + well_w
+                r2 = r1 + well_h
+                mask[r1:r2, c1:c2] = count
+                count += 1
+
+    mask = np.flipud(mask)
+
+    masked = PIL.Image.fromarray(
+            np.where(mask>=0, 1, 0).astype(np.uint8) * org_img)
+    masked_buf = io.BytesIO()
+    masked.save(masked_buf, format='PNG')
+
+    return {
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
             'layout': {
                 'width': 400,
@@ -345,14 +399,8 @@ def draw_images(
                 }],
                 'dragmode': 'select',
             }
-        },
-        style={
-            'display': 'inline-block',
-            'width': '50%',
         }
-    )
 
-    return [masked_img, mask_img]
 
 if __name__ == '__main__':
     app.run_server(debug=True)
