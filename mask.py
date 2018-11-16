@@ -202,8 +202,11 @@ def update_well_h(selected_data):
 def draw_images(
         n_rows, n_clms, n_plates,
         gap_r, gap_c, gap_p, x, y, well_w, well_h, angle, figure):
+
+    # Guard
     if figure is None:
         return
+
     # Get base64ed hash of original image
     orgimg_uri = figure['layout']['images'][0]['source']
     imghash = orgimg_uri.split(',')[1]
@@ -234,10 +237,12 @@ def draw_images(
                 mask[r1:r2, c1:c2] = count
                 count += 1
 
+    mask = np.flipud(mask)
+
     grayed = PIL.Image.fromarray(
-            np.flipud(np.where(mask>=0, 255, 0).astype(np.uint8)))
+            np.where(mask>=0, 255, 0).astype(np.uint8))
     masked = PIL.Image.fromarray(
-            np.flipud(np.where(mask>=0, 1, 0).astype(np.uint8)) * org_img)
+            np.where(mask>=0, 1, 0).astype(np.uint8) * org_img)
     mask_buf = io.BytesIO()
     masked_buf = io.BytesIO()
     grayed.save(mask_buf, format='PNG')
@@ -247,7 +252,7 @@ def draw_images(
     os.makedirs('static/', exist_ok=True)
 
     # save the mask
-    np.save('static/mask.npy', np.flipud(mask).astype(np.int16))
+    np.save('static/mask.npy', mask.astype(np.int16))
 
     # save the parameters
     params_dict = {
