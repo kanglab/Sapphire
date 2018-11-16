@@ -11,11 +11,14 @@ import io
 import os
 import glob
 import dash
+import json
 import base64
 import zipfile
 import PIL.Image
 import dash_auth
+import dash_table
 import numpy as np
+import pandas as pd
 import scipy.signal
 import my_threshold
 import flask_caching
@@ -30,7 +33,7 @@ THETA = 50
 
 
 
-app = dash.Dash()
+app = dash.Dash('Sapphire')
 app.css.append_css(
         {'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
 cache = flask_caching.Cache()
@@ -42,363 +45,365 @@ cache.init_app(
 #  Definition of the viewer page
 # ================================
 app.layout = html.Div([
-    html.Header([html.H1('Sapphire', style={'margin': '0px'})]),
-    html.Div([
-        html.Div([
-                'Dataset:',
-                html.Br(),
+    html.Header([html.H1('Sapphire', style={'margin': '10px'})]),
+    dcc.Tabs(id='tabs', value='tab-1', children=[
+        dcc.Tab(id='tab-1', label='Tab 1', value='tab-1', children=[
+            html.Div([
                 html.Div([
-                    dcc.Dropdown(
-                        id='env-dropdown',
-                        placeholder='Select a dataset...',
-                        clearable=False,
-                    ),
-                    ],
-                    style={
-                        'display': 'inline-block',
-                        'width': '200px',
-                        'vertical-align': 'middle',
-                    },
-                ),
-                html.Br(),
-                'Manual Detection File (CSV):',
-                html.Br(),
-                html.Div([
-                    dcc.Dropdown(
-                        id='csv-dropdown',
-                        placeholder='Select a CSV file...',
-                        clearable=False,
-                    ),
-                    ],
-                    style={
-                        'display': 'inline-block',
-                        'width': '200px',
-                        'vertical-align': 'middle',
-                    },
-                ),
-                html.Br(),
-                'Target Morphology:',
-                html.Br(),
-                html.Div([
-                    dcc.Dropdown(
-                        id='morpho-dropdown',
-                        placeholder='Select a morpho...',
-                        clearable=False,
-                    ),
-                    ],
-                    style={
-                        'display': 'inline-block',
-                        'width': '200px',
-                        'vertical-align': 'middle',
-                    },
-                ),
-                html.Br(),
-                'Inference Data:',
-                html.Br(),
-                html.Div([
-                    dcc.Dropdown(
-                        id='result-dropdown',
-                        placeholder='Select a result dir...',
-                        clearable=False,
-                    ),
-                    ],
-                    style={
-                        'display': 'inline-block',
-                        'width': '200px',
-                        'vertical-align': 'middle',
-                    },
-                ),
-                html.Br(),
-                'Thresholding:',
-                html.Br(),
-                dcc.RadioItems(
-                    id='rise-or-fall',
-                    options=[
-                        {'label': 'Rising Up', 'value': 'rise'},
-                        {'label': 'Falling Down', 'value': 'fall'},
-                    ],
-                    value='rise',
-                ),
-                'Well Index:',
-                html.Br(),
-                html.Div([
-                    dcc.Input(
-                        id='well-selector',
-                        type='number',
-                        value=0,
-                        min=0,
-                        size=5,
-                    ),
-                    ],
-                    style={
-                        'display': 'inline-block',
-                    },
-                ),
-                html.Br(),
-                html.Div([
-                    dcc.Slider(
-                        id='well-slider',
-                        value=0,
-                        min=0,
-                        step=1,
-                    ),
-                    ],
-                    style={
-                        'display': 'inline-block',
-                        'width': '200px',
-                        # 'margin-left': '20px',
-                    },
-                ),
-                html.Br(),
-                'Time Step:',
-                html.Br(),
-                html.Div([
+                        'Dataset:',
+                        html.Br(),
+                        html.Div([
+                            dcc.Dropdown(
+                                id='env-dropdown',
+                                placeholder='Select a dataset...',
+                                clearable=False,
+                            ),
+                            ],
+                            style={
+                                'display': 'inline-block',
+                                'width': '200px',
+                                'vertical-align': 'middle',
+                            },
+                        ),
+                        html.Br(),
+                        'Manual Detection File (CSV):',
+                        html.Br(),
+                        html.Div([
+                            dcc.Dropdown(
+                                id='csv-dropdown',
+                                placeholder='Select a CSV file...',
+                                clearable=False,
+                            ),
+                            ],
+                            style={
+                                'display': 'inline-block',
+                                'width': '200px',
+                                'vertical-align': 'middle',
+                            },
+                        ),
+                        html.Br(),
+                        'Target Morphology:',
+                        html.Br(),
+                        html.Div([
+                            dcc.Dropdown(
+                                id='morpho-dropdown',
+                                placeholder='Select a morpho...',
+                                clearable=False,
+                            ),
+                            ],
+                            style={
+                                'display': 'inline-block',
+                                'width': '200px',
+                                'vertical-align': 'middle',
+                            },
+                        ),
+                        html.Br(),
+                        'Inference Data:',
+                        html.Br(),
+                        html.Div([
+                            dcc.Dropdown(
+                                id='result-dropdown',
+                                placeholder='Select a result dir...',
+                                clearable=False,
+                            ),
+                            ],
+                            style={
+                                'display': 'inline-block',
+                                'width': '200px',
+                                'vertical-align': 'middle',
+                            },
+                        ),
+                        html.Br(),
+                        'Thresholding:',
+                        html.Br(),
+                        dcc.RadioItems(
+                            id='rise-or-fall',
+                            options=[
+                                {'label': 'Rising Up', 'value': 'rise'},
+                                {'label': 'Falling Down', 'value': 'fall'},
+                            ],
+                            value='rise',
+                        ),
+                        'Well Index:',
+                        html.Br(),
+                        html.Div([
+                            dcc.Input(
+                                id='well-selector',
+                                type='number',
+                                value=0,
+                                min=0,
+                                size=5,
+                            ),
+                            ],
+                            style={
+                                'display': 'inline-block',
+                            },
+                        ),
+                        html.Br(),
+                        html.Div([
+                            dcc.Slider(
+                                id='well-slider',
+                                value=0,
+                                min=0,
+                                step=1,
+                            ),
+                            ],
+                            style={
+                                'display': 'inline-block',
+                                'width': '200px',
+                                # 'margin-left': '20px',
+                            },
+                        ),
+                        html.Br(),
+                        'Time Step:',
+                        html.Br(),
+                        html.Div([
+                                dcc.Input(
+                                    id='time-selector',
+                                    type='number',
+                                    value=0,
+                                    min=0,
+                                    size=5,
+                                ),
+                            ],
+                            style={
+                                'display': 'inline-block',
+                            },
+                        ),
+                        html.Br(),
+
+                        'Smoothing:',
+                        dcc.Checklist(
+                            id='filter-check',
+                            options=[{'label': 'Apply', 'value': True}],
+                            values=[],
+                        ),
+                        'Sigma:',
                         dcc.Input(
-                            id='time-selector',
+                            id='gaussian-sigma',
                             type='number',
-                            value=0,
+                            value=5,
                             min=0,
                             size=5,
+                            step=0.1,
                         ),
                     ],
                     style={
                         'display': 'inline-block',
+                        'margin': '10px 10px',
                     },
                 ),
-                html.Br(),
-
-                'Smoothing:',
-                dcc.Checklist(
-                    id='filter-check',
-                    options=[{'label': 'Apply', 'value': True}],
-                    values=[],
-                ),
-                'Sigma:',
-                dcc.Input(
-                    id='gaussian-sigma',
-                    type='number',
-                    value=5,
-                    min=0,
-                    size=5,
-                    step=0.1,
-                ),
-            ],
-            style={
-                'display': 'inline-block',
-                'margin': '10px 10px',
-            },
-        ),
-        html.Div([
-            html.Div('Original Image', style={'display': 'table'}),
-            html.Img(
-                id='t-image',
-                style={
-                    'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
-                    'padding': '5px',
-                    'display': 'block',
-                },
-            ),
-            html.Div('Label', style={'display': 'table'}),
-            html.Img(
-                id='t-label',
-                style={
-                    'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
-                    'padding': '5px',
-                    'display': 'block',
-                },
-            ),
-            html.Div('Probability', style={'display': 'table'}),
-            html.Img(
-                id='t-prob',
-                style={
-                    'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
-                    'padding': '5px',
-                    'display': 'block',
-                },
-            ),
-            html.Div(['Image at "t"'], style={'display': 'table'}),
-            ],
-            style={
-                'display': 'inline-block',
-                'margin-right': '5px',
-                'margin-left': '5px',
-            },
-        ),
-        html.Div([
-            html.Img(
-                id='t+1-image',
-                style={
-                    'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
-                    'padding': '5px',
-                    'display': 'block',
-                },
-            ),
-            html.Div('Label', style={'display': 'table'}),
-            html.Img(
-                id='t+1-label',
-                style={
-                    'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
-                    'padding': '5px',
-                    'display': 'block',
-                },
-            ),
-            html.Div('Probability', style={'display': 'table'}),
-            html.Img(
-                id='t+1-prob',
-                style={
-                    'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
-                    'padding': '5px',
-                    'display': 'block',
-                },
-            ),
-            html.Div(['"t+1"'], style={'display': 'table'}),
-            ],
-            style={
-                'display': 'inline-block',
-                'margin-right': '5px',
-                'margin-left': '5px',
-            },
-        ),
-
-        html.Div([
-                html.Img(
-                    id='current-well',
+                html.Div([
+                    html.Div('Original Image', style={'display': 'table'}),
+                    html.Img(
+                        id='t-image',
+                        style={
+                            'background': '#555555',
+                            'height': '80px',
+                            'width': '80px',
+                            'padding': '5px',
+                            'display': 'block',
+                        },
+                    ),
+                    html.Div('Label', style={'display': 'table'}),
+                    html.Img(
+                        id='t-label',
+                        style={
+                            'background': '#555555',
+                            'height': '80px',
+                            'width': '80px',
+                            'padding': '5px',
+                            'display': 'block',
+                        },
+                    ),
+                    html.Div('Probability', style={'display': 'table'}),
+                    html.Img(
+                        id='t-prob',
+                        style={
+                            'background': '#555555',
+                            'height': '80px',
+                            'width': '80px',
+                            'padding': '5px',
+                            'display': 'block',
+                        },
+                    ),
+                    html.Div(['Image at "t"'], style={'display': 'table'}),
+                    ],
                     style={
-                        'background': '#555555',
-                        'height': 'auto',
-                        'width': '200px',
-                        'padding': '5px',
+                        'display': 'inline-block',
+                        'margin-right': '5px',
+                        'margin-left': '5px',
                     },
                 ),
+                html.Div([
+                    html.Img(
+                        id='t+1-image',
+                        style={
+                            'background': '#555555',
+                            'height': '80px',
+                            'width': '80px',
+                            'padding': '5px',
+                            'display': 'block',
+                        },
+                    ),
+                    html.Div('Label', style={'display': 'table'}),
+                    html.Img(
+                        id='t+1-label',
+                        style={
+                            'background': '#555555',
+                            'height': '80px',
+                            'width': '80px',
+                            'padding': '5px',
+                            'display': 'block',
+                        },
+                    ),
+                    html.Div('Probability', style={'display': 'table'}),
+                    html.Img(
+                        id='t+1-prob',
+                        style={
+                            'background': '#555555',
+                            'height': '80px',
+                            'width': '80px',
+                            'padding': '5px',
+                            'display': 'block',
+                        },
+                    ),
+                    html.Div(['"t+1"'], style={'display': 'table'}),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                        'margin-right': '5px',
+                        'margin-left': '5px',
+                    },
+                ),
+
+                html.Div([
+                        html.Img(
+                            id='current-well',
+                            style={
+                                'background': '#555555',
+                                'height': 'auto',
+                                'width': '200px',
+                                'padding': '5px',
+                            },
+                        ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                        'margin-left': '5px',
+                    },
+                ),
+
+                html.Div([
+                    'Data root :',
+                    html.Div(DATA_ROOT, id='data-root'),
+                    html.Br(),
+                    'Imaging environment :',
+                    html.Div(id='current-env'),
+                    html.Br(),
+                    'File name :',
+                    html.Div(id='current-csv'),
+                    html.Br(),
+                    'Current morpho :',
+                    html.Div(id='current-morpho'),
+                    html.Br(),
+                    'Current result :',
+                    html.Div(id='current-result'),
+                    ],
+                    style={
+                        # 'display': 'inline-block',
+                        'display': 'none',
+                        'vertical-align': 'top',
+                        
+                    },
+                ),
+
+                html.Div([
+                    dcc.Slider(
+                        id='threshold-slider1',
+                        value=2,
+                        min=-5,
+                        max=10,
+                        step=.1,
+                        updatemode='mouseup',
+                        vertical=True,
+                    )],
+                    style={
+                        'display': 'inline-block',
+                        'height': '300px',
+                        'width': '10px',
+                        'padding-bottom': '50px',
+                        'margin-left': '30px',
+
+                    },
+                ),
+                dcc.Graph(
+                    id='signal-graph',
+                    style={
+                        'display': 'inline-block',
+                        'height': '400px',
+                        #'width': '60%',
+                    },
+                ),
+                html.Div([
+                    dcc.Slider(
+                        id='threshold-slider2',
+                        value=600000,
+                        min=0,
+                        step=1,
+                        updatemode='mouseup',
+                        vertical=True,
+                    )],
+                    style={
+                        'display': 'inline-block',
+                        'height': '280px',
+                        'width': '10px',
+                        'padding-bottom': '50px',
+                    },
+                ),
+
             ],
-            style={
-                'display': 'inline-block',
-                'margin-left': '5px',
-            },
-        ),
-
-        html.Div([
-            'Data root :',
-            html.Div(DATA_ROOT, id='data-root'),
-            html.Br(),
-            'Imaging environment :',
-            html.Div(id='current-env'),
-            html.Br(),
-            'File name :',
-            html.Div(id='current-csv'),
-            html.Br(),
-            'Current morpho :',
-            html.Div(id='current-morpho'),
-            html.Br(),
-            'Current result :',
-            html.Div(id='current-result'),
-            ],
-            style={
-                # 'display': 'inline-block',
-                'display': 'none',
-                'vertical-align': 'top',
-                
-            },
-        ),
-
-        html.Div([
-            dcc.Slider(
-                id='threshold-slider1',
-                value=2,
-                min=-5,
-                max=10,
-                step=.1,
-                updatemode='mouseup',
-                vertical=True,
-            )],
-            style={
-                'display': 'inline-block',
-                'height': '300px',
-                'width': '10px',
-                'padding-bottom': '50px',
-                'margin-left': '30px',
-
-            },
-        ),
-        dcc.Graph(
-            id='signal-graph',
-            style={
-                'display': 'inline-block',
-                'height': '400px',
-                #'width': '60%',
-            },
-        ),
-        html.Div([
-            dcc.Slider(
-                id='threshold-slider2',
-                value=600000,
-                min=0,
-                step=1,
-                updatemode='mouseup',
-                vertical=True,
-            )],
-            style={
-                'display': 'inline-block',
-                'height': '280px',
-                'width': '10px',
-                'padding-bottom': '50px',
-            },
-        ),
-
-    ],
-    ),
-    html.Div([
-        dcc.Graph(
-            id='summary-graph',
-            style={
-                'display': 'inline-block',
-                'height': '400px',
-                'width': '25%',
-            },
-        ),
-        dcc.Graph(
-            id='error-hist',
-            style={
-                'display': 'inline-block',
-                'height': '400px',
-                'width': '25%',
-            },
-        ),
-        dcc.Graph(
-            id='summary-graph2',
-            style={
-                'display': 'inline-block',
-                'height': '400px',
-                'width': '25%',
-            },
-        ),
-        dcc.Graph(
-            id='error-hist2',
-            style={
-                'display': 'inline-block',
-                'height': '400px',
-                'width': '25%',
-            },
-        ),
+            ),
+            html.Div([
+                dcc.Graph(
+                    id='summary-graph',
+                    style={
+                        'display': 'inline-block',
+                        'height': '400px',
+                        'width': '25%',
+                    },
+                ),
+                dcc.Graph(
+                    id='error-hist',
+                    style={
+                        'display': 'inline-block',
+                        'height': '400px',
+                        'width': '25%',
+                    },
+                ),
+                dcc.Graph(
+                    id='summary-graph2',
+                    style={
+                        'display': 'inline-block',
+                        'height': '400px',
+                        'width': '25%',
+                    },
+                ),
+                dcc.Graph(
+                    id='error-hist2',
+                    style={
+                        'display': 'inline-block',
+                        'height': '400px',
+                        'width': '25%',
+                    },
+                ),
+            ]),
+            html.Div(id='dummy-div'),
+        ]),
+        dcc.Tab(id='tab-2', label='Tab 2', value='tab-2', children='children'),
     ]),
-    html.Div(id='dummy-div'),
-    ],
-    style={
-        'width': '1600px',
-    },
-)
+
+], style={'width': '1600px',},)
 
 
 # =================================================
@@ -1645,6 +1650,118 @@ def callback(checks):
 
     else:
         return False
+
+
+# ======================================================
+#  
+# ======================================================
+@app.callback(
+        Output('tab-2', 'children'),
+        [Input('tabs', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('csv-dropdown', 'value'),
+         State('morpho-dropdown', 'value'),
+         State('result-dropdown', 'value'),
+         State('rise-or-fall', 'value'),
+         State('threshold-slider1', 'value'),
+         State('gaussian-sigma', 'value'),
+         State('filter-check', 'values')])
+def callback(
+        tab_name, data_root, env, csv, morpho, result, rise_fall,
+        coef, sigma, checks):
+
+    # Guard
+    if data_root is None:
+        return
+    if env is None:
+        return
+    if csv is None:
+        return 'Not available.'
+
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    n_wells = params['n-rows'] * params['n-clms'] * params['n-plates']
+
+    # Load a manual data
+    manual_evals = store_manual_evals(data_root, env, csv)
+    manual_evals = manual_evals.reshape(
+            params['n-rows']*params['n-plates'], params['n-clms'])
+
+    if tab_name == 'tab-2':
+
+        style = [{
+                'if': {
+                    'column_id': '{}'.format(clm),
+                    'filter': 'num({2}) > {0} && {1} >= num({3})'.format(clm, clm, int(t)+100, int(t)),
+                },
+                'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
+                'color': 'black',
+            }
+            for clm in range(params['n-clms'])
+            for t, c in zip(
+                range(0, manual_evals.max(), 100),
+                np.linspace(0, 255, len(range(0, manual_evals.max(), 100))))
+        ]
+
+        children = [
+                html.Div([
+
+                    html.H3('Manual'),
+
+                    dash_table.DataTable(
+                        id='table',
+                        columns=[{'name': str(clm), 'id': str(clm)}
+                                for clm in range(params['n-clms'])],
+                        data=pd.DataFrame(manual_evals).to_dict('rows'),
+                        style_data_conditional=style,
+                        style_table={'width': '400px'}
+                    ),
+                ], style={'display': 'inline-block'}),
+            ]
+
+        if morpho is not None and result is not None:
+
+            signals = store_signals(data_root, env, morpho, result)
+
+            # Smooth the signals
+            if len(checks) != 0:
+                signals = my_filter(signals, sigma=sigma)
+
+            # Compute thresholds
+            threshold = my_threshold.entire_stats(signals, coef=coef)
+
+            # Compute event times from signals
+            if rise_fall == 'rise':
+                auto_evals = (signals > threshold).argmax(axis=1)
+
+            elif rise_fall == 'fall':
+                # Scan the signal from the right hand side.
+                auto_evals = (signals.shape[1]
+                        - (np.fliplr(signals) > threshold).argmax(axis=1))
+                # If the signal was not more than the threshold.
+                auto_evals[auto_evals == signals.shape[1]] = 0
+
+            auto_evals = auto_evals.reshape(
+                    params['n-rows']*params['n-plates'], params['n-clms'])
+
+            children.append(html.Div([
+
+                    html.H3('Auto'),
+
+                    dash_table.DataTable(
+                        id='table',
+                        columns=[{'name': str(clm), 'id': str(clm)}
+                                for clm in range(params['n-clms'])],
+                        data=pd.DataFrame(auto_evals).to_dict('rows'),
+                        style_data_conditional=style,
+                        style_table={'width': '400px'}
+                    ),
+                ], style={'display': 'inline-block'}),
+            )
+
+        return html.Div(children, style={'width': '1200px'})
 
 
 # =========================================
