@@ -209,11 +209,12 @@ def update_well_h(selected_data):
             Input('well_w', 'value'),
             Input('well_h', 'value'),
             Input('angle', 'value')],
-        [State('org-img', 'figure')])
+        [State('org-img', 'figure'),
+         State('mask-img', 'relayoutData')])
 def draw_images(
         n_rows, n_clms, n_plates,
         gap_r, gap_c, gap_p, x, y, well_w, well_h, angle,
-        figure):
+        figure, layout):
 
     # Guard
     if 'images' not in figure['layout']:
@@ -279,6 +280,30 @@ def draw_images(
     with open('static/mask_params.json', 'w') as f:
         json.dump(params_dict, f, indent=4)
 
+    if 'xaxis.range[0]' in layout:
+        xaxis = {
+                'range': (layout['xaxis.range[0]'], layout['xaxis.range[1]']),
+                'scaleanchor': 'y',
+                'scaleratio': 1,
+        }
+
+    else:
+        xaxis = {
+                'range': (0, width),
+                'scaleanchor': 'y',
+                'scaleratio': 1,
+        }
+
+    if 'yaxis.range[0]' in layout:
+        yaxis = {
+                'range': (layout['yaxis.range[0]'], layout['yaxis.range[1]']),
+        }
+
+    else:
+        yaxis = {
+                'range': (0, height),
+        }
+
     # define the graphs to draw
     return {
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
@@ -286,14 +311,8 @@ def draw_images(
                 'width': 400,
                 'height': 700,
                 'margin': go.layout.Margin(l=40, b=40, t=26, r=10),
-                'xaxis': {
-                    'range': (0, width),
-                    'scaleanchor': 'y',
-                    'scaleratio': 1,
-                },
-                'yaxis': {
-                    'range': (0, height),
-                },
+                'xaxis': xaxis,
+                'yaxis': yaxis,
                 'images': [{
                     'xref': 'x',
                     'yref': 'y',
@@ -324,11 +343,12 @@ def draw_images(
             Input('well_w', 'value'),
             Input('well_h', 'value'),
             Input('angle', 'value')],
-        [State('org-img', 'figure')])
+        [State('org-img', 'figure'),
+         State('masked-img', 'relayoutData')])
 def draw_images(
         n_rows, n_clms, n_plates,
         gap_r, gap_c, gap_p, x, y, well_w, well_h, angle,
-        figure):
+        figure, layout):
 
     # Guard
     if 'images' not in figure['layout']:
@@ -371,20 +391,38 @@ def draw_images(
     masked_buf = io.BytesIO()
     masked.save(masked_buf, format='JPEG')
 
+    if 'xaxis.range[0]' in layout:
+        xaxis = {
+                'range': (layout['xaxis.range[0]'], layout['xaxis.range[1]']),
+                'scaleanchor': 'y',
+                'scaleratio': 1,
+        }
+
+    else:
+        xaxis = {
+                'range': (0, width),
+                'scaleanchor': 'y',
+                'scaleratio': 1,
+        }
+
+    if 'yaxis.range[0]' in layout:
+        yaxis = {
+                'range': (layout['yaxis.range[0]'], layout['yaxis.range[1]']),
+        }
+
+    else:
+        yaxis = {
+                'range': (0, height),
+        }
+
     return {
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
             'layout': {
                 'width': 400,
                 'height': 700,
                 'margin': go.layout.Margin(l=40, b=40, t=26, r=10),
-                'xaxis': {
-                    'range': (0, width),
-                    'scaleanchor': 'y',
-                    'scaleratio': 1,
-                },
-                'yaxis': {
-                    'range': (0, height),
-                },
+                'xaxis': xaxis,
+                'yaxis': yaxis,
                 'images': [{
                     'xref': 'x',
                     'yref': 'y',
