@@ -11,12 +11,14 @@ import io
 import os
 import glob
 import dash
+import json
 import base64
 import zipfile
 import PIL.Image
 import dash_auth
 import dash_table
 import numpy as np
+import pandas as pd
 import scipy.signal
 import my_threshold
 import flask_caching
@@ -1655,13 +1657,34 @@ def callback(checks):
 # ======================================================
 @app.callback(
         Output('tab-2', 'children'),
-        [Input('tabs', 'value')])
-def callback(tab_name):
+        [Input('tabs', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('csv-dropdown', 'value')])
+def callback(tab_name, data_root, dataset_name, csv_name):
+
+    # Guard
+    if data_root is None:
+        return
+    if dataset_name is None:
+        return
+    if csv_name is None:
+        return
+
+    # Load a mask params
+    with open(os.path.join(data_root, dataset_name, 'mask_params.json')) as f:
+        params = json.load(f)
+    n_wells = params['n-rows'] * params['n-clms'] * params['n-plates']
+
+    # Load a manual data
+    manual_evals = store_manual_evals(data_root, dataset_name, csv_name)
+    manual_evals = manual_evals.reshape(params['n-rows']*params['n-plates'], params['n-clms'])
+
     if tab_name == 'tab-2':
         return [dash_table.DataTable(
             id='table',
-            columns=[{"name": i, "id": i} for i in range(5)],
-            data=pd.DataFrame(np.random.randint(0, 100, (5, 5))).to_dict('rows'),
+            columns=[{"name": i, "id": i} for i in range(params['n-clms'])],
+            data=pd.DataFrame(manual_evals).to_dict('rows'),
         )]
 
 
