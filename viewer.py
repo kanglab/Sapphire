@@ -402,9 +402,27 @@ app.layout = html.Div([
             html.Div(id='dummy-div'),
         ]),
         dcc.Tab(id='tab-2', label='Tab 2', value='tab-2', children=[
-            html.Div(id='timestamp-table', style={'display': 'inline-block'}),
-            html.Div(id='manual-table', style={'display': 'inline-block'}),
-            html.Div(id='auto-table', style={'display': 'inline-block'}),
+            html.Div(
+                id='timestamp-table',
+                style={
+                    'display': 'inline-block',
+                    'vertical-align': 'top',
+                },
+            ),
+            html.Div(
+                id='manual-table',
+                style={
+                    'display': 'inline-block',
+                    'vertical-align': 'top',
+                },
+            ),
+            html.Div(
+                id='auto-table',
+                style={
+                    'display': 'inline-block',
+                    'vertical-align': 'top',
+                },
+            ),
         ], style={'width': '1200px'}),
     ]),
 
