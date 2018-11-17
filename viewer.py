@@ -570,7 +570,8 @@ def store_timestamps(data_root, env):
 
     return [[
         os.path.basename(orgimg_path),
-        PIL.Image.open(orgimg_path)._getexif()[36868]]
+        datetime.datetime.fromtimestamp(os.stat(orgimg_path).st_mtime) \
+                .strftime('%Y-%m-%d %H:%M:%S')]
         for orgimg_path in orgimg_paths]
 
 
