@@ -1723,7 +1723,9 @@ def callback(tab_name, data_root, env):
             dash_table.DataTable(
                 columns=[{'id': c, 'name': c} for c in df.columns],
                 data=df.to_dict('rows'),
-                style_table={'width': '100px'},
+                n_fixed_rows=1,
+                style_table={'width': '200px'},
+                pagination_mode=False,
             ),
         ]
 
