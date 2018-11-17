@@ -440,6 +440,7 @@ app.layout = html.Div([
             ),
         ], style={'width': '1200px'}),
     ]),
+    html.Div(id='hidden-timestamp', style={'display': 'none'}),
 
 ], style={'width': '1600px',},)
 
@@ -575,6 +576,28 @@ def store_timestamps(data_root, env):
         for orgimg_path in orgimg_paths]
 
 
+@app.callback(
+        Output('hidden-timestamp', 'children'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+
+    # Guard
+    if env is None:
+        return
+
+    # Load an original image
+    orgimg_paths = sorted(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg')))
+
+    return pd.DataFrame([[
+            os.path.basename(orgimg_path),
+            datetime.datetime.fromtimestamp(os.stat(orgimg_path).st_mtime) \
+                    .strftime('%Y-%m-%d %H:%M:%S')]
+            for orgimg_path in orgimg_paths],
+            columns=['frame', 'create time']).to_json()
+
+
 # ======================================================================
 #  Load a luminance signal file when selecting an imaging environment.
 # ======================================================================
@@ -596,7 +619,7 @@ def callback(env, data_root):
         [State('data-root', 'children')])
 def callback(env, data_root):
     store_mask(data_root, env)
-    store_timestamps(data_root, env)
+    # store_timestamps(data_root, env)
     return env
 
 
@@ -1717,8 +1740,9 @@ def callback(checks):
         Output('timestamp-table', 'children'),
         [Input('tabs', 'value')],
         [State('data-root', 'children'),
-         State('env-dropdown', 'value')])
-def callback(tab_name, data_root, env):
+         State('env-dropdown', 'value'),
+         State('hidden-timestamp', 'children')])
+def callback(tab_name, data_root, env, timestamps):
 
     # Guard
     if data_root is None:
@@ -1728,9 +1752,7 @@ def callback(tab_name, data_root, env):
     if tab_name != 'tab-2':
         return
 
-    data = store_timestamps(data_root, env)
-
-    df = pd.DataFrame(data, columns=['frame', 'create time'])
+    df = pd.read_json(timestamps)
 
     return [
             dash_table.DataTable(
