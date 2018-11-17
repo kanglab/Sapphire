@@ -617,9 +617,8 @@ def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    return np.load(os.path.join(
-            data_root, env, 'inference', morpho, result,
-            'signals.npy')).shape[1] - 1
+    return len(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg'))) - 1
 
 
 # =======================================================
@@ -639,6 +638,7 @@ def callback(result, data_root, env, morpho):
     return np.load(
             os.path.join(data_root, env, 'luminance_signals.npy')).max()
 
+
 # =======================================================
 #  Initialize the maximum value of the well-slider
 #  after loading a signal file.
@@ -653,8 +653,10 @@ def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    return len(np.load(os.path.join(
-            data_root, env, 'inference', morpho, result, 'signals.npy'))) - 1
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+
+    return params['n-rows'] * params['n-plates'] * params['n-clms'] - 1
 
 
 # ====================================================
@@ -671,8 +673,10 @@ def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    return len(np.load(os.path.join(
-            data_root, env, 'inference', morpho, result, 'signals.npy'))) - 1
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+
+    return params['n-rows'] * params['n-plates'] * params['n-clms'] - 1
 
 
 # ======================================================
