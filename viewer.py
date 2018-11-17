@@ -617,10 +617,9 @@ def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    signals = np.load(os.path.join(
-            data_root, env, 'inference', morpho, result, 'signals.npy'))
-
-    return signals.shape[1] - 1
+    return np.load(os.path.join(
+            data_root, env, 'inference', morpho, result,
+            'signals.npy')).shape[1] - 1
 
 
 # =======================================================
@@ -637,8 +636,8 @@ def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    signals = np.load(os.path.join(data_root, env, 'luminance_signals.npy'))
-    return signals.max()
+    return np.load(
+            os.path.join(data_root, env, 'luminance_signals.npy')).max()
 
 # =======================================================
 #  Initialize the maximum value of the well-slider
@@ -654,10 +653,8 @@ def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    signals = np.load(os.path.join(
-            data_root, env, 'inference', morpho, result, 'signals.npy'))
-
-    return len(signals) - 1
+    return len(np.load(os.path.join(
+            data_root, env, 'inference', morpho, result, 'signals.npy'))) - 1
 
 
 # ====================================================
@@ -674,10 +671,8 @@ def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    signals = np.load(os.path.join(
-            data_root, env, 'inference', morpho, result, 'signals.npy'))
-
-    return len(signals) - 1
+    return len(np.load(os.path.join(
+            data_root, env, 'inference', morpho, result, 'signals.npy'))) - 1
 
 
 # ======================================================
