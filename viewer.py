@@ -514,49 +514,6 @@ def callback(morpho, data_root, env):
     return [{'label': i, 'value': i} for i in results]
 
 
-# ==========
-#  Caching
-# ==========
-@cache.memoize()
-def store_signals(data_root, env, morpho, result):
-    if env is None or morpho is None or result is None:
-        return
-
-    signals = np.load(os.path.join(
-        data_root, env, 'inference', morpho, result, 'signals.npy'))
-
-    return signals
-
-
-@cache.memoize()
-def store_manual_evals(data_root, env, csv):
-    if env is None or csv is None:
-        return
-
-    manual_evals = np.loadtxt(
-            os.path.join(data_root, env, 'original', csv),
-            dtype=np.uint16,
-            delimiter=',').flatten()
-
-    return manual_evals
-
-
-@cache.memoize()
-def store_mask(data_root, env):
-    if env is None:
-        return
-
-    return np.load(os.path.join(data_root, env, 'mask.npy'))
-
-
-@cache.memoize()
-def store_luminance_signals(data_root, env):
-    if env is None:
-        return
-
-    return np.load(os.path.join(data_root, env, 'luminance_signals.npy'))
-
-
 # =======================================================================
 #  Store image file names and their timestamps as json in a hidden div.
 # =======================================================================
@@ -590,7 +547,6 @@ def callback(env, data_root):
         [Input('env-dropdown', 'value')],
         [State('data-root', 'children')])
 def callback(env, data_root):
-    store_luminance_signals(data_root, env)
     return ''
 
 
@@ -602,8 +558,6 @@ def callback(env, data_root):
         [Input('env-dropdown', 'value')],
         [State('data-root', 'children')])
 def callback(env, data_root):
-    store_mask(data_root, env)
-    # store_timestamps(data_root, env)
     return env
 
 
@@ -616,7 +570,6 @@ def callback(env, data_root):
         [State('data-root', 'children'),
          State('env-dropdown', 'value')])
 def callback(csv, data_root, env):
-    store_manual_evals(data_root, env, csv)
     return csv
 
 
@@ -647,7 +600,6 @@ def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    store_signals(data_root, env, morpho, result)
     return result
 
 
@@ -665,8 +617,9 @@ def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    signals = store_signals(data_root, env, morpho, result)
-    return signals.shape[1] - 1
+    return np.load(os.path.join(
+            data_root, env, 'inference', morpho, result,
+            'signals.npy')).shape[1] - 1
 
 
 # =======================================================
@@ -683,8 +636,8 @@ def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    signals = store_luminance_signals(data_root, env)
-    return signals.max()
+    return np.load(
+            os.path.join(data_root, env, 'luminance_signals.npy')).max()
 
 # =======================================================
 #  Initialize the maximum value of the well-slider
@@ -700,8 +653,8 @@ def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    signals = store_signals(data_root, env, morpho, result)
-    return len(signals) - 1
+    return len(np.load(os.path.join(
+            data_root, env, 'inference', morpho, result, 'signals.npy'))) - 1
 
 
 # ====================================================
@@ -718,8 +671,8 @@ def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
-    signals = store_signals(data_root, env, morpho, result)
-    return len(signals) - 1
+    return len(np.load(os.path.join(
+            data_root, env, 'inference', morpho, result, 'signals.npy'))) - 1
 
 
 # ======================================================
@@ -794,8 +747,10 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
         x, y = time, figure['data'][3]['y'][time]
 
     # Load the data
-    signals = store_signals(data_root, env, morpho, result)
-    luminance_signals = store_luminance_signals(data_root, env).T
+    signals = np.load(os.path.join(
+            data_root, env, 'inference', morpho, result, 'signals.npy'))
+    luminance_signals = np.load(
+            os.path.join(data_root, env, 'luminance_signals.npy')).T
 
     # Smooth the signals
     if len(checks) != 0:
@@ -835,7 +790,9 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
         pass
 
     else:
-        manual_evals = store_manual_evals(data_root, env, csv)
+        manual_evals = np.loadtxt(
+                os.path.join(data_root, env, 'original', csv),
+                dtype=np.uint16, delimiter=',').flatten()
 
         manual_data = [
                 {
@@ -972,8 +929,11 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
         return {'data': []}
 
     # Load the data
-    signals = store_signals(data_root, env, morpho, result)
-    manual_evals = store_manual_evals(data_root, env, csv)
+    signals = np.load(os.path.join(
+            data_root, env, 'inference', morpho, result, 'signals.npy'))
+    manual_evals = np.loadtxt(
+            os.path.join(data_root, env, 'original', csv),
+            dtype=np.uint16, delimiter=',').flatten()
 
     # Smooth the signals
     if len(checks) != 0:
@@ -1091,8 +1051,11 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
         return {'data': []}
 
     # Load the data
-    signals = store_luminance_signals(data_root, env).T
-    manual_evals = store_manual_evals(data_root, env, csv)
+    signals = np.load(
+            os.path.join(data_root, env, 'luminance_signals.npy')).T
+    manual_evals = np.loadtxt(
+            os.path.join(data_root, env, 'original', csv),
+            dtype=np.uint16, delimiter=',').flatten()
 
     # Smooth the signals
     if len(checks) != 0:
@@ -1208,8 +1171,11 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
         return {'data': []}
 
     # Load the data
-    signals = store_signals(data_root, env, morpho, result)
-    manual_evals = store_manual_evals(data_root, env, csv)
+    signals = np.load(os.path.join(
+            data_root, env, 'inference', morpho, result, 'signals.npy'))
+    manual_evals = np.loadtxt(
+            os.path.join(data_root, env, 'original', csv),
+            dtype=np.uint16, delimiter=',').flatten()
 
     # Smooth the signals
     if len(checks) != 0:
@@ -1342,8 +1308,11 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
         return {'data': []}
 
     # Load the data
-    signals = store_luminance_signals(data_root, env).T
-    manual_evals = store_manual_evals(data_root, env, csv)
+    signals = np.load(
+            os.path.join(data_root, env, 'luminance_signals.npy')).T
+    manual_evals = np.loadtxt(
+            os.path.join(data_root, env, 'original', csv),
+            dtype=np.uint16, delimiter=',').flatten()
 
     # Smooth the signals
     if len(checks) != 0:
@@ -1465,7 +1434,7 @@ def callback(time, well_idx, data_root, env):
         return ''
 
     # Load the mask
-    mask = store_mask(data_root, env)
+    mask = np.load(os.path.join(data_root, env, 'mask.npy'))
 
     # Load an original image
     orgimg_paths = sorted(glob.glob(
@@ -1502,7 +1471,7 @@ def callback(time, well_idx, data_root, env):
         return ''
 
     # Load the mask
-    mask = store_mask(data_root, env)
+    mask = np.load(os.path.join(data_root, env, 'mask.npy'))
 
     # Load an original image
     orgimg_paths = sorted(glob.glob(
@@ -1681,7 +1650,7 @@ def callback(time, well_idx, data_root, env, morpho, result):
         return ''
 
     # Load the mask
-    mask = store_mask(data_root, env)
+    mask = np.load(os.path.join(data_root, env, 'mask.npy'))
 
     # Load an original image
     orgimg_paths = sorted(glob.glob(
@@ -1785,7 +1754,9 @@ def callback(
         params = json.load(f)
 
     # Load a manual data
-    manual_evals = store_manual_evals(data_root, env, csv)
+    manual_evals = np.loadtxt(
+            os.path.join(data_root, env, 'original', csv),
+            dtype=np.uint16, delimiter=',').flatten()
     manual_evals = manual_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
 
@@ -1849,7 +1820,8 @@ def callback(
     with open(os.path.join(data_root, env, 'mask_params.json')) as f:
         params = json.load(f)
 
-    signals = store_signals(data_root, env, morpho, result)
+    signals = np.load(os.path.join(
+            data_root, env, 'inference', morpho, result, 'signals.npy'))
 
     # Smooth the signals
     if len(checks) != 0:
