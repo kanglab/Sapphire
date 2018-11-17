@@ -407,6 +407,7 @@ app.layout = html.Div([
                 style={
                     'display': 'inline-block',
                     'vertical-align': 'top',
+                    'margin': '20px',
                 },
             ),
             html.Div(
@@ -414,6 +415,7 @@ app.layout = html.Div([
                 style={
                     'display': 'inline-block',
                     'vertical-align': 'top',
+                    'margin': '20px',
                 },
             ),
             html.Div(
@@ -421,6 +423,7 @@ app.layout = html.Div([
                 style={
                     'display': 'inline-block',
                     'vertical-align': 'top',
+                    'margin': '20px',
                 },
             ),
         ], style={'width': '1200px'}),
