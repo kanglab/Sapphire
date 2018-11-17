@@ -595,7 +595,7 @@ def callback(env, data_root):
             datetime.datetime.fromtimestamp(os.stat(orgimg_path).st_mtime) \
                     .strftime('%Y-%m-%d %H:%M:%S')]
             for orgimg_path in orgimg_paths],
-            columns=['frame', 'create time']).to_json()
+            columns=['frame', 'create time']).T.to_json()
 
 
 # ======================================================================
@@ -1752,12 +1752,14 @@ def callback(tab_name, data_root, env, timestamps):
     if tab_name != 'tab-2':
         return
 
-    df = pd.read_json(timestamps)
+    data = list(json.loads(timestamps).values())
 
     return [
             dash_table.DataTable(
-                columns=[{'id': c, 'name': c} for c in df.columns],
-                data=df.to_dict('rows'),
+                columns=[
+                    {'id': 'frame', 'name': 'frame'},
+                    {'id': 'create time', 'name': 'create time'}],
+                data=data,
                 n_fixed_rows=1,
                 style_table={'width': '100%'},
                 pagination_mode=False,
