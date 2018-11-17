@@ -440,6 +440,7 @@ app.layout = html.Div([
             ),
         ], style={'width': '1200px'}),
     ]),
+    html.Div(id='hidden-timestamp', style={'display': 'none'}),
 
 ], style={'width': '1600px',},)
 
@@ -556,9 +557,14 @@ def store_luminance_signals(data_root, env):
     return np.load(os.path.join(data_root, env, 'luminance_signals.npy'))
 
 
-@cache.memoize()
-def store_timestamps(data_root, env):
-    print('store_timestamps() was called.')
+# =======================================================================
+#  Store image file names and their timestamps as json in a hidden div.
+# =======================================================================
+@app.callback(
+        Output('hidden-timestamp', 'children'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
 
     # Guard
     if env is None:
@@ -568,11 +574,12 @@ def store_timestamps(data_root, env):
     orgimg_paths = sorted(glob.glob(
             os.path.join(data_root, env, 'original', '*.jpg')))
 
-    return [[
-        os.path.basename(orgimg_path),
-        datetime.datetime.fromtimestamp(os.stat(orgimg_path).st_mtime) \
-                .strftime('%Y-%m-%d %H:%M:%S')]
-        for orgimg_path in orgimg_paths]
+    return pd.DataFrame([[
+            os.path.basename(orgimg_path),
+            datetime.datetime.fromtimestamp(os.stat(orgimg_path).st_mtime) \
+                    .strftime('%Y-%m-%d %H:%M:%S')]
+            for orgimg_path in orgimg_paths],
+            columns=['frame', 'create time']).T.to_json()
 
 
 # ======================================================================
@@ -596,7 +603,7 @@ def callback(env, data_root):
         [State('data-root', 'children')])
 def callback(env, data_root):
     store_mask(data_root, env)
-    store_timestamps(data_root, env)
+    # store_timestamps(data_root, env)
     return env
 
 
@@ -1717,8 +1724,9 @@ def callback(checks):
         Output('timestamp-table', 'children'),
         [Input('tabs', 'value')],
         [State('data-root', 'children'),
-         State('env-dropdown', 'value')])
-def callback(tab_name, data_root, env):
+         State('env-dropdown', 'value'),
+         State('hidden-timestamp', 'children')])
+def callback(tab_name, data_root, env, timestamps):
 
     # Guard
     if data_root is None:
@@ -1728,14 +1736,14 @@ def callback(tab_name, data_root, env):
     if tab_name != 'tab-2':
         return
 
-    data = store_timestamps(data_root, env)
-
-    df = pd.DataFrame(data, columns=['frame', 'create time'])
+    data = list(json.loads(timestamps).values())
 
     return [
             dash_table.DataTable(
-                columns=[{'id': c, 'name': c} for c in df.columns],
-                data=df.to_dict('rows'),
+                columns=[
+                    {'id': 'frame', 'name': 'frame'},
+                    {'id': 'create time', 'name': 'create time'}],
+                data=data,
                 n_fixed_rows=1,
                 style_table={'width': '100%'},
                 pagination_mode=False,
