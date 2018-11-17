@@ -14,6 +14,7 @@ import dash
 import json
 import base64
 import zipfile
+import datetime
 import PIL.Image
 import dash_auth
 import dash_table
@@ -401,7 +402,7 @@ app.layout = html.Div([
             html.Div(id='dummy-div'),
         ]),
         dcc.Tab(id='tab-2', label='Tab 2', value='tab-2', children=[
-            html.Div(id='timestamps', style={'display': 'inline-block'}),
+            html.Div(id='timestamp-table', style={'display': 'inline-block'}),
             html.Div(id='manual-table', style={'display': 'inline-block'}),
             html.Div(id='auto-table', style={'display': 'inline-block'}),
         ], style={'width': '1200px'}),
@@ -1654,6 +1655,44 @@ def callback(checks):
 
     else:
         return False
+
+
+# ======================================================
+#  Timestamp table
+# ======================================================
+@app.callback(
+        Output('timestamp-table', 'children'),
+        [Input('tabs', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(tab_name, data_root, env):
+
+    # Guard
+    if data_root is None:
+        return
+    if env is None:
+        return
+    if tab_name != 'tab-2':
+        return
+
+    # Load an original image
+    orgimg_paths = sorted(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg')))
+
+    data = [[os.path.basename(orgimg_path), datetime.datetime.fromtimestamp(os.stat(orgimg_path).st_mtime).strftime('%Y-%m-%d %H:%M:%S')] for orgimg_path in orgimg_paths]
+
+    df = pd.DataFrame(data, columns=['frame', 'create time'])
+    print(df)
+
+    return [
+            html.H3('Timestamp'),
+
+            dash_table.DataTable(
+                columns=[{'id': c, 'name': c} for c in df.columns],
+                data=df.to_dict('rows'),
+                style_table={'width': '100px'},
+            ),
+        ]
 
 
 # ======================================================
