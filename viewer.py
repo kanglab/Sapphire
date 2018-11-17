@@ -1417,7 +1417,7 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.Margin(l=50, r=0, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=50, pad=0),
             },
         }
 
