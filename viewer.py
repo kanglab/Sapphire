@@ -403,27 +403,39 @@ app.layout = html.Div([
         ]),
         dcc.Tab(id='tab-2', label='Tab 2', value='tab-2', children=[
             html.Div(
-                id='timestamp-table',
+                [
+                    html.H3('Timestamp'),
+                    html.Div(id='timestamp-table'),
+                ],
                 style={
                     'display': 'inline-block',
                     'vertical-align': 'top',
                     'margin': '20px',
+                    'width': '200px',
                 },
             ),
             html.Div(
-                id='manual-table',
+                [
+                    html.H3('Manual Detection'),
+                    html.Div(id='manual-table'),
+                ],
                 style={
                     'display': 'inline-block',
                     'vertical-align': 'top',
                     'margin': '20px',
+                    'width': '400px',
                 },
             ),
             html.Div(
-                id='auto-table',
+                [
+                    html.H3('Auto Detection'),
+                    html.Div(id='auto-table'),
+                ],
                 style={
                     'display': 'inline-block',
                     'vertical-align': 'top',
                     'margin': '20px',
+                    'width': '400px',
                 },
             ),
         ], style={'width': '1200px'}),
@@ -1721,13 +1733,11 @@ def callback(tab_name, data_root, env):
     df = pd.DataFrame(data, columns=['frame', 'create time'])
 
     return [
-            html.H3('Timestamp'),
-
             dash_table.DataTable(
                 columns=[{'id': c, 'name': c} for c in df.columns],
                 data=df.to_dict('rows'),
                 n_fixed_rows=1,
-                style_table={'width': '200px'},
+                style_table={'width': '100%'},
                 pagination_mode=False,
             ),
         ]
@@ -1786,14 +1796,12 @@ def callback(
     ]
 
     return [
-            html.H3('Manual'),
-
             dash_table.DataTable(
                 columns=[{'name': str(clm), 'id': str(clm)}
                         for clm in range(params['n-clms'])],
                 data=pd.DataFrame(manual_evals).to_dict('rows'),
                 style_data_conditional=style,
-                style_table={'width': '400px'}
+                style_table={'width': '100%'}
             ),
         ]
 
@@ -1871,14 +1879,12 @@ def callback(
     ]
 
     return [
-            html.H3('Auto'),
-
             dash_table.DataTable(
                 columns=[{'name': str(clm), 'id': str(clm)}
                         for clm in range(params['n-clms'])],
                 data=pd.DataFrame(auto_evals).to_dict('rows'),
                 style_data_conditional=style,
-                style_table={'width': '400px'}
+                style_table={'width': '100%'}
             ),
         ]
 
