@@ -14,6 +14,7 @@ import dash
 import json
 import base64
 import zipfile
+import datetime
 import PIL.Image
 import dash_auth
 import dash_table
@@ -400,7 +401,44 @@ app.layout = html.Div([
             ]),
             html.Div(id='dummy-div'),
         ]),
-        dcc.Tab(id='tab-2', label='Tab 2', value='tab-2', children='children'),
+        dcc.Tab(id='tab-2', label='Tab 2', value='tab-2', children=[
+            html.Div(
+                [
+                    html.H3('Timestamp'),
+                    html.Div(id='timestamp-table'),
+                ],
+                style={
+                    'display': 'inline-block',
+                    'vertical-align': 'top',
+                    'margin': '20px',
+                    'width': '200px',
+                },
+            ),
+            html.Div(
+                [
+                    html.H3('Manual Detection'),
+                    html.Div(id='manual-table'),
+                ],
+                style={
+                    'display': 'inline-block',
+                    'vertical-align': 'top',
+                    'margin': '20px',
+                    'width': '400px',
+                },
+            ),
+            html.Div(
+                [
+                    html.H3('Auto Detection'),
+                    html.Div(id='auto-table'),
+                ],
+                style={
+                    'display': 'inline-block',
+                    'vertical-align': 'top',
+                    'margin': '20px',
+                    'width': '400px',
+                },
+            ),
+        ], style={'width': '1200px'}),
     ]),
 
 ], style={'width': '1600px',},)
@@ -518,6 +556,25 @@ def store_luminance_signals(data_root, env):
     return np.load(os.path.join(data_root, env, 'luminance_signals.npy'))
 
 
+@cache.memoize()
+def store_timestamps(data_root, env):
+    print('store_timestamps() was called.')
+
+    # Guard
+    if env is None:
+        return
+
+    # Load an original image
+    orgimg_paths = sorted(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg')))
+
+    return [[
+        os.path.basename(orgimg_path),
+        datetime.datetime.fromtimestamp(os.stat(orgimg_path).st_mtime) \
+                .strftime('%Y-%m-%d %H:%M:%S')]
+        for orgimg_path in orgimg_paths]
+
+
 # ======================================================================
 #  Load a luminance signal file when selecting an imaging environment.
 # ======================================================================
@@ -539,6 +596,7 @@ def callback(env, data_root):
         [State('data-root', 'children')])
 def callback(env, data_root):
     store_mask(data_root, env)
+    store_timestamps(data_root, env)
     return env
 
 
@@ -1653,10 +1711,43 @@ def callback(checks):
 
 
 # ======================================================
-#  
+#  Timestamp table
 # ======================================================
 @app.callback(
-        Output('tab-2', 'children'),
+        Output('timestamp-table', 'children'),
+        [Input('tabs', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(tab_name, data_root, env):
+
+    # Guard
+    if data_root is None:
+        return
+    if env is None:
+        return
+    if tab_name != 'tab-2':
+        return
+
+    data = store_timestamps(data_root, env)
+
+    df = pd.DataFrame(data, columns=['frame', 'create time'])
+
+    return [
+            dash_table.DataTable(
+                columns=[{'id': c, 'name': c} for c in df.columns],
+                data=df.to_dict('rows'),
+                n_fixed_rows=1,
+                style_table={'width': '100%'},
+                pagination_mode=False,
+            ),
+        ]
+
+
+# ======================================================
+#  Manual table
+# ======================================================
+@app.callback(
+        Output('manual-table', 'children'),
         [Input('tabs', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
@@ -1678,90 +1769,124 @@ def callback(
         return
     if csv is None:
         return 'Not available.'
+    if tab_name != 'tab-2':
+        return
 
     # Load a mask params
     with open(os.path.join(data_root, env, 'mask_params.json')) as f:
         params = json.load(f)
-    n_wells = params['n-rows'] * params['n-clms'] * params['n-plates']
 
     # Load a manual data
     manual_evals = store_manual_evals(data_root, env, csv)
     manual_evals = manual_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
 
-    if tab_name == 'tab-2':
+    style = [{
+            'if': {
+                'column_id': '{}'.format(clm),
+                'filter': 'num({2}) > {0} && {1} >= num({3})'.format(clm, clm, int(t)+100, int(t)),
+            },
+            'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
+            'color': 'black',
+        }
+        for clm in range(params['n-clms'])
+        for t, c in zip(
+            range(0, manual_evals.max(), 100),
+            np.linspace(0, 255, len(range(0, manual_evals.max(), 100))))
+    ]
 
-        style = [{
-                'if': {
-                    'column_id': '{}'.format(clm),
-                    'filter': 'num({2}) > {0} && {1} >= num({3})'.format(clm, clm, int(t)+100, int(t)),
-                },
-                'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
-                'color': 'black',
-            }
-            for clm in range(params['n-clms'])
-            for t, c in zip(
-                range(0, manual_evals.max(), 100),
-                np.linspace(0, 255, len(range(0, manual_evals.max(), 100))))
+    return [
+            dash_table.DataTable(
+                columns=[{'name': str(clm), 'id': str(clm)}
+                        for clm in range(params['n-clms'])],
+                data=pd.DataFrame(manual_evals).to_dict('rows'),
+                style_data_conditional=style,
+                style_table={'width': '100%'}
+            ),
         ]
 
-        children = [
-                html.Div([
 
-                    html.H3('Manual'),
+# ======================================================
+#  Auto table
+# ======================================================
+@app.callback(
+        Output('auto-table', 'children'),
+        [Input('tabs', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('csv-dropdown', 'value'),
+         State('morpho-dropdown', 'value'),
+         State('result-dropdown', 'value'),
+         State('rise-or-fall', 'value'),
+         State('threshold-slider1', 'value'),
+         State('gaussian-sigma', 'value'),
+         State('filter-check', 'values')])
+def callback(
+        tab_name, data_root, env, csv, morpho, result, rise_fall,
+        coef, sigma, checks):
 
-                    dash_table.DataTable(
-                        id='table',
-                        columns=[{'name': str(clm), 'id': str(clm)}
-                                for clm in range(params['n-clms'])],
-                        data=pd.DataFrame(manual_evals).to_dict('rows'),
-                        style_data_conditional=style,
-                        style_table={'width': '400px'}
-                    ),
-                ], style={'display': 'inline-block'}),
-            ]
+    # Guard
+    if data_root is None:
+        return
+    if env is None:
+        return
+    if csv is None:
+        return 'Not available.'
+    if tab_name != 'tab-2':
+        return
+    if morpho is None or result is None:
+        return
 
-        if morpho is not None and result is not None:
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
 
-            signals = store_signals(data_root, env, morpho, result)
+    signals = store_signals(data_root, env, morpho, result)
 
-            # Smooth the signals
-            if len(checks) != 0:
-                signals = my_filter(signals, sigma=sigma)
+    # Smooth the signals
+    if len(checks) != 0:
+        signals = my_filter(signals, sigma=sigma)
 
-            # Compute thresholds
-            threshold = my_threshold.entire_stats(signals, coef=coef)
+    # Compute thresholds
+    threshold = my_threshold.entire_stats(signals, coef=coef)
 
-            # Compute event times from signals
-            if rise_fall == 'rise':
-                auto_evals = (signals > threshold).argmax(axis=1)
+    # Compute event times from signals
+    if rise_fall == 'rise':
+        auto_evals = (signals > threshold).argmax(axis=1)
 
-            elif rise_fall == 'fall':
-                # Scan the signal from the right hand side.
-                auto_evals = (signals.shape[1]
-                        - (np.fliplr(signals) > threshold).argmax(axis=1))
-                # If the signal was not more than the threshold.
-                auto_evals[auto_evals == signals.shape[1]] = 0
+    elif rise_fall == 'fall':
+        # Scan the signal from the right hand side.
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > threshold).argmax(axis=1))
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == signals.shape[1]] = 0
 
-            auto_evals = auto_evals.reshape(
-                    params['n-rows']*params['n-plates'], params['n-clms'])
+    auto_evals = auto_evals.reshape(
+            params['n-rows']*params['n-plates'], params['n-clms'])
 
-            children.append(html.Div([
+    style = [{
+            'if': {
+                'column_id': '{}'.format(clm),
+                'filter': 'num({2}) > {0} && {1} >= num({3})'.format(clm, clm, int(t)+100, int(t)),
+            },
+            'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
+            'color': 'black',
+        }
+        for clm in range(params['n-clms'])
+        for t, c in zip(
+            range(0, auto_evals.max(), 100),
+            np.linspace(0, 255, len(range(0, auto_evals.max(), 100))))
+    ]
 
-                    html.H3('Auto'),
-
-                    dash_table.DataTable(
-                        id='table',
-                        columns=[{'name': str(clm), 'id': str(clm)}
-                                for clm in range(params['n-clms'])],
-                        data=pd.DataFrame(auto_evals).to_dict('rows'),
-                        style_data_conditional=style,
-                        style_table={'width': '400px'}
-                    ),
-                ], style={'display': 'inline-block'}),
-            )
-
-        return html.Div(children, style={'width': '1200px'})
+    return [
+            dash_table.DataTable(
+                columns=[{'name': str(clm), 'id': str(clm)}
+                        for clm in range(params['n-clms'])],
+                data=pd.DataFrame(auto_evals).to_dict('rows'),
+                style_data_conditional=style,
+                style_table={'width': '100%'}
+            ),
+        ]
 
 
 # =========================================
