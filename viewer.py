@@ -1710,6 +1710,7 @@ def callback(tab_name, data_root, env, timestamps):
         return
 
     data = list(json.loads(timestamps).values())
+    time_to_csv = "data:text/csv;charset=utf-8,"+pd.DataFrame(data).to_csv( index=False,),
 
     return [
             dash_table.DataTable(
@@ -1721,6 +1722,14 @@ def callback(tab_name, data_root, env, timestamps):
                 style_table={'width': '100%'},
                 pagination_mode=False,
             ),
+            html.Br(),
+            html.A(
+                'Download Time Stamp',
+                id='download-link',
+                download="Timestamp.csv",
+                href=time_to_csv,
+                target="_blank"
+                    ),
         ]
 
 
@@ -1764,6 +1773,8 @@ def callback(
     manual_evals = manual_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
 
+    manual_to_csv = "data:text/csv;charset=utf-8,"+'Dataset,:,{}\nMorpho,:,{}\nInference Data,:,{}\nThresholding,:,{}\nManual Detection\n'.format(env,morpho,result,rise_fall,)+pd.DataFrame(manual_evals).to_csv( index=False, encoding="utf-8",header= False ),
+
     style = [{
             'if': {
                 'column_id': '{}'.format(clm),
@@ -1786,6 +1797,14 @@ def callback(
                 style_data_conditional=style,
                 style_table={'width': '100%'}
             ),
+            html.Br(),
+            html.A(
+                'Download Manual Data',
+                id='download-link',
+                download="Manual_Detection.csv",
+                href=manual_to_csv,
+                target="_blank"
+                    ),
         ]
 
 
@@ -1848,6 +1867,10 @@ def callback(
     auto_evals = auto_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
 
+
+    auto_to_csv = "data:text/csv;charset=utf-8,"+'Dataset,:,{}\nMorpho,:,{}\nInference Data,:,{}\nThresholding,:,{}\nThreshold Value ,:,{}\n(Threshold Value = mean + coef * std )\nmean ,:, {}\ncoef,;,{}\nstd,:,{}\nSmoosing Sigma,:,{}\nAuto Detection\n'.format(
+                    env,morpho,result,rise_fall,threshold[0,0],signals.mean(),coef,signals.std(),sigma)+pd.DataFrame(auto_evals).to_csv( index=False, encoding="utf-8",header=False),
+
     style = [{
             'if': {
                 'column_id': '{}'.format(clm),
@@ -1870,6 +1893,13 @@ def callback(
                 style_data_conditional=style,
                 style_table={'width': '100%'}
             ),
+            html.A(
+                'Download Auto Data',
+                id='download-link',
+                download="Auto_Detection.csv",
+                href=auto_to_csv,
+                target="_blank"
+                    ),
         ]
 
 
