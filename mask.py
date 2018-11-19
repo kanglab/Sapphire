@@ -233,7 +233,7 @@ def draw_images(
             gap_r, gap_c, gap_p, x, y, well_w, well_h, np.deg2rad(angle))
 
     label = PIL.Image.fromarray(
-            np.where(mask>=0, 255, 0).astype(np.uint8))
+            (255 * (np.log(mask + 2) / np.log(mask + 2).max())).astype(np.uint8))
     mask_buf = io.BytesIO()
     label.save(mask_buf, format='JPEG')
 
