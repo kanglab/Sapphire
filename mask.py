@@ -255,7 +255,7 @@ def draw_images(
             'y': y,
             'well-w': well_w,
             'well-h': well_h,
-            'angle': np.rad2deg(angle),
+            'angle': angle,
             }
     with open('static/mask_params.json', 'w') as f:
         json.dump(params_dict, f, indent=4)
