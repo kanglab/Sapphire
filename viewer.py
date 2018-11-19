@@ -51,143 +51,143 @@ app.layout = html.Div([
         dcc.Tab(id='tab-1', label='Tab 1', value='tab-1', children=[
             html.Div([
                 html.Div([
-                        'Dataset:',
-                        html.Br(),
-                        html.Div([
-                            dcc.Dropdown(
-                                id='env-dropdown',
-                                placeholder='Select a dataset...',
-                                clearable=False,
-                            ),
-                            ],
-                            style={
-                                'display': 'inline-block',
-                                'width': '200px',
-                                'vertical-align': 'middle',
-                            },
+                    'Dataset:',
+                    html.Br(),
+                    html.Div([
+                        dcc.Dropdown(
+                            id='env-dropdown',
+                            placeholder='Select a dataset...',
+                            clearable=False,
                         ),
-                        html.Br(),
-                        'Manual Detection File (CSV):',
-                        html.Br(),
-                        html.Div([
-                            dcc.Dropdown(
-                                id='csv-dropdown',
-                                placeholder='Select a CSV file...',
-                                clearable=False,
-                            ),
-                            ],
-                            style={
-                                'display': 'inline-block',
-                                'width': '200px',
-                                'vertical-align': 'middle',
-                            },
+                        ],
+                        style={
+                            'display': 'inline-block',
+                            'width': '200px',
+                            'vertical-align': 'middle',
+                        },
+                    ),
+                    html.Br(),
+                    'Manual Detection File (CSV):',
+                    html.Br(),
+                    html.Div([
+                        dcc.Dropdown(
+                            id='csv-dropdown',
+                            placeholder='Select a CSV file...',
+                            clearable=False,
                         ),
-                        html.Br(),
-                        'Target Morphology:',
-                        html.Br(),
-                        html.Div([
-                            dcc.Dropdown(
-                                id='morpho-dropdown',
-                                placeholder='Select a morpho...',
-                                clearable=False,
-                            ),
-                            ],
-                            style={
-                                'display': 'inline-block',
-                                'width': '200px',
-                                'vertical-align': 'middle',
-                            },
+                        ],
+                        style={
+                            'display': 'inline-block',
+                            'width': '200px',
+                            'vertical-align': 'middle',
+                        },
+                    ),
+                    html.Br(),
+                    'Target Morphology:',
+                    html.Br(),
+                    html.Div([
+                        dcc.Dropdown(
+                            id='morpho-dropdown',
+                            placeholder='Select a morpho...',
+                            clearable=False,
                         ),
-                        html.Br(),
-                        'Inference Data:',
-                        html.Br(),
-                        html.Div([
-                            dcc.Dropdown(
-                                id='result-dropdown',
-                                placeholder='Select a result dir...',
-                                clearable=False,
-                            ),
-                            ],
-                            style={
-                                'display': 'inline-block',
-                                'width': '200px',
-                                'vertical-align': 'middle',
-                            },
+                        ],
+                        style={
+                            'display': 'inline-block',
+                            'width': '200px',
+                            'vertical-align': 'middle',
+                        },
+                    ),
+                    html.Br(),
+                    'Inference Data:',
+                    html.Br(),
+                    html.Div([
+                        dcc.Dropdown(
+                            id='result-dropdown',
+                            placeholder='Select a result dir...',
+                            clearable=False,
                         ),
-                        html.Br(),
-                        'Thresholding:',
-                        html.Br(),
-                        dcc.RadioItems(
-                            id='rise-or-fall',
-                            options=[
-                                {'label': 'Rising Up', 'value': 'rise'},
-                                {'label': 'Falling Down', 'value': 'fall'},
-                            ],
-                            value='rise',
+                        ],
+                        style={
+                            'display': 'inline-block',
+                            'width': '200px',
+                            'vertical-align': 'middle',
+                        },
+                    ),
+                    html.Br(),
+                    'Thresholding:',
+                    html.Br(),
+                    dcc.RadioItems(
+                        id='rise-or-fall',
+                        options=[
+                            {'label': 'Rising Up', 'value': 'rise'},
+                            {'label': 'Falling Down', 'value': 'fall'},
+                        ],
+                        value='rise',
+                    ),
+                    'Well Index:',
+                    html.Br(),
+                    html.Div([
+                        dcc.Input(
+                            id='well-selector',
+                            type='number',
+                            value=0,
+                            min=0,
+                            size=5,
                         ),
-                        'Well Index:',
-                        html.Br(),
-                        html.Div([
+                        ],
+                        style={
+                            'display': 'inline-block',
+                        },
+                    ),
+                    html.Br(),
+                    html.Div([
+                        dcc.Slider(
+                            id='well-slider',
+                            value=0,
+                            min=0,
+                            step=1,
+                        ),
+                        ],
+                        style={
+                            'display': 'inline-block',
+                            'width': '200px',
+                            # 'margin-left': '20px',
+                        },
+                    ),
+                    html.Br(),
+                    'Time Step:',
+                    html.Br(),
+                    html.Div([
                             dcc.Input(
-                                id='well-selector',
+                                id='time-selector',
                                 type='number',
                                 value=0,
                                 min=0,
                                 size=5,
                             ),
-                            ],
-                            style={
-                                'display': 'inline-block',
-                            },
-                        ),
-                        html.Br(),
-                        html.Div([
-                            dcc.Slider(
-                                id='well-slider',
-                                value=0,
-                                min=0,
-                                step=1,
-                            ),
-                            ],
-                            style={
-                                'display': 'inline-block',
-                                'width': '200px',
-                                # 'margin-left': '20px',
-                            },
-                        ),
-                        html.Br(),
-                        'Time Step:',
-                        html.Br(),
-                        html.Div([
-                                dcc.Input(
-                                    id='time-selector',
-                                    type='number',
-                                    value=0,
-                                    min=0,
-                                    size=5,
-                                ),
-                            ],
-                            style={
-                                'display': 'inline-block',
-                            },
-                        ),
-                        html.Br(),
+                        ],
+                        style={
+                            'display': 'inline-block',
+                        },
+                    ),
+                    html.Br(),
 
-                        'Smoothing:',
-                        dcc.Checklist(
-                            id='filter-check',
-                            options=[{'label': 'Apply', 'value': True}],
-                            values=[],
-                        ),
-                        'Sigma:',
-                        dcc.Input(
-                            id='gaussian-sigma',
-                            type='number',
-                            value=5,
-                            min=0,
-                            size=5,
-                            step=0.1,
-                        ),
+                    'Smoothing:',
+                    dcc.Checklist(
+                        id='filter-check',
+                        options=[{'label': 'Apply', 'value': True}],
+                        values=[],
+                    ),
+                    'Sigma:',
+                    dcc.Input(
+                        id='gaussian-sigma',
+                        type='number',
+                        value=5,
+                        min=0,
+                        size=5,
+                        step=0.1,
+                    ),
                     ],
                     style={
                         'display': 'inline-block',
@@ -195,6 +195,16 @@ app.layout = html.Div([
                     },
                 ),
                 html.Div([
+                    dcc.Checklist(
+                        id='blacklist-check',
+                        options=[{
+                            'label': 'Black List',
+                            'value': 'checked',
+                            'disabled': True,
+                        }],
+                        values=[],
+                        style={'display': 'table'},
+                    ),
                     html.Div('Original Image', style={'display': 'table'}),
                     html.Img(
                         id='t-image',
@@ -475,6 +485,29 @@ def callback(env, data_root):
                 data_root, env, 'original', '*.csv')))]
 
     return [{'label': i, 'value': i} for i in csvs]
+
+
+# =================================================================
+#  
+# =================================================================
+@app.callback(
+        Output('blacklist-check', 'values'),
+        [Input('well-selector', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(well_idx, data_root, env):
+    if well_idx is None or env is None:
+        return False
+
+    blacklist = np.loadtxt(
+            os.path.join(data_root, env, 'blacklist.csv'),
+            dtype=np.uint16, delimiter=',').flatten()
+
+    if blacklist[well_idx] == 0:
+        return []
+
+    else:
+        return 'checked'
 
 
 # ===================================================================
