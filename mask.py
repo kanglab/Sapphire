@@ -233,7 +233,7 @@ def draw_images(
             gap_r, gap_c, gap_p, x, y, well_w, well_h, np.deg2rad(angle))
 
     label = PIL.Image.fromarray(
-            np.where(mask>=0, 255, 0).astype(np.uint8))
+            (255 * (np.log(mask + 2) / np.log(mask + 2).max())).astype(np.uint8))
     mask_buf = io.BytesIO()
     label.save(mask_buf, format='JPEG')
 
@@ -404,6 +404,10 @@ def create_mask(
         shape, n_rows, n_clms, n_plates,
         gap_r, gap_c, gap_p, x, y, well_w, well_h, angle):
 
+    mask_idx = np.flipud(
+            np.arange(n_rows * n_clms * n_plates, dtype=int).reshape(
+                n_rows*n_plates, n_clms)).reshape(n_rows * n_clms * n_plates)
+
     count = 0
     mask = -1 * np.ones(shape)
     for n in range(n_plates):
@@ -419,7 +423,7 @@ def create_mask(
                 c1, r1 = np.round([c1, r1]).astype(int)
                 c2 = c1 + well_w
                 r2 = r1 + well_h
-                mask[r1:r2, c1:c2] = count
+                mask[r1:r2, c1:c2] = mask_idx[count]
                 count += 1
 
     return np.flipud(mask)
