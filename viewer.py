@@ -1104,6 +1104,13 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
+    # Load a blacklist
+    blacklist = np.loadtxt(
+            os.path.join(data_root, env, 'blacklist.csv'),
+            dtype=np.uint16, delimiter=',').flatten()
+
+    whitelist = blacklist == 0
+
     # Load the data
     signals = np.load(
             os.path.join(data_root, env, 'luminance_signals.npy')).T
@@ -1127,7 +1134,7 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
         auto_evals[auto_evals == signals.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals - manual_evals
+    errors = auto_evals[whitelist == 0] - manual_evals[whitelist == 0]
 
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
@@ -1170,11 +1177,20 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
                     'name': 'Auto = Manual',
                 },
                 {
-                    'x': list(auto_evals),
-                    'y': list(manual_evals),
+                    'x': list(auto_evals[blacklist == 1]),
+                    'y': list(manual_evals[blacklist == 1]),
+                    'text': [str(i) for i in np.where(blacklist == 1)[0]],
                     'mode': 'markers',
-                    'marker': {'size': 5, 'color': '#20b2aa'},
-                    'name': 'Well',
+                    'marker': {'size': 4, 'color': '#000000'},
+                    'name': 'Well in Blacklist',
+                },
+                {
+                    'x': list(auto_evals[whitelist == 1]),
+                    'y': list(manual_evals[whitelist == 1]),
+                    'text': [str(i) for i in np.where(whitelist == 1)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#20b2aa'},
+                    'name': 'Well in Whitelist',
                 },
                 {
                     'x': [auto_evals[well_idx]],
