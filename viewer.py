@@ -635,6 +635,10 @@ def callback(result, data_root, env, morpho):
     if env is None or morpho is None:
         return
 
+    if not os.path.exists(os.path.join(
+            data_root, env, 'luminance_signals.npy')):
+        return
+
     return np.load(
             os.path.join(data_root, env, 'luminance_signals.npy')).max()
 
@@ -749,6 +753,14 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
         x, y = 0, 0
     else:
         x, y = time, figure['data'][3]['y'][time]
+
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', morpho, result, 'signals.npy')):
+        return {'data': []}
+
+    if not os.path.exists(os.path.join(
+            data_root, env, 'luminance_signals.npy')):
+        return {'data': []}
 
     # Load the data
     signals = np.load(os.path.join(
