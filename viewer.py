@@ -998,7 +998,7 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
         auto_evals[auto_evals == signals.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals[whitelist == 0] - manual_evals[whitelist == 0]
+    errors = auto_evals[whitelist == 1] - manual_evals[whitelist == 1]
 
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
@@ -1134,7 +1134,7 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
         auto_evals[auto_evals == signals.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals[whitelist == 0] - manual_evals[whitelist == 0]
+    errors = auto_evals[whitelist == 1] - manual_evals[whitelist == 1]
 
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
@@ -1240,6 +1240,11 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
+    # Load a blacklist as a whitelist
+    whitelist = np.loadtxt(
+            os.path.join(data_root, env, 'blacklist.csv'),
+            dtype=np.uint16, delimiter=',').flatten() == 0
+
     # Load the data
     signals = np.load(os.path.join(
             data_root, env, 'inference', morpho, result, 'signals.npy'))
@@ -1266,7 +1271,7 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
         auto_evals[auto_evals == signals.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals - manual_evals
+    errors = auto_evals[whitelist == 1] - manual_evals[whitelist == 1]
     ns, bins = np.histogram(errors, 1000)
 
     # Calculate the number of inconsistent wells
@@ -1377,6 +1382,11 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
+    # Load a blacklist as a whitelist
+    whitelist = np.loadtxt(
+            os.path.join(data_root, env, 'blacklist.csv'),
+            dtype=np.uint16, delimiter=',').flatten() == 0
+
     # Load the data
     signals = np.load(
             os.path.join(data_root, env, 'luminance_signals.npy')).T
@@ -1400,7 +1410,7 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
         auto_evals[auto_evals == signals.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals - manual_evals
+    errors = auto_evals[whitelist == 1] - manual_evals[whitelist == 1]
     ns, bins = np.histogram(errors, 1000)
 
     # Calculate the number of inconsistent wells
