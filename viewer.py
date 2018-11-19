@@ -725,7 +725,7 @@ def callback(_, click_data):
     if click_data is None:
         return 20
 
-    return click_data['points'][0]['pointNumber']
+    return int(click_data['points'][0]['text'])
         
 
 # ====================================================
@@ -996,6 +996,13 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
 
+    # Load a blacklist
+    blacklist = np.loadtxt(
+            os.path.join(data_root, env, 'blacklist.csv'),
+            dtype=np.uint16, delimiter=',').flatten()
+
+    whitelist = blacklist == 0
+
     return {
             'data': [
                 {
@@ -1034,15 +1041,25 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
                     'name': 'Auto = Manual',
                 },
                 {
-                    'x': list(auto_evals),
-                    'y': list(manual_evals),
+                    'x': list(auto_evals[blacklist == 1]),
+                    'y': list(manual_evals[blacklist == 1]),
+                    'text': [str(i) for i in np.where(blacklist == 1)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#000000'},
+                    'name': 'Well in Blacklist',
+                },
+                {
+                    'x': list(auto_evals[whitelist == 1]),
+                    'y': list(manual_evals[whitelist == 1]),
+                    'text': [str(i) for i in np.where(whitelist == 1)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#1f77b4'},
-                    'name': 'Well',
+                    'name': 'Well in Whitelist',
                 },
                 {
                     'x': [auto_evals[well_idx]],
                     'y': [manual_evals[well_idx]],
+                    'text': str(well_idx),
                     'mode': 'markers',
                     'marker': {'size': 10, 'color': '#ff0000'},
                     'name': 'Selected well',
