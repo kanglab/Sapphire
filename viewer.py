@@ -965,6 +965,13 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
+    # Load a blacklist
+    blacklist = np.loadtxt(
+            os.path.join(data_root, env, 'blacklist.csv'),
+            dtype=np.uint16, delimiter=',').flatten()
+
+    whitelist = blacklist == 0
+
     # Load the data
     signals = np.load(os.path.join(
             data_root, env, 'inference', morpho, result, 'signals.npy'))
@@ -991,17 +998,10 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
         auto_evals[auto_evals == signals.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals - manual_evals
+    errors = auto_evals[whitelist == 0] - manual_evals[whitelist == 0]
 
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
-
-    # Load a blacklist
-    blacklist = np.loadtxt(
-            os.path.join(data_root, env, 'blacklist.csv'),
-            dtype=np.uint16, delimiter=',').flatten()
-
-    whitelist = blacklist == 0
 
     return {
             'data': [
