@@ -601,9 +601,9 @@ def callback(morpho, data_root, env):
     return morpho
 
 
-# ========================================================
-#  Load a signal file when selecting a result directory.
-# ========================================================
+# =================================
+#  Initialize the current-result.
+# =================================
 @app.callback(
         Output('current-result', 'children'),
         [Input('result-dropdown', 'value')],
@@ -617,25 +617,10 @@ def callback(result, data_root, env, morpho):
     return result
 
 
-# =====================================================
-#  Initialize the maximum value of the time-selector.
-# =====================================================
-@app.callback(
-        Output('time-selector', 'max'),
-        [Input('env-dropdown', 'value')],
-        [State('data-root', 'children')])
-def callback(env, data_root):
-    if env is None:
-        return
-
-    return len(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg'))) - 1
-
-
-# =======================================================
+# ========================================================
 #  Initialize the maximum value of the threshold-slider2
 #  after loading a signal file.
-# =======================================================
+# ========================================================
 @app.callback(
         Output('threshold-slider2', 'max'),
         [Input('current-result', 'children')],
@@ -654,44 +639,11 @@ def callback(result, data_root, env, morpho):
             os.path.join(data_root, env, 'luminance_signals.npy')).max()
 
 
-# ==================================================
-#  Initialize the maximum value of the time-slider
-# ==================================================
+# =====================================================
+#  Initialize the maximum value of the well-selector.
+# =====================================================
 @app.callback(
-        Output('time-slider', 'max'),
-        [Input('env-dropdown', 'value')],
-        [State('data-root', 'children')])
-def callback(env, data_root):
-    if env is None:
-        return 100
-
-    return len(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg'))) - 1
-
-
-# ======================================================
-#  Initialize the current value of the time-slider
-#  when selecting a dataset
-#  or when clicking a data point in the summary-graph.
-# ======================================================
-@app.callback(
-        Output('time-slider', 'value'),
-        [Input('env-dropdown', 'value'),
-         Input('current-result', 'children'),
-         Input('summary-graph', 'clickData')],
-        [State('time-slider', 'value')])
-def callback(_, result, click_data, time):
-    if click_data is None or result is None:
-        return time
-
-    return click_data['points'][0]['x']
-
-
-# ===================================================
-#  Initialize the maximum value of the well-slider.
-# ===================================================
-@app.callback(
-        Output('well-slider', 'max'),
+        Output('well-selector', 'max'),
         [Input('env-dropdown', 'value')],
         [State('data-root', 'children')])
 def callback(env, data_root):
@@ -702,13 +654,24 @@ def callback(env, data_root):
         params = json.load(f)
 
     return params['n-rows'] * params['n-plates'] * params['n-clms'] - 1
+        
 
-
-# =====================================================
-#  Initialize the maximum value of the well-selector.
-# =====================================================
+# ====================================================
+#  Initialize the current value of the well-selector
+#  when selecting a value on the well-slider.
+# ====================================================
 @app.callback(
-        Output('well-selector', 'max'),
+        Output('well-selector', 'value'),
+        [Input('well-slider', 'value')])
+def callback(well_idx):
+    return well_idx
+
+
+# ===================================================
+#  Initialize the maximum value of the well-slider.
+# ===================================================
+@app.callback(
+        Output('well-slider', 'max'),
         [Input('env-dropdown', 'value')],
         [State('data-root', 'children')])
 def callback(env, data_root):
@@ -738,17 +701,21 @@ def callback(_, click_data, result, well_idx):
         return well_idx
 
     return click_data['points'][0]['pointNumber']
-        
 
-# ====================================================
-#  Initialize the current value of the well-selector
-#  when selecting a value on the well-slider.
-# ====================================================
+
+# =====================================================
+#  Initialize the maximum value of the time-selector.
+# =====================================================
 @app.callback(
-        Output('well-selector', 'value'),
-        [Input('well-slider', 'value')])
-def callback(well_idx):
-    return well_idx
+        Output('time-selector', 'max'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None:
+        return
+
+    return len(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg'))) - 1
 
 
 # ====================================================
@@ -760,6 +727,39 @@ def callback(well_idx):
         [Input('time-slider', 'value')])
 def callback(timestep):
     return timestep
+
+
+# ===================================================
+#  Initialize the maximum value of the time-slider.
+# ===================================================
+@app.callback(
+        Output('time-slider', 'max'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None:
+        return 100
+
+    return len(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg'))) - 1
+
+
+# ======================================================
+#  Initialize the current value of the time-slider
+#  when selecting a dataset
+#  or when clicking a data point in the summary-graph.
+# ======================================================
+@app.callback(
+        Output('time-slider', 'value'),
+        [Input('env-dropdown', 'value'),
+         Input('current-result', 'children'),
+         Input('summary-graph', 'clickData')],
+        [State('time-slider', 'value')])
+def callback(_, result, click_data, time):
+    if click_data is None or result is None:
+        return time
+
+    return click_data['points'][0]['x']
 
 
 # =========================================
