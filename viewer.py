@@ -757,16 +757,13 @@ def callback(well_idx):
 
 # ====================================================
 #  Initialize the current value of the time-selector
-#  when clicking a data point in the signal-graph.
+#  when selecting a value on the time-slider.
 # ====================================================
 @app.callback(
         Output('time-selector', 'value'),
-        [Input('signal-graph', 'clickData')])
-def callback(click_data):
-    if click_data is None:
-        return 0
-    else:
-        return click_data['points'][0]['x']
+        [Input('time-slider', 'value')])
+def callback(timestep):
+    return timestep
 
 
 # =========================================
