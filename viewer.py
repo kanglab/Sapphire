@@ -875,10 +875,8 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
 
     # Load a manual data and prepare data to be drawn
     # If a manual data exists, draw it
-    manual_data = []
-
     if csv is None:
-        pass
+        manual_data = [{'x': [], 'y': []}]
 
     else:
         manual_evals = np.loadtxt(
