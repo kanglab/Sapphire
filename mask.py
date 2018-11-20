@@ -233,7 +233,7 @@ def draw_images(
             gap_r, gap_c, gap_p, x, y, well_w, well_h, np.deg2rad(angle))
 
     label = PIL.Image.fromarray(
-            np.where(mask>=0, 255, 0).astype(np.uint8))
+            (255 * (np.log(mask + 2) / np.log(mask + 2).max())).astype(np.uint8))
     mask_buf = io.BytesIO()
     label.save(mask_buf, format='JPEG')
 
@@ -255,7 +255,7 @@ def draw_images(
             'y': y,
             'well-w': well_w,
             'well-h': well_h,
-            'angle': np.rad2deg(angle),
+            'angle': angle,
             }
     with open('static/mask_params.json', 'w') as f:
         json.dump(params_dict, f, indent=4)
@@ -404,6 +404,10 @@ def create_mask(
         shape, n_rows, n_clms, n_plates,
         gap_r, gap_c, gap_p, x, y, well_w, well_h, angle):
 
+    well_idxs = np.flipud(
+            np.arange(n_rows * n_clms * n_plates, dtype=int).reshape(
+                n_rows*n_plates, n_clms)).reshape(n_rows * n_clms * n_plates)
+
     count = 0
     mask = -1 * np.ones(shape)
     for n in range(n_plates):
@@ -419,8 +423,20 @@ def create_mask(
                 c1, r1 = np.round([c1, r1]).astype(int)
                 c2 = c1 + well_w
                 r2 = r1 + well_h
-                mask[r1:r2, c1:c2] = count
+                mask[r1:r2, c1:c2] = well_idxs[count]
                 count += 1
+
+    shapes = []
+    for well_idx in np.unique(mask)[1:]:
+        clms, rows = np.where(mask == well_idx)
+        masked = mask[min(clms):max(clms), min(rows):max(rows)]
+        shapes.append(masked.shape)
+    shapes = np.array(shapes)
+
+    if np.unique(shapes.T[0]).shape[0] >= 2 \
+            or np.unique(shapes.T[1]).shape[0] >= 2:
+        return np.flipud(mask) \
+                * np.logical_not(np.eye(mask.shape[0], mask.shape[1]))
 
     return np.flipud(mask)
 
