@@ -617,18 +617,15 @@ def callback(result, data_root, env, morpho):
     return result
 
 
-# ====================================================
-#  Initialize the maximum value of the time-selector
-#  after loading a signal file.
-# ====================================================
+# =====================================================
+#  Initialize the maximum value of the time-selector.
+# =====================================================
 @app.callback(
         Output('time-selector', 'max'),
-        [Input('current-result', 'children')],
-        [State('data-root', 'children'),
-         State('env-dropdown', 'value'),
-         State('morpho-dropdown', 'value')])
-def callback(result, data_root, env, morpho):
-    if env is None or morpho is None:
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None:
         return
 
     return len(glob.glob(
