@@ -144,7 +144,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Slider(
                                 id='well-slider',
-                                value=0,
+                                value=30,
                                 min=0,
                                 step=1,
                             ),
@@ -677,26 +677,25 @@ def callback(env, data_root):
 @app.callback(
         Output('time-slider', 'value'),
         [Input('env-dropdown', 'value'),
-         Input('summary-graph', 'clickData')])
-def callback(_, click_data):
-    if click_data is None:
-        return 0
+         Input('current-result', 'children'),
+         Input('summary-graph', 'clickData')],
+        [State('time-slider', 'value')])
+def callback(_, result, click_data, time):
+    if click_data is None or result is None:
+        return time
 
     return click_data['points'][0]['x']
 
 
-# =======================================================
-#  Initialize the maximum value of the well-slider
-#  after loading a signal file.
-# =======================================================
+# ===================================================
+#  Initialize the maximum value of the well-slider.
+# ===================================================
 @app.callback(
         Output('well-slider', 'max'),
-        [Input('current-result', 'children')],
-        [State('data-root', 'children'),
-         State('env-dropdown', 'value'),
-         State('morpho-dropdown', 'value')])
-def callback(result, data_root, env, morpho):
-    if env is None or morpho is None:
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None or data_root is None:
         return
 
     with open(os.path.join(data_root, env, 'mask_params.json')) as f:
@@ -705,18 +704,15 @@ def callback(result, data_root, env, morpho):
     return params['n-rows'] * params['n-plates'] * params['n-clms'] - 1
 
 
-# ====================================================
-#  Initialize the maximum value of the well-selector
-#  after loading a signal file.
-# ====================================================
+# =====================================================
+#  Initialize the maximum value of the well-selector.
+# =====================================================
 @app.callback(
         Output('well-selector', 'max'),
-        [Input('current-result', 'children')],
-        [State('data-root', 'children'),
-         State('env-dropdown', 'value'),
-         State('morpho-dropdown', 'value')])
-def callback(result, data_root, env, morpho):
-    if env is None or morpho is None:
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None or data_root is None:
         return
 
     with open(os.path.join(data_root, env, 'mask_params.json')) as f:
@@ -725,18 +721,21 @@ def callback(result, data_root, env, morpho):
     return params['n-rows'] * params['n-plates'] * params['n-clms'] - 1
 
 
-# ======================================================
+# =======================================================
 #  Initialize the current value of the well-slider
-#  after loading a signal file
-#  or when clicking a data point in the summary-graph.
-# ======================================================
+#  when selecting a dataset
+#  or when clicking a data point in the summary-graph
+#  or when selecting a result directory to draw graphs.
+# =======================================================
 @app.callback(
         Output('well-slider', 'value'),
-        [Input('current-result', 'children'),
-         Input('summary-graph', 'clickData')])
-def callback(_, click_data):
-    if click_data is None:
-        return 20
+        [Input('env-dropdown', 'value'),
+         Input('summary-graph', 'clickData'),
+         Input('current-result', 'children')],
+        [State('well-slider', 'value')])
+def callback(_, click_data, result, well_idx):
+    if click_data is None or result is None:
+        return well_idx
 
     return click_data['points'][0]['pointNumber']
         
