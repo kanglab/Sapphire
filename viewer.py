@@ -172,6 +172,20 @@ app.layout = html.Div([
                             },
                         ),
                         html.Br(),
+                        html.Div([
+                            dcc.Slider(
+                                id='time-slider',
+                                value=0,
+                                min=0,
+                                step=1,
+                            ),
+                            ],
+                            style={
+                                'display': 'inline-block',
+                                'width': '200px',
+                            },
+                        ),
+                        html.Br(),
 
                         'Smoothing:',
                         dcc.Checklist(
