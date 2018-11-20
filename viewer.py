@@ -2048,6 +2048,9 @@ def callback(
         return
     if morpho is None or result is None:
         return
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', morpho, result, 'signals.npy')):
+        return 'Not available.'
 
     # Load a mask params
     with open(os.path.join(data_root, env, 'mask_params.json')) as f:
