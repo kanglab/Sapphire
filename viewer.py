@@ -752,7 +752,7 @@ def callback(env, data_root):
         return
 
     return len(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg'))) - 1
+            os.path.join(data_root, env, 'original', '*.jpg'))) - 2
 
 
 # ====================================================
@@ -778,7 +778,7 @@ def callback(env, data_root):
         return 100
 
     return len(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg'))) - 1
+            os.path.join(data_root, env, 'original', '*.jpg'))) - 2
 
 
 # ======================================================
@@ -875,10 +875,8 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
 
     # Load a manual data and prepare data to be drawn
     # If a manual data exists, draw it
-    manual_data = []
-
     if csv is None:
-        pass
+        manual_data = [{'x': [], 'y': []}]
 
     else:
         manual_evals = np.loadtxt(
@@ -1668,8 +1666,14 @@ def callback(time, well_idx, data_root, env):
     # Load an original image
     orgimg_paths = sorted(glob.glob(
             os.path.join(data_root, env, 'original', '*.jpg')))
-    org_img = np.array(
-            PIL.Image.open(orgimg_paths[time+1]).convert('L'), dtype=np.uint8)
+
+    if time >= len(orgimg_paths) - 1:
+        org_img = np.zeros_like(mask, dtype=np.uint8)
+
+    else:
+        org_img = np.array(
+                PIL.Image.open(
+                        orgimg_paths[time+1]).convert('L'), dtype=np.uint8)
 
     # Cut out an well image from the original image
     r, c = np.where(mask == well_idx)
@@ -1742,11 +1746,15 @@ def callback(time, well_idx, data_root, env, morpho, result):
     npzfile_path = os.path.join(
             data_root, env, 'inference', morpho, result, 'probs',
             '{:03d}.npz'.format(well_idx))
-    npz = np.load(npzfile_path)
-    probs = npz['arr_0'].astype(np.int32)
-    prob = (probs[time+1] > THETA) * 255
-    prob = prob.astype(np.uint8)
-    label_image = PIL.Image.fromarray(prob).convert('L')
+    probs = np.load(npzfile_path)['arr_0'].astype(np.int32)
+
+    if time >= len(probs) - 1:
+        label_image = PIL.Image.fromarray(
+                np.zeros_like(probs[0], dtype=np.uint8)).convert('L')
+
+    else:
+        label_image = PIL.Image.fromarray(
+                ((probs[time+1] > THETA) * 255).astype(np.uint8)).convert('L')
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
@@ -1812,9 +1820,15 @@ def callback(time, well_idx, data_root, env, morpho, result):
     npzfile_path = os.path.join(
             data_root, env, 'inference', morpho, result, 'probs',
             '{:03d}.npz'.format(well_idx))
-    npz = np.load(npzfile_path)
-    probs = npz['arr_0'].astype(np.int32)
-    prob_image = PIL.Image.fromarray(probs[time+1] / 100 * 255).convert('L')
+
+    probs = np.load(npzfile_path)['arr_0'].astype(np.int32)
+
+    if time >= len(probs) - 1:
+        prob_image= PIL.Image.fromarray(
+                np.zeros_like(probs[0], dtype=np.uint8)).convert('L')
+
+    else:
+        prob_image = PIL.Image.fromarray(probs[time+1] / 100 * 255).convert('L')
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
@@ -1891,9 +1905,11 @@ def callback(tab_name, data_root, env, timestamps):
 
     # Guard
     if data_root is None:
-        return
+        return 'Not available.'
     if env is None:
-        return
+        return 'Not available.'
+    if timestamps is None:
+        return 'Now loading...'
     if tab_name != 'tab-2':
         return
 
@@ -1944,9 +1960,9 @@ def callback(
 
     # Guard
     if data_root is None:
-        return
+        return 'Not available.'
     if env is None:
-        return
+        return 'Not available.'
     if csv is None:
         return 'Not available.'
     if tab_name != 'tab-2':
@@ -2015,7 +2031,6 @@ def callback(
         [Input('tabs', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value'),
          State('rise-or-fall', 'value'),
@@ -2023,20 +2038,21 @@ def callback(
          State('gaussian-sigma', 'value'),
          State('filter-check', 'values')])
 def callback(
-        tab_name, data_root, env, csv, morpho, result, rise_fall,
+        tab_name, data_root, env, morpho, result, rise_fall,
         coef, sigma, checks):
 
     # Guard
     if data_root is None:
-        return
+        return 'Not available.'
     if env is None:
-        return
-    if csv is None:
         return 'Not available.'
     if tab_name != 'tab-2':
         return
     if morpho is None or result is None:
-        return
+        return 'Not available.'
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', morpho, result, 'signals.npy')):
+        return 'Not available.'
 
     # Load a mask params
     with open(os.path.join(data_root, env, 'mask_params.json')) as f:
