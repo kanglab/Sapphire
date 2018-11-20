@@ -51,157 +51,157 @@ app.layout = html.Div([
         dcc.Tab(id='tab-1', label='Tab 1', value='tab-1', children=[
             html.Div([
                 html.Div([
-                        'Dataset:',
-                        html.Br(),
-                        html.Div([
-                            dcc.Dropdown(
-                                id='env-dropdown',
-                                placeholder='Select a dataset...',
-                                clearable=False,
-                            ),
-                            ],
-                            style={
-                                'display': 'inline-block',
-                                'width': '200px',
-                                'vertical-align': 'middle',
-                            },
+                    'Dataset:',
+                    html.Br(),
+                    html.Div([
+                        dcc.Dropdown(
+                            id='env-dropdown',
+                            placeholder='Select a dataset...',
+                            clearable=False,
                         ),
-                        html.Br(),
-                        'Manual Detection File (CSV):',
-                        html.Br(),
-                        html.Div([
-                            dcc.Dropdown(
-                                id='csv-dropdown',
-                                placeholder='Select a CSV file...',
-                                clearable=False,
-                            ),
-                            ],
-                            style={
-                                'display': 'inline-block',
-                                'width': '200px',
-                                'vertical-align': 'middle',
-                            },
+                        ],
+                        style={
+                            'display': 'inline-block',
+                            'width': '200px',
+                            'vertical-align': 'middle',
+                        },
+                    ),
+                    html.Br(),
+                    'Manual Detection File (CSV):',
+                    html.Br(),
+                    html.Div([
+                        dcc.Dropdown(
+                            id='csv-dropdown',
+                            placeholder='Select a CSV file...',
+                            clearable=False,
                         ),
-                        html.Br(),
-                        'Target Morphology:',
-                        html.Br(),
-                        html.Div([
-                            dcc.Dropdown(
-                                id='morpho-dropdown',
-                                placeholder='Select a morpho...',
-                                clearable=False,
-                            ),
-                            ],
-                            style={
-                                'display': 'inline-block',
-                                'width': '200px',
-                                'vertical-align': 'middle',
-                            },
+                        ],
+                        style={
+                            'display': 'inline-block',
+                            'width': '200px',
+                            'vertical-align': 'middle',
+                        },
+                    ),
+                    html.Br(),
+                    'Target Morphology:',
+                    html.Br(),
+                    html.Div([
+                        dcc.Dropdown(
+                            id='morpho-dropdown',
+                            placeholder='Select a morpho...',
+                            clearable=False,
                         ),
-                        html.Br(),
-                        'Inference Data:',
-                        html.Br(),
-                        html.Div([
-                            dcc.Dropdown(
-                                id='result-dropdown',
-                                placeholder='Select a result dir...',
-                                clearable=False,
-                            ),
-                            ],
-                            style={
-                                'display': 'inline-block',
-                                'width': '200px',
-                                'vertical-align': 'middle',
-                            },
+                        ],
+                        style={
+                            'display': 'inline-block',
+                            'width': '200px',
+                            'vertical-align': 'middle',
+                        },
+                    ),
+                    html.Br(),
+                    'Inference Data:',
+                    html.Br(),
+                    html.Div([
+                        dcc.Dropdown(
+                            id='result-dropdown',
+                            placeholder='Select a result dir...',
+                            clearable=False,
                         ),
-                        html.Br(),
-                        'Thresholding:',
-                        html.Br(),
-                        dcc.RadioItems(
-                            id='rise-or-fall',
-                            options=[
-                                {'label': 'Rising Up', 'value': 'rise'},
-                                {'label': 'Falling Down', 'value': 'fall'},
-                            ],
-                            value='rise',
+                        ],
+                        style={
+                            'display': 'inline-block',
+                            'width': '200px',
+                            'vertical-align': 'middle',
+                        },
+                    ),
+                    html.Br(),
+                    'Thresholding:',
+                    html.Br(),
+                    dcc.RadioItems(
+                        id='rise-or-fall',
+                        options=[
+                            {'label': 'Rising Up', 'value': 'rise'},
+                            {'label': 'Falling Down', 'value': 'fall'},
+                        ],
+                        value='rise',
+                    ),
+                    'Well Index:',
+                    html.Br(),
+                    html.Div([
+                        dcc.Input(
+                            id='well-selector',
+                            type='number',
+                            value=0,
+                            min=0,
+                            size=5,
                         ),
-                        'Well Index:',
-                        html.Br(),
-                        html.Div([
+                        ],
+                        style={
+                            'display': 'inline-block',
+                        },
+                    ),
+                    html.Br(),
+                    html.Div([
+                        dcc.Slider(
+                            id='well-slider',
+                            value=0,
+                            min=0,
+                            step=1,
+                        ),
+                        ],
+                        style={
+                            'display': 'inline-block',
+                            'width': '200px',
+                            # 'margin-left': '20px',
+                        },
+                    ),
+                    html.Br(),
+                    'Time Step:',
+                    html.Br(),
+                    html.Div([
                             dcc.Input(
-                                id='well-selector',
+                                id='time-selector',
                                 type='number',
                                 value=0,
                                 min=0,
                                 size=5,
                             ),
-                            ],
-                            style={
-                                'display': 'inline-block',
-                            },
-                        ),
-                        html.Br(),
-                        html.Div([
-                            dcc.Slider(
-                                id='well-slider',
-                                value=30,
-                                min=0,
-                                step=1,
-                            ),
-                            ],
-                            style={
-                                'display': 'inline-block',
-                                'width': '200px',
-                                # 'margin-left': '20px',
-                            },
-                        ),
-                        html.Br(),
-                        'Time Step:',
-                        html.Br(),
-                        html.Div([
-                                dcc.Input(
-                                    id='time-selector',
-                                    type='number',
-                                    value=0,
-                                    min=0,
-                                    size=5,
-                                ),
-                            ],
-                            style={
-                                'display': 'inline-block',
-                            },
-                        ),
-                        html.Br(),
-                        html.Div([
-                            dcc.Slider(
-                                id='time-slider',
-                                value=0,
-                                min=0,
-                                step=1,
-                            ),
-                            ],
-                            style={
-                                'display': 'inline-block',
-                                'width': '200px',
-                            },
-                        ),
-                        html.Br(),
-
-                        'Smoothing:',
-                        dcc.Checklist(
-                            id='filter-check',
-                            options=[{'label': 'Apply', 'value': True}],
-                            values=[],
-                        ),
-                        'Sigma:',
-                        dcc.Input(
-                            id='gaussian-sigma',
-                            type='number',
-                            value=5,
+                        ],
+                        style={
+                            'display': 'inline-block',
+                        },
+                    ),
+                    html.Br(),
+                    html.Div([
+                        dcc.Slider(
+                            id='time-slider',
+                            value=0,
                             min=0,
-                            size=5,
-                            step=0.1,
+                            step=1,
                         ),
+                        ],
+                        style={
+                            'display': 'inline-block',
+                            'width': '200px',
+                        },
+                    ),
+                    html.Br(),
+
+                    'Smoothing:',
+                    dcc.Checklist(
+                        id='filter-check',
+                        options=[{'label': 'Apply', 'value': True}],
+                        values=[],
+                    ),
+                    'Sigma:',
+                    dcc.Input(
+                        id='gaussian-sigma',
+                        type='number',
+                        value=5,
+                        min=0,
+                        size=5,
+                        step=0.1,
+                    ),
                     ],
                     style={
                         'display': 'inline-block',
@@ -209,6 +209,16 @@ app.layout = html.Div([
                     },
                 ),
                 html.Div([
+                    dcc.Checklist(
+                        id='blacklist-check',
+                        options=[{
+                            'label': 'Black List',
+                            'value': 'checked',
+                            'disabled': True,
+                        }],
+                        values=[],
+                        style={'display': 'table'},
+                    ),
                     html.Div('Original Image', style={'display': 'table'}),
                     html.Img(
                         id='t-image',
@@ -491,6 +501,32 @@ def callback(env, data_root):
     return [{'label': i, 'value': i} for i in csvs]
 
 
+# ======================================
+#  Load a blacklist file and check it.
+# ======================================
+@app.callback(
+        Output('blacklist-check', 'values'),
+        [Input('well-selector', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(well_idx, data_root, env):
+    if well_idx is None or env is None:
+        return []
+    
+    if not os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
+        return []
+
+    blacklist = np.loadtxt(
+            os.path.join(data_root, env, 'blacklist.csv'),
+            dtype=np.uint16, delimiter=',').flatten() == 1
+
+    if blacklist[well_idx]:
+        return 'checked'
+
+    else:
+        return []
+
+
 # ===================================================================
 #  Initialize morpho-dropdown when selecting an imaging environment.
 # ===================================================================
@@ -700,7 +736,8 @@ def callback(_, click_data, result, well_idx):
     if click_data is None or result is None:
         return well_idx
 
-    return click_data['points'][0]['pointNumber']
+    return int(click_data['points'][0]['text'])
+        
 
 
 # =====================================================
@@ -982,6 +1019,25 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    
+    # Load a blacklist
+    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
+
+        blacklist = np.loadtxt(
+                os.path.join(data_root, env, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 1
+
+    else:
+        blacklist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])) \
+                        .flatten() == 1
+
+    # Make a whitelist
+    whitelist = np.logical_not(blacklist)
+
     # Load the data
     signals = np.load(os.path.join(
             data_root, env, 'inference', morpho, result, 'signals.npy'))
@@ -1008,7 +1064,7 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
         auto_evals[auto_evals == signals.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals - manual_evals
+    errors = auto_evals[whitelist] - manual_evals[whitelist]
 
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
@@ -1051,15 +1107,25 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
                     'name': 'Auto = Manual',
                 },
                 {
-                    'x': list(auto_evals),
-                    'y': list(manual_evals),
+                    'x': list(auto_evals[blacklist]),
+                    'y': list(manual_evals[blacklist]),
+                    'text': [str(i) for i in np.where(blacklist)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#000000'},
+                    'name': 'Well in Blacklist',
+                },
+                {
+                    'x': list(auto_evals[whitelist]),
+                    'y': list(manual_evals[whitelist]),
+                    'text': [str(i) for i in np.where(whitelist)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#1f77b4'},
-                    'name': 'Well',
+                    'name': 'Well in Whitelist',
                 },
                 {
                     'x': [auto_evals[well_idx]],
                     'y': [manual_evals[well_idx]],
+                    'text': str(well_idx),
                     'mode': 'markers',
                     'marker': {'size': 10, 'color': '#ff0000'},
                     'name': 'Selected well',
@@ -1104,6 +1170,25 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    
+    # Load a blacklist
+    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
+
+        blacklist = np.loadtxt(
+                os.path.join(data_root, env, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 1
+
+    else:
+        blacklist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])) \
+                        .flatten() == 1
+
+    # Make a whitelist
+    whitelist = np.logical_not(blacklist)
+
     # Load the data
     signals = np.load(
             os.path.join(data_root, env, 'luminance_signals.npy')).T
@@ -1127,7 +1212,7 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
         auto_evals[auto_evals == signals.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals - manual_evals
+    errors = auto_evals[whitelist] - manual_evals[whitelist]
 
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
@@ -1170,11 +1255,20 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
                     'name': 'Auto = Manual',
                 },
                 {
-                    'x': list(auto_evals),
-                    'y': list(manual_evals),
+                    'x': list(auto_evals[blacklist]),
+                    'y': list(manual_evals[blacklist]),
+                    'text': [str(i) for i in np.where(blacklist)[0]],
                     'mode': 'markers',
-                    'marker': {'size': 5, 'color': '#20b2aa'},
-                    'name': 'Well',
+                    'marker': {'size': 4, 'color': '#000000'},
+                    'name': 'Well in Blacklist',
+                },
+                {
+                    'x': list(auto_evals[whitelist]),
+                    'y': list(manual_evals[whitelist]),
+                    'text': [str(i) for i in np.where(whitelist)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#20b2aa'},
+                    'name': 'Well in Whitelist',
                 },
                 {
                     'x': [auto_evals[well_idx]],
@@ -1224,6 +1318,22 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    
+    # Load a blacklist
+    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
+
+        whitelist = np.loadtxt(
+                os.path.join(data_root, env, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 0
+
+    else:
+        whitelist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])) \
+                        .flatten() == 0
+
     # Load the data
     signals = np.load(os.path.join(
             data_root, env, 'inference', morpho, result, 'signals.npy'))
@@ -1250,7 +1360,7 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
         auto_evals[auto_evals == signals.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals - manual_evals
+    errors = auto_evals[whitelist == 1] - manual_evals[whitelist == 1]
     ns, bins = np.histogram(errors, 1000)
 
     # Calculate the number of inconsistent wells
@@ -1361,6 +1471,22 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    
+    # Load a blacklist
+    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
+
+        whitelist = np.loadtxt(
+                os.path.join(data_root, env, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 0
+
+    else:
+        whitelist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])) \
+                        .flatten() == 0
+
     # Load the data
     signals = np.load(
             os.path.join(data_root, env, 'luminance_signals.npy')).T
@@ -1384,7 +1510,7 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
         auto_evals[auto_evals == signals.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals - manual_evals
+    errors = auto_evals[whitelist == 1] - manual_evals[whitelist == 1]
     ns, bins = np.histogram(errors, 1000)
 
     # Calculate the number of inconsistent wells
