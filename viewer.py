@@ -487,9 +487,9 @@ def callback(env, data_root):
     return [{'label': i, 'value': i} for i in csvs]
 
 
-# =================================================================
-#  
-# =================================================================
+# ======================================
+#  Load a blacklist file and check it.
+# ======================================
 @app.callback(
         Output('blacklist-check', 'values'),
         [Input('well-selector', 'value')],
@@ -501,13 +501,13 @@ def callback(well_idx, data_root, env):
 
     blacklist = np.loadtxt(
             os.path.join(data_root, env, 'blacklist.csv'),
-            dtype=np.uint16, delimiter=',').flatten()
+            dtype=np.uint16, delimiter=',').flatten() == 1
 
-    if blacklist[well_idx] == 0:
-        return []
+    if blacklist[well_idx]:
+        return 'checked'
 
     else:
-        return 'checked'
+        return []
 
 
 # ===================================================================
@@ -968,9 +968,9 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
     # Load a blacklist
     blacklist = np.loadtxt(
             os.path.join(data_root, env, 'blacklist.csv'),
-            dtype=np.uint16, delimiter=',').flatten()
+            dtype=np.uint16, delimiter=',').flatten() == 1
 
-    whitelist = blacklist == 0
+    whitelist = np.logical_not(blacklist)
 
     # Load the data
     signals = np.load(os.path.join(
@@ -998,7 +998,7 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
         auto_evals[auto_evals == signals.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals[whitelist == 1] - manual_evals[whitelist == 1]
+    errors = auto_evals[whitelist] - manual_evals[whitelist]
 
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
@@ -1041,17 +1041,17 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
                     'name': 'Auto = Manual',
                 },
                 {
-                    'x': list(auto_evals[blacklist == 1]),
-                    'y': list(manual_evals[blacklist == 1]),
-                    'text': [str(i) for i in np.where(blacklist == 1)[0]],
+                    'x': list(auto_evals[blacklist]),
+                    'y': list(manual_evals[blacklist]),
+                    'text': [str(i) for i in np.where(blacklist)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#000000'},
                     'name': 'Well in Blacklist',
                 },
                 {
-                    'x': list(auto_evals[whitelist == 1]),
-                    'y': list(manual_evals[whitelist == 1]),
-                    'text': [str(i) for i in np.where(whitelist == 1)[0]],
+                    'x': list(auto_evals[whitelist]),
+                    'y': list(manual_evals[whitelist]),
+                    'text': [str(i) for i in np.where(whitelist)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#1f77b4'},
                     'name': 'Well in Whitelist',
@@ -1107,9 +1107,9 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
     # Load a blacklist
     blacklist = np.loadtxt(
             os.path.join(data_root, env, 'blacklist.csv'),
-            dtype=np.uint16, delimiter=',').flatten()
+            dtype=np.uint16, delimiter=',').flatten() == 0
 
-    whitelist = blacklist == 0
+    whitelist = np.logical_not(blacklist)
 
     # Load the data
     signals = np.load(
@@ -1134,7 +1134,7 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
         auto_evals[auto_evals == signals.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals[whitelist == 1] - manual_evals[whitelist == 1]
+    errors = auto_evals[whitelist] - manual_evals[whitelist]
 
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
@@ -1177,17 +1177,17 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
                     'name': 'Auto = Manual',
                 },
                 {
-                    'x': list(auto_evals[blacklist == 1]),
-                    'y': list(manual_evals[blacklist == 1]),
-                    'text': [str(i) for i in np.where(blacklist == 1)[0]],
+                    'x': list(auto_evals[blacklist]),
+                    'y': list(manual_evals[blacklist]),
+                    'text': [str(i) for i in np.where(blacklist)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#000000'},
                     'name': 'Well in Blacklist',
                 },
                 {
-                    'x': list(auto_evals[whitelist == 1]),
-                    'y': list(manual_evals[whitelist == 1]),
-                    'text': [str(i) for i in np.where(whitelist == 1)[0]],
+                    'x': list(auto_evals[whitelist]),
+                    'y': list(manual_evals[whitelist]),
+                    'text': [str(i) for i in np.where(whitelist)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#20b2aa'},
                     'name': 'Well in Whitelist',
