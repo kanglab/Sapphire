@@ -437,7 +437,7 @@ app.layout = html.Div([
                     'display': 'inline-block',
                     'vertical-align': 'top',
                     'margin': '20px',
-                    'width': '400px',
+                    'width': '500px',
                 },
             ),
             html.Div(
@@ -449,7 +449,7 @@ app.layout = html.Div([
                     'display': 'inline-block',
                     'vertical-align': 'top',
                     'margin': '20px',
-                    'width': '400px',
+                    'width': '500px',
                 },
             ),
         ], style={'width': '1200px'}),
@@ -1760,6 +1760,9 @@ def callback(tab_name, data_root, env, timestamps):
         return
 
     data = list(json.loads(timestamps).values())
+    time_to_csv = 'data:text/csv;charset=utf-8,' \
+            + pd.DataFrame(data).to_csv(index=False)
+
 
     return [
             dash_table.DataTable(
@@ -1770,6 +1773,14 @@ def callback(tab_name, data_root, env, timestamps):
                 n_fixed_rows=1,
                 style_table={'width': '100%'},
                 pagination_mode=False,
+            ),
+            html.Br(),
+            html.A(
+                'Download Time Stamp',
+                id='download-link',
+                download='Timestamp({}).csv'.format(env[0:20]),
+                href=time_to_csv,
+                target="_blank"
             ),
         ]
 
@@ -1811,13 +1822,24 @@ def callback(
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', csv),
             dtype=np.uint16, delimiter=',').flatten()
+
     manual_evals = manual_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
+
+    manual_to_csv = \
+              'data:text/csv;charset=utf-8,' \
+            + 'Dataset,{}\nMorphology,{}\n'.format(env, morpho) \
+            + 'Inference Data,{}\n'.format(result) \
+            + 'Thresholding,{}\n'.format(rise_fall) \
+            + 'Event Timing\n' \
+            + pd.DataFrame(manual_evals).to_csv(
+                    index=False, encoding='utf-8', header=False)
 
     style = [{
             'if': {
                 'column_id': '{}'.format(clm),
-                'filter': 'num({2}) > {0} && {1} >= num({3})'.format(clm, clm, int(t)+100, int(t)),
+                'filter': 'num({2}) > {0} && {1} >= num({3})'.format(
+                        clm, clm, int(t)+100, int(t)),
             },
             'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
             'color': 'black',
@@ -1835,6 +1857,14 @@ def callback(
                 data=pd.DataFrame(manual_evals).to_dict('rows'),
                 style_data_conditional=style,
                 style_table={'width': '100%'}
+            ),
+            html.Br(),
+            html.A(
+                'Download Manual Data',
+                id='download-link',
+                download='Manual_Detection.csv',
+                href=manual_to_csv,
+                target="_blank"
             ),
         ]
 
@@ -1898,10 +1928,25 @@ def callback(
     auto_evals = auto_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
 
+    auto_to_csv = \
+              'data:text/csv;charset=utf-8,' \
+            + 'Dataset,{}\nMorphology,{}\n'.format(env, morpho) \
+            + 'Inference Data,{}\n'.format(result) \
+            + 'Thresholding,{}\n'.format(rise_fall) \
+            + 'Threshold Value,{}\n'.format(threshold[0, 0]) \
+            + '(Threshold Value = mean + coef * std)\n' \
+            + 'Mean (mean),{}\n'.format(signals.mean()) \
+            + 'Coefficient (coef),{}\n'.format(coef) \
+            + 'Standard Deviation (std),{}\n'.format(signals.std()) \
+            + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma) \
+            + pd.DataFrame(auto_evals).to_csv(
+                    index=False, encoding='utf-8', header=False),
+
     style = [{
             'if': {
                 'column_id': '{}'.format(clm),
-                'filter': 'num({2}) > {0} && {1} >= num({3})'.format(clm, clm, int(t)+100, int(t)),
+                'filter': 'num({2}) > {0} && {1} >= num({3})'.format(
+                        clm, clm, int(t)+100, int(t)),
             },
             'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
             'color': 'black',
@@ -1919,6 +1964,14 @@ def callback(
                 data=pd.DataFrame(auto_evals).to_dict('rows'),
                 style_data_conditional=style,
                 style_table={'width': '100%'}
+            ),
+            html.Br(),
+            html.A(
+                'Download Auto Data',
+                id='download-link',
+                download='Auto_Detection.csv',
+                href=auto_to_csv,
+                target="_blank"
             ),
         ]
 
