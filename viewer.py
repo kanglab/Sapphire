@@ -1666,8 +1666,14 @@ def callback(time, well_idx, data_root, env):
     # Load an original image
     orgimg_paths = sorted(glob.glob(
             os.path.join(data_root, env, 'original', '*.jpg')))
-    org_img = np.array(
-            PIL.Image.open(orgimg_paths[time+1]).convert('L'), dtype=np.uint8)
+
+    if time >= len(orgimg_paths) - 1:
+        org_img = np.zeros_like(mask, dtype=np.uint8)
+
+    else:
+        org_img = np.array(
+                PIL.Image.open(
+                        orgimg_paths[time+1]).convert('L'), dtype=np.uint8)
 
     # Cut out an well image from the original image
     r, c = np.where(mask == well_idx)
@@ -1740,11 +1746,15 @@ def callback(time, well_idx, data_root, env, morpho, result):
     npzfile_path = os.path.join(
             data_root, env, 'inference', morpho, result, 'probs',
             '{:03d}.npz'.format(well_idx))
-    npz = np.load(npzfile_path)
-    probs = npz['arr_0'].astype(np.int32)
-    prob = (probs[time+1] > THETA) * 255
-    prob = prob.astype(np.uint8)
-    label_image = PIL.Image.fromarray(prob).convert('L')
+    probs = np.load(npzfile_path)['arr_0'].astype(np.int32)
+
+    if time >= len(probs) - 1:
+        label_image = PIL.Image.fromarray(
+                np.zeros_like(probs[0], dtype=np.uint8)).convert('L')
+
+    else:
+        label_image = PIL.Image.fromarray(
+                ((probs[time+1] > THETA) * 255).astype(np.uint8)).convert('L')
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
@@ -1810,9 +1820,15 @@ def callback(time, well_idx, data_root, env, morpho, result):
     npzfile_path = os.path.join(
             data_root, env, 'inference', morpho, result, 'probs',
             '{:03d}.npz'.format(well_idx))
-    npz = np.load(npzfile_path)
-    probs = npz['arr_0'].astype(np.int32)
-    prob_image = PIL.Image.fromarray(probs[time+1] / 100 * 255).convert('L')
+
+    probs = np.load(npzfile_path)['arr_0'].astype(np.int32)
+
+    if time >= len(probs) - 1:
+        prob_image= PIL.Image.fromarray(
+                np.zeros_like(probs[0], dtype=np.uint8)).convert('L')
+
+    else:
+        prob_image = PIL.Image.fromarray(probs[time+1] / 100 * 255).convert('L')
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
