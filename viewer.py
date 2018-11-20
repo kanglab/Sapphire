@@ -752,7 +752,7 @@ def callback(env, data_root):
         return
 
     return len(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg'))) - 1
+            os.path.join(data_root, env, 'original', '*.jpg'))) - 2
 
 
 # ====================================================
@@ -778,7 +778,7 @@ def callback(env, data_root):
         return 100
 
     return len(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg'))) - 1
+            os.path.join(data_root, env, 'original', '*.jpg'))) - 2
 
 
 # ======================================================
