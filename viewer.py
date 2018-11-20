@@ -144,7 +144,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Slider(
                                 id='well-slider',
-                                value=0,
+                                value=30,
                                 min=0,
                                 step=1,
                             ),
@@ -169,6 +169,20 @@ app.layout = html.Div([
                             ],
                             style={
                                 'display': 'inline-block',
+                            },
+                        ),
+                        html.Br(),
+                        html.Div([
+                            dcc.Slider(
+                                id='time-slider',
+                                value=0,
+                                min=0,
+                                step=1,
+                            ),
+                            ],
+                            style={
+                                'display': 'inline-block',
+                                'width': '200px',
                             },
                         ),
                         html.Br(),
@@ -587,9 +601,9 @@ def callback(morpho, data_root, env):
     return morpho
 
 
-# ========================================================
-#  Load a signal file when selecting a result directory.
-# ========================================================
+# =================================
+#  Initialize the current-result.
+# =================================
 @app.callback(
         Output('current-result', 'children'),
         [Input('result-dropdown', 'value')],
@@ -603,28 +617,10 @@ def callback(result, data_root, env, morpho):
     return result
 
 
-# ====================================================
-#  Initialize the maximum value of the time-selector
-#  after loading a signal file.
-# ====================================================
-@app.callback(
-        Output('time-selector', 'max'),
-        [Input('current-result', 'children')],
-        [State('data-root', 'children'),
-         State('env-dropdown', 'value'),
-         State('morpho-dropdown', 'value')])
-def callback(result, data_root, env, morpho):
-    if env is None or morpho is None:
-        return
-
-    return len(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg'))) - 1
-
-
-# =======================================================
+# ========================================================
 #  Initialize the maximum value of the threshold-slider2
 #  after loading a signal file.
-# =======================================================
+# ========================================================
 @app.callback(
         Output('threshold-slider2', 'max'),
         [Input('current-result', 'children')],
@@ -643,60 +639,21 @@ def callback(result, data_root, env, morpho):
             os.path.join(data_root, env, 'luminance_signals.npy')).max()
 
 
-# =======================================================
-#  Initialize the maximum value of the well-slider
-#  after loading a signal file.
-# =======================================================
-@app.callback(
-        Output('well-slider', 'max'),
-        [Input('current-result', 'children')],
-        [State('data-root', 'children'),
-         State('env-dropdown', 'value'),
-         State('morpho-dropdown', 'value')])
-def callback(result, data_root, env, morpho):
-    if env is None or morpho is None:
-        return
-
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
-
-    return params['n-rows'] * params['n-plates'] * params['n-clms'] - 1
-
-
-# ====================================================
-#  Initialize the maximum value of the well-selector
-#  after loading a signal file.
-# ====================================================
+# =====================================================
+#  Initialize the maximum value of the well-selector.
+# =====================================================
 @app.callback(
         Output('well-selector', 'max'),
-        [Input('current-result', 'children')],
-        [State('data-root', 'children'),
-         State('env-dropdown', 'value'),
-         State('morpho-dropdown', 'value')])
-def callback(result, data_root, env, morpho):
-    if env is None or morpho is None:
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None or data_root is None:
         return
 
     with open(os.path.join(data_root, env, 'mask_params.json')) as f:
         params = json.load(f)
 
     return params['n-rows'] * params['n-plates'] * params['n-clms'] - 1
-
-
-# ======================================================
-#  Initialize the current value of the well-slider
-#  after loading a signal file
-#  or when clicking a data point in the summary-graph.
-# ======================================================
-@app.callback(
-        Output('well-slider', 'value'),
-        [Input('current-result', 'children'),
-         Input('summary-graph', 'clickData')])
-def callback(_, click_data):
-    if click_data is None:
-        return 20
-
-    return click_data['points'][0]['pointNumber']
         
 
 # ====================================================
@@ -710,18 +667,99 @@ def callback(well_idx):
     return well_idx
 
 
+# ===================================================
+#  Initialize the maximum value of the well-slider.
+# ===================================================
+@app.callback(
+        Output('well-slider', 'max'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None or data_root is None:
+        return
+
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+
+    return params['n-rows'] * params['n-plates'] * params['n-clms'] - 1
+
+
+# =======================================================
+#  Initialize the current value of the well-slider
+#  when selecting a dataset
+#  or when clicking a data point in the summary-graph
+#  or when selecting a result directory to draw graphs.
+# =======================================================
+@app.callback(
+        Output('well-slider', 'value'),
+        [Input('env-dropdown', 'value'),
+         Input('summary-graph', 'clickData'),
+         Input('current-result', 'children')],
+        [State('well-slider', 'value')])
+def callback(_, click_data, result, well_idx):
+    if click_data is None or result is None:
+        return well_idx
+
+    return click_data['points'][0]['pointNumber']
+
+
+# =====================================================
+#  Initialize the maximum value of the time-selector.
+# =====================================================
+@app.callback(
+        Output('time-selector', 'max'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None:
+        return
+
+    return len(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg'))) - 1
+
+
 # ====================================================
 #  Initialize the current value of the time-selector
-#  when clicking a data point in the signal-graph.
+#  when selecting a value on the time-slider.
 # ====================================================
 @app.callback(
         Output('time-selector', 'value'),
-        [Input('signal-graph', 'clickData')])
-def callback(click_data):
-    if click_data is None:
-        return 0
-    else:
-        return click_data['points'][0]['x']
+        [Input('time-slider', 'value')])
+def callback(timestep):
+    return timestep
+
+
+# ===================================================
+#  Initialize the maximum value of the time-slider.
+# ===================================================
+@app.callback(
+        Output('time-slider', 'max'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None:
+        return 100
+
+    return len(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg'))) - 1
+
+
+# ======================================================
+#  Initialize the current value of the time-slider
+#  when selecting a dataset
+#  or when clicking a data point in the summary-graph.
+# ======================================================
+@app.callback(
+        Output('time-slider', 'value'),
+        [Input('env-dropdown', 'value'),
+         Input('current-result', 'children'),
+         Input('summary-graph', 'clickData')],
+        [State('time-slider', 'value')])
+def callback(_, result, click_data, time):
+    if click_data is None or result is None:
+        return time
+
+    return click_data['points'][0]['x']
 
 
 # =========================================
