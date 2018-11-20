@@ -2029,7 +2029,6 @@ def callback(
         [Input('tabs', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value'),
          State('rise-or-fall', 'value'),
@@ -2037,7 +2036,7 @@ def callback(
          State('gaussian-sigma', 'value'),
          State('filter-check', 'values')])
 def callback(
-        tab_name, data_root, env, csv, morpho, result, rise_fall,
+        tab_name, data_root, env, morpho, result, rise_fall,
         coef, sigma, checks):
 
     # Guard
@@ -2045,8 +2044,6 @@ def callback(
         return
     if env is None:
         return
-    if csv is None:
-        return 'Not available.'
     if tab_name != 'tab-2':
         return
     if morpho is None or result is None:
