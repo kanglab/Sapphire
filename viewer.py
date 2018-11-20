@@ -1905,9 +1905,11 @@ def callback(tab_name, data_root, env, timestamps):
 
     # Guard
     if data_root is None:
-        return
+        return 'Not available.'
     if env is None:
-        return
+        return 'Not available.'
+    if timestamps is None:
+        return 'Now loading...'
     if tab_name != 'tab-2':
         return
 
@@ -1958,9 +1960,9 @@ def callback(
 
     # Guard
     if data_root is None:
-        return
+        return 'Not available.'
     if env is None:
-        return
+        return 'Not available.'
     if csv is None:
         return 'Not available.'
     if tab_name != 'tab-2':
@@ -2041,13 +2043,13 @@ def callback(
 
     # Guard
     if data_root is None:
-        return
+        return 'Not available.'
     if env is None:
-        return
+        return 'Not available.'
     if tab_name != 'tab-2':
         return
     if morpho is None or result is None:
-        return
+        return 'Not available.'
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', morpho, result, 'signals.npy')):
         return 'Not available.'
