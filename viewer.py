@@ -1107,7 +1107,7 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
     # Load a blacklist
     blacklist = np.loadtxt(
             os.path.join(data_root, env, 'blacklist.csv'),
-            dtype=np.uint16, delimiter=',').flatten() == 0
+            dtype=np.uint16, delimiter=',').flatten() == 1
 
     whitelist = np.logical_not(blacklist)
 
