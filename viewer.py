@@ -657,6 +657,37 @@ def callback(result, data_root, env, morpho):
             os.path.join(data_root, env, 'luminance_signals.npy')).max()
 
 
+# ==================================================
+#  Initialize the maximum value of the time-slider
+# ==================================================
+@app.callback(
+        Output('time-slider', 'max'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None:
+        return 100
+
+    return len(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg'))) - 1
+
+
+# ======================================================
+#  Initialize the current value of the time-slider
+#  when selecting a dataset
+#  or when clicking a data point in the summary-graph.
+# ======================================================
+@app.callback(
+        Output('time-slider', 'value'),
+        [Input('env-dropdown', 'value'),
+         Input('summary-graph', 'clickData')])
+def callback(_, click_data):
+    if click_data is None:
+        return 0
+
+    return click_data['points'][0]['x']
+
+
 # =======================================================
 #  Initialize the maximum value of the well-slider
 #  after loading a signal file.
