@@ -497,7 +497,10 @@ def callback(env, data_root):
          State('env-dropdown', 'value')])
 def callback(well_idx, data_root, env):
     if well_idx is None or env is None:
-        return False
+        return []
+    
+    if not os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
+        return []
 
     blacklist = np.loadtxt(
             os.path.join(data_root, env, 'blacklist.csv'),
