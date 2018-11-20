@@ -968,11 +968,23 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    
     # Load a blacklist
-    blacklist = np.loadtxt(
-            os.path.join(data_root, env, 'blacklist.csv'),
-            dtype=np.uint16, delimiter=',').flatten() == 1
+    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
 
+        blacklist = np.loadtxt(
+                os.path.join(data_root, env, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 1
+
+    else:
+        blacklist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])) \
+                        .flatten() == 1
+
+    # Make a whitelist
     whitelist = np.logical_not(blacklist)
 
     # Load the data
@@ -1107,11 +1119,23 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    
     # Load a blacklist
-    blacklist = np.loadtxt(
-            os.path.join(data_root, env, 'blacklist.csv'),
-            dtype=np.uint16, delimiter=',').flatten() == 1
+    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
 
+        blacklist = np.loadtxt(
+                os.path.join(data_root, env, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 1
+
+    else:
+        blacklist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])) \
+                        .flatten() == 1
+
+    # Make a whitelist
     whitelist = np.logical_not(blacklist)
 
     # Load the data
@@ -1243,10 +1267,21 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
-    # Load a blacklist as a whitelist
-    whitelist = np.loadtxt(
-            os.path.join(data_root, env, 'blacklist.csv'),
-            dtype=np.uint16, delimiter=',').flatten() == 0
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    
+    # Load a blacklist
+    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
+
+        whitelist = np.loadtxt(
+                os.path.join(data_root, env, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 0
+
+    else:
+        whitelist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])) \
+                        .flatten() == 0
 
     # Load the data
     signals = np.load(os.path.join(
@@ -1385,10 +1420,21 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
     if env is None or csv is None or morpho is None:
         return {'data': []}
 
-    # Load a blacklist as a whitelist
-    whitelist = np.loadtxt(
-            os.path.join(data_root, env, 'blacklist.csv'),
-            dtype=np.uint16, delimiter=',').flatten() == 0
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    
+    # Load a blacklist
+    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
+
+        whitelist = np.loadtxt(
+                os.path.join(data_root, env, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 0
+
+    else:
+        whitelist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])) \
+                        .flatten() == 0
 
     # Load the data
     signals = np.load(
