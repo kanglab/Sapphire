@@ -423,7 +423,7 @@ app.layout = html.Div([
                     'display': 'inline-block',
                     'vertical-align': 'top',
                     'margin': '20px',
-                    'width': '400px',
+                    'width': '500px',
                 },
             ),
             html.Div(
@@ -435,7 +435,7 @@ app.layout = html.Div([
                     'display': 'inline-block',
                     'vertical-align': 'top',
                     'margin': '20px',
-                    'width': '400px',
+                    'width': '500px',
                 },
             ),
         ], style={'width': '1200px'}),
@@ -1724,6 +1724,7 @@ def callback(tab_name, data_root, env, timestamps):
     data = list(json.loads(timestamps).values())
     time_to_csv = "data:text/csv;charset=utf-8,"+pd.DataFrame(data).to_csv( index=False,),
 
+
     return [
             dash_table.DataTable(
                 columns=[
@@ -1738,7 +1739,7 @@ def callback(tab_name, data_root, env, timestamps):
             html.A(
                 'Download Time Stamp',
                 id='download-link',
-                download="Timestamp.csv",
+                download="Timestamp({}).csv".format(env[0:20]),
                 href=time_to_csv,
                 target="_blank"
                     ),
@@ -1785,7 +1786,7 @@ def callback(
     manual_evals = manual_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
 
-    manual_to_csv = "data:text/csv;charset=utf-8,"+'Dataset,:,{}\nMorpho,:,{}\nInference Data,:,{}\nThresholding,:,{}\nManual Detection\n'.format(env,morpho,result,rise_fall,)+pd.DataFrame(manual_evals).to_csv( index=False, encoding="utf-8",header= False ),
+    manual_to_csv = "data:text/csv;charset=utf-8,"+'Dataset,{}\nMorphology,{}\nInference Data,{}\nThresholding,{}\nEvent Timing\n'.format(env,morpho,result,rise_fall,)+pd.DataFrame(manual_evals).to_csv( index=False, encoding="utf-8",header= False ),
 
     style = [{
             'if': {
@@ -1880,7 +1881,7 @@ def callback(
             params['n-rows']*params['n-plates'], params['n-clms'])
 
 
-    auto_to_csv = "data:text/csv;charset=utf-8,"+'Dataset,:,{}\nMorpho,:,{}\nInference Data,:,{}\nThresholding,:,{}\nThreshold Value ,:,{}\n(Threshold Value = mean + coef * std )\nmean ,:, {}\ncoef,;,{}\nstd,:,{}\nSmoosing Sigma,:,{}\nAuto Detection\n'.format(
+    auto_to_csv = "data:text/csv;charset=utf-8,"+'Dataset,{}\nMorphology,{}\nInference Data,{}\nThresholding,{}\nThreshold Value,{}\n(Threshold Value = mean + coef * std)\nMean (mean),{}\nCoefficient (coef),{}\nStandard Deviation (std),{}\nSmoothing Sigma,{}\nEvent Timing\n'.format(
                     env,morpho,result,rise_fall,threshold[0,0],signals.mean(),coef,signals.std(),sigma)+pd.DataFrame(auto_evals).to_csv( index=False, encoding="utf-8",header=False),
 
     style = [{
@@ -1905,6 +1906,7 @@ def callback(
                 style_data_conditional=style,
                 style_table={'width': '100%'}
             ),
+            html.Br(),
             html.A(
                 'Download Auto Data',
                 id='download-link',
