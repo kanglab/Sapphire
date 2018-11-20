@@ -820,14 +820,9 @@ def callback(_, result, click_data, time):
 def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
         sigma, figure, data_root, env, csv, morpho, result):
 
-    # Exception handling
+    # Guard
     if env is None or morpho is None:
         return {'data': []}
-
-    if len(figure['data']) == 0:
-        x, y = 0, 0
-    else:
-        x, y = time, figure['data'][3]['y'][time]
 
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', morpho, result, 'signals.npy')):
@@ -836,6 +831,11 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
     if not os.path.exists(os.path.join(
             data_root, env, 'luminance_signals.npy')):
         return {'data': []}
+
+    if len(figure['data']) == 0:
+        x, y = 0, 0
+    else:
+        x, y = time, figure['data'][3]['y'][time]
 
     # Load the data
     signals = np.load(os.path.join(
@@ -1015,8 +1015,11 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
 def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
         env, csv, morpho, result):
 
-    # Exception handling
+    # Guard
     if env is None or csv is None or morpho is None:
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', morpho, result, 'signals.npy')):
         return {'data': []}
 
     # Load a mask params
@@ -1166,8 +1169,11 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
 def callback(threshold, well_idx, positive_or_negative, checks, sigma,
         data_root, env, csv, morpho, result):
 
-    # Exception handling
+    # Guard
     if env is None or csv is None or morpho is None:
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'luminance_signals.npy')):
         return {'data': []}
 
     # Load a mask params
@@ -1314,8 +1320,11 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
 def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
         env, csv, morpho, result):
 
-    # Exception handling
+    # Guard
     if env is None or csv is None or morpho is None:
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', morpho, result, 'signals.npy')):
         return {'data': []}
 
     # Load a mask params
@@ -1467,8 +1476,11 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
 def callback(threshold, well_idx, positive_or_negative, checks, sigma,
         data_root, env, csv, morpho, result):
 
-    # Exception handling
+    # Guard
     if env is None or csv is None or morpho is None:
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'luminance_signals.npy')):
         return {'data': []}
 
     # Load a mask params
