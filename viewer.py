@@ -193,6 +193,15 @@ app.layout = html.Div([
                         options=[{'label': 'Apply', 'value': True}],
                         values=[],
                     ),
+                    'Size:',
+                    dcc.Input(
+                        id='gaussian-size',
+                        type='number',
+                        value=10,
+                        min=0,
+                        size=5,
+                    ),
+                    html.Br(),
                     'Sigma:',
                     dcc.Input(
                         id='gaussian-sigma',
@@ -810,6 +819,7 @@ def callback(_, result, click_data, time):
          Input('rise-or-fall', 'value'),
          Input('time-selector', 'value'),
          Input('filter-check', 'values'),
+         Input('gaussian-size', 'value'),
          Input('gaussian-sigma', 'value')],
         [State('signal-graph', 'figure'),
          State('data-root', 'children'),
@@ -818,7 +828,7 @@ def callback(_, result, click_data, time):
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
 def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
-        sigma, figure, data_root, env, csv, morpho, result):
+        size, sigma, figure, data_root, env, csv, morpho, result):
 
     # Guard
     if env is None or morpho is None:
@@ -845,8 +855,8 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
 
     # Smooth the signals
     if len(checks) != 0:
-        signals = my_filter(signals, sigma=sigma)
-        luminance_signals = my_filter(luminance_signals, sigma=sigma)
+        signals = my_filter(signals, size=size, sigma=sigma)
+        luminance_signals = my_filter(luminance_signals, size=size, sigma=sigma)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
@@ -1004,14 +1014,15 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
          Input('well-selector', 'value'),
          Input('rise-or-fall', 'value'),
          Input('filter-check', 'values'),
+         Input('gaussian-size', 'value'),
          Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
-        env, csv, morpho, result):
+def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
+        data_root, env, csv, morpho, result):
 
     # Guard
     if env is None or csv is None or morpho is None:
@@ -1048,7 +1059,7 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
 
     # Smooth the signals
     if len(checks) != 0:
-        signals = my_filter(signals, sigma=sigma)
+        signals = my_filter(signals, size=size, sigma=sigma)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
@@ -1158,13 +1169,14 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
          Input('well-selector', 'value'),
          Input('rise-or-fall', 'value'),
          Input('filter-check', 'values'),
+         Input('gaussian-size', 'value'),
          Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, positive_or_negative, checks, sigma,
+def callback(threshold, well_idx, positive_or_negative, checks, size, sigma,
         data_root, env, csv, morpho, result):
 
     # Guard
@@ -1202,7 +1214,7 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
 
     # Smooth the signals
     if len(checks) != 0:
-        signals = my_filter(signals, sigma=sigma)
+        signals = my_filter(signals, size=size, sigma=sigma)
 
     # Compute event times from signals
     if positive_or_negative == 'rise':
@@ -1309,14 +1321,15 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
          Input('well-selector', 'value'),
          Input('rise-or-fall', 'value'),
          Input('filter-check', 'values'),
+         Input('gaussian-size', 'value'),
          Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
-        env, csv, morpho, result):
+def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
+        data_root, env, csv, morpho, result):
 
     # Guard
     if env is None or csv is None or morpho is None:
@@ -1350,7 +1363,7 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
 
     # Smooth the signals
     if len(checks) != 0:
-        signals = my_filter(signals, sigma=sigma)
+        signals = my_filter(signals, size=size, sigma=sigma)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
@@ -1465,13 +1478,14 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
          Input('well-selector', 'value'),
          Input('rise-or-fall', 'value'),
          Input('filter-check', 'values'),
+         Input('gaussian-size', 'value'),
          Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, positive_or_negative, checks, sigma,
+def callback(threshold, well_idx, positive_or_negative, checks, size, sigma,
         data_root, env, csv, morpho, result):
 
     # Guard
@@ -1506,7 +1520,7 @@ def callback(threshold, well_idx, positive_or_negative, checks, sigma,
 
     # Smooth the signals
     if len(checks) != 0:
-        signals = my_filter(signals, sigma=sigma)
+        signals = my_filter(signals, size=size, sigma=sigma)
 
     # Compute event times from signals
     if positive_or_negative == 'rise':
@@ -1877,6 +1891,21 @@ def callback(time, well_idx, data_root, env, morpho, result):
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
+# =====================================================
+#  Toggle validation or invalidation of gaussian-size
+# =====================================================
+@app.callback(
+        Output('gaussian-size', 'disabled'),
+        [Input('filter-check', 'values')])
+def callback(checks):
+
+    if len(checks) == 0:
+        return True
+
+    else:
+        return False
+
+
 # ======================================================
 #  Toggle validation or invalidation of gaussian-sigma
 # ======================================================
@@ -1952,11 +1981,12 @@ def callback(tab_name, data_root, env, timestamps):
          State('result-dropdown', 'value'),
          State('rise-or-fall', 'value'),
          State('threshold-slider1', 'value'),
+         State('gaussian-size', 'value'),
          State('gaussian-sigma', 'value'),
          State('filter-check', 'values')])
 def callback(
         tab_name, data_root, env, csv, morpho, result, rise_fall,
-        coef, sigma, checks):
+        coef, size, sigma, checks):
 
     # Guard
     if data_root is None:
@@ -2035,11 +2065,12 @@ def callback(
          State('result-dropdown', 'value'),
          State('rise-or-fall', 'value'),
          State('threshold-slider1', 'value'),
+         State('gaussian-size', 'value'),
          State('gaussian-sigma', 'value'),
          State('filter-check', 'values')])
 def callback(
         tab_name, data_root, env, morpho, result, rise_fall,
-        coef, sigma, checks):
+        coef, size, sigma, checks):
 
     # Guard
     if data_root is None:
@@ -2063,7 +2094,7 @@ def callback(
 
     # Smooth the signals
     if len(checks) != 0:
-        signals = my_filter(signals, sigma=sigma)
+        signals = my_filter(signals, size=size, sigma=sigma)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
@@ -2092,6 +2123,7 @@ def callback(
             + 'Mean (mean),{}\n'.format(signals.mean()) \
             + 'Coefficient (coef),{}\n'.format(coef) \
             + 'Standard Deviation (std),{}\n'.format(signals.std()) \
+            + 'Smoothing Window Size,{}\n'.format(size) \
             + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma) \
             + pd.DataFrame(auto_evals).to_csv(
                     index=False, encoding='utf-8', header=False),
@@ -2133,9 +2165,9 @@ def callback(
 # =========================================
 #  Smoothing signals with gaussian window
 # =========================================
-def my_filter(signals, sigma=5):
+def my_filter(signals, size=10, sigma=5):
     
-    window = scipy.signal.gaussian(10, sigma)
+    window = scipy.signal.gaussian(size, sigma)
 
     signals = np.array(
             [np.convolve(signal, window, mode='same')
