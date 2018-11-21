@@ -2157,9 +2157,9 @@ def callback(
 # =========================================
 #  Smoothing signals with gaussian window
 # =========================================
-def my_filter(signals, sigma=5):
+def my_filter(signals, size=10, sigma=5):
     
-    window = scipy.signal.gaussian(10, sigma)
+    window = scipy.signal.gaussian(size, sigma)
 
     signals = np.array(
             [np.convolve(signal, window, mode='same')
