@@ -1886,6 +1886,21 @@ def callback(time, well_idx, data_root, env, morpho, result):
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
+# =====================================================
+#  Toggle validation or invalidation of gaussian-size
+# =====================================================
+@app.callback(
+        Output('gaussian-size', 'disabled'),
+        [Input('filter-check', 'values')])
+def callback(checks):
+
+    if len(checks) == 0:
+        return True
+
+    else:
+        return False
+
+
 # ======================================================
 #  Toggle validation or invalidation of gaussian-sigma
 # ======================================================
