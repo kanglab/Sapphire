@@ -2123,6 +2123,7 @@ def callback(
             + 'Mean (mean),{}\n'.format(signals.mean()) \
             + 'Coefficient (coef),{}\n'.format(coef) \
             + 'Standard Deviation (std),{}\n'.format(signals.std()) \
+            + 'Smoothing Window Size,{}\n'.format(size) \
             + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma) \
             + pd.DataFrame(auto_evals).to_csv(
                     index=False, encoding='utf-8', header=False),
