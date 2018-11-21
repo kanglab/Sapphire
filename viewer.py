@@ -839,7 +839,7 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
 
     # Load the data
     signals = np.load(os.path.join(
-            data_root, env, 'inference', morpho, result, 'signals.npy'))
+            data_root, env, 'inference', morpho, result, 'signals.npy')).T
     luminance_signals = np.load(
             os.path.join(data_root, env, 'luminance_signals.npy')).T
 
@@ -1041,7 +1041,7 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
 
     # Load the data
     signals = np.load(os.path.join(
-            data_root, env, 'inference', morpho, result, 'signals.npy'))
+            data_root, env, 'inference', morpho, result, 'signals.npy')).T
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', csv),
             dtype=np.uint16, delimiter=',').flatten()
@@ -1343,7 +1343,7 @@ def callback(coef, well_idx, positive_or_negative, checks, sigma, data_root,
 
     # Load the data
     signals = np.load(os.path.join(
-            data_root, env, 'inference', morpho, result, 'signals.npy'))
+            data_root, env, 'inference', morpho, result, 'signals.npy')).T
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', csv),
             dtype=np.uint16, delimiter=',').flatten()
@@ -2059,7 +2059,7 @@ def callback(
         params = json.load(f)
 
     signals = np.load(os.path.join(
-            data_root, env, 'inference', morpho, result, 'signals.npy'))
+            data_root, env, 'inference', morpho, result, 'signals.npy')).T
 
     # Smooth the signals
     if len(checks) != 0:
