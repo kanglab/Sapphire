@@ -193,6 +193,15 @@ app.layout = html.Div([
                         options=[{'label': 'Apply', 'value': True}],
                         values=[],
                     ),
+                    'Size:',
+                    dcc.Input(
+                        id='gaussian-size',
+                        type='number',
+                        value=10,
+                        min=0,
+                        size=5,
+                    ),
+                    html.Br(),
                     'Sigma:',
                     dcc.Input(
                         id='gaussian-sigma',
