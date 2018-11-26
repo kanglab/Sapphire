@@ -1380,7 +1380,8 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
         auto_evals[auto_evals == signals.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals[whitelist == 1] - manual_evals[whitelist == 1]
+    errors = auto_evals - manual_evals
+    errors = errors[whitelist]
     ns, bins = np.histogram(errors, 1000)
 
     # Calculate the number of inconsistent wells
@@ -1424,9 +1425,9 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
                         'y': 0.9 * ns.max(),
                         'text': '{} (5%): {:.1f}% ({}/{})'.format(
                             round(0.05 * signals.shape[1]),
-                            100 * n_consist_5percent / len(manual_evals),
+                            100 * n_consist_5percent / whitelist.sum(),
                             n_consist_5percent,
-                            len(manual_evals)),
+                            whitelist.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -1435,9 +1436,9 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
                         'y': 0.8 * ns.max(),
                         'text': '{} (1%): {:.1f}% ({}/{})'.format(
                             round(0.01 * signals.shape[1]),
-                            100 * n_consist_1percent / len(manual_evals),
+                            100 * n_consist_1percent / whitelist.sum(),
                             n_consist_1percent,
-                            len(manual_evals)),
+                            whitelist.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -1445,9 +1446,9 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
                         'x': 0.9 * signals.shape[1],
                         'y': 0.7 * ns.max(),
                         'text': '10: {:.1f}% ({}/{})'.format(
-                            100 * n_consist_10frames / len(manual_evals),
+                            100 * n_consist_10frames / whitelist.sum(),
                             n_consist_10frames,
-                            len(manual_evals)),
+                            whitelist.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -1534,7 +1535,8 @@ def callback(threshold, well_idx, positive_or_negative, checks, size, sigma,
         auto_evals[auto_evals == signals.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals[whitelist == 1] - manual_evals[whitelist == 1]
+    errors = auto_evals - manual_evals
+    errors = errors[whitelist]
     ns, bins = np.histogram(errors, 1000)
 
     # Calculate the number of inconsistent wells
@@ -1577,9 +1579,9 @@ def callback(threshold, well_idx, positive_or_negative, checks, size, sigma,
                         'y': 0.9 * ns.max(),
                         'text': '{} (5%): {:.1f}% ({}/{})'.format(
                             round(0.05 * signals.shape[1]),
-                            100 * n_consist_5percent / len(manual_evals),
+                            100 * n_consist_5percent / whitelist.sum(),
                             n_consist_5percent,
-                            len(manual_evals)),
+                            whitelist.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -1588,9 +1590,9 @@ def callback(threshold, well_idx, positive_or_negative, checks, size, sigma,
                         'y': 0.8 * ns.max(),
                         'text': '{} (1%): {:.1f}% ({}/{})'.format(
                             round(0.01 * signals.shape[1]),
-                            100 * n_consist_1percent / len(manual_evals),
+                            100 * n_consist_1percent / whitelist.sum(),
                             n_consist_1percent,
-                            len(manual_evals)),
+                            whitelist.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -1598,9 +1600,9 @@ def callback(threshold, well_idx, positive_or_negative, checks, size, sigma,
                         'x': 0.9 * signals.shape[1],
                         'y': 0.7 * ns.max(),
                         'text': '10: {:.1f}% ({}/{})'.format(
-                            100 * n_consist_10frames / len(manual_evals),
+                            100 * n_consist_10frames / whitelist.sum(),
                             n_consist_10frames,
-                            len(manual_evals)),
+                            whitelist.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
