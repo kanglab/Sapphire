@@ -871,19 +871,19 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, weight,
     # Apply weight to the signals
     if len(weight) != 0 and morpho == 'adult':
 
-        label_diffs = label_diffs * np.arange(
-                len(label_diffs.T)) / len(label_diffs.T)
+        label_diffs = label_diffs *  \
+                10 * np.arange(len(label_diffs.T)) / len(label_diffs.T)
 
-        lum_diffs = lum_diffs * np.arange(
-                len(lum_diffs.T)) / len(lum_diffs.T)
+        lum_diffs = lum_diffs *  \
+                10 * np.arange(len(lum_diffs.T)) / len(lum_diffs.T)
 
     elif len(weight) != 0 and morpho == 'larva':
 
         label_diffs = label_diffs *  \
-                (np.arange(len(label_diffs.T)) / len(label_diffs.T))[::-1]
+                10 * (np.arange(len(label_diffs.T)) / len(label_diffs.T))[::-1]
 
         lum_diffs = lum_diffs *  \
-                (np.arange(len(lum_diffs.T)) / len(lum_diffs.T))[::-1]
+                10 * (np.arange(len(lum_diffs.T)) / len(lum_diffs.T))[::-1]
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(label_diffs, coef=coef)
@@ -1093,13 +1093,13 @@ def callback(coef, well_idx, positive_or_negative, weight,
     # Apply weight to the signals
     if len(weight) != 0 and morpho == 'adult':
 
-        label_diffs = label_diffs * np.arange(
-                len(label_diffs.T)) / len(label_diffs.T)
+        label_diffs = label_diffs *  \
+                10 * np.arange(len(label_diffs.T)) / len(label_diffs.T)
 
     elif len(weight) != 0 and morpho == 'larva':
 
         label_diffs = label_diffs *  \
-                (np.arange(len(label_diffs.T)) / len(label_diffs.T))[::-1]
+                10 * (np.arange(len(label_diffs.T)) / len(label_diffs.T))[::-1]
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(label_diffs, coef=coef)
