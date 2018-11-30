@@ -1376,6 +1376,7 @@ def callback(threshold, well_idx, positive_or_negative, weight,
         [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
          Input('rise-or-fall', 'value'),
+         Input('weight-check', 'values'),
          Input('filter-check', 'values'),
          Input('gaussian-size', 'value'),
          Input('gaussian-sigma', 'value')],
@@ -1384,8 +1385,8 @@ def callback(threshold, well_idx, positive_or_negative, weight,
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
-        data_root, env, csv, morpho, result):
+def callback(coef, well_idx, positive_or_negative, weight,
+        checks, size, sigma, data_root, env, csv, morpho, result):
 
     # Guard
     if env is None or csv is None or morpho is None:
@@ -1411,7 +1412,7 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
                         .flatten() == 0
 
     # Load the data
-    signals = np.load(os.path.join(
+    label_diffs = np.load(os.path.join(
             data_root, env, 'inference', morpho, result, 'signals.npy')).T
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', csv),
@@ -1419,21 +1420,32 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
 
     # Smooth the signals
     if len(checks) != 0:
-        signals = my_filter(signals, size=size, sigma=sigma)
+        label_diffs = my_filter(label_diffs, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if len(weight) != 0 and morpho == 'adult':
+
+        label_diffs = label_diffs *  \
+                10 * np.arange(len(label_diffs.T)) / len(label_diffs.T)
+
+    elif len(weight) != 0 and morpho == 'larva':
+
+        label_diffs = label_diffs *  \
+                10 * (np.arange(len(label_diffs.T)) / len(label_diffs.T))[::-1]
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(signals, coef=coef)
+    threshold = my_threshold.entire_stats(label_diffs, coef=coef)
 
-    # Compute event times from signals
+    # Compute event times from label_diffs
     if positive_or_negative == 'rise':
-        auto_evals = (signals > threshold).argmax(axis=1)
+        auto_evals = (label_diffs > threshold).argmax(axis=1)
 
     elif positive_or_negative == 'fall':
         # Scan the signal from the right hand side.
-        auto_evals = (signals.shape[1]
-                - (np.fliplr(signals) > threshold).argmax(axis=1))
+        auto_evals = (label_diffs.shape[1]
+                - (np.fliplr(label_diffs) > threshold).argmax(axis=1))
         # If the signal was not more than the threshold.
-        auto_evals[auto_evals == signals.shape[1]] = 0
+        auto_evals[auto_evals == label_diffs.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
@@ -1442,16 +1454,16 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
 
     # Calculate the number of inconsistent wells
     tmp = np.bincount(abs(errors))
-    n_consist_5percent = tmp[:round(0.05 * signals.shape[1])].sum()
-    n_consist_1percent = tmp[:round(0.01 * signals.shape[1])].sum()
+    n_consist_5percent = tmp[:round(0.05 * label_diffs.shape[1])].sum()
+    n_consist_1percent = tmp[:round(0.01 * label_diffs.shape[1])].sum()
     n_consist_10frames = tmp[:11].sum()
 
     return {
             'data': [
                 {
                     'x': [
-                        -round(0.05 * signals.shape[1]),
-                        round(0.05 * signals.shape[1])
+                        -round(0.05 * label_diffs.shape[1]),
+                        round(0.05 * label_diffs.shape[1])
                     ],
                     'y': [ns.max(), ns.max()],
                     'mode': 'lines',
@@ -1470,17 +1482,17 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
                 'title': 'Error histogram',
                 'annotations': [
                     {
-                        'x': 0.9 * signals.shape[1],
+                        'x': 0.9 * label_diffs.shape[1],
                         'y': 1.0 * ns.max(),
                         'text': '#frames: consistency',
                         'showarrow': False,
                         'xanchor': 'right',
                     },
                     {
-                        'x': 0.9 * signals.shape[1],
+                        'x': 0.9 * label_diffs.shape[1],
                         'y': 0.9 * ns.max(),
                         'text': '{} (5%): {:.1f}% ({}/{})'.format(
-                            round(0.05 * signals.shape[1]),
+                            round(0.05 * label_diffs.shape[1]),
                             100 * n_consist_5percent / whitelist.sum(),
                             n_consist_5percent,
                             whitelist.sum()),
@@ -1488,10 +1500,10 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
                         'xanchor': 'right',
                     },
                     {
-                        'x': 0.9 * signals.shape[1],
+                        'x': 0.9 * label_diffs.shape[1],
                         'y': 0.8 * ns.max(),
                         'text': '{} (1%): {:.1f}% ({}/{})'.format(
-                            round(0.01 * signals.shape[1]),
+                            round(0.01 * label_diffs.shape[1]),
                             100 * n_consist_1percent / whitelist.sum(),
                             n_consist_1percent,
                             whitelist.sum()),
@@ -1499,7 +1511,7 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
                         'xanchor': 'right',
                     },
                     {
-                        'x': 0.9 * signals.shape[1],
+                        'x': 0.9 * label_diffs.shape[1],
                         'y': 0.7 * ns.max(),
                         'text': '10: {:.1f}% ({}/{})'.format(
                             100 * n_consist_10frames / whitelist.sum(),
@@ -1512,7 +1524,7 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'auto - manual',
-                    'range': [-len(signals.T), len(signals.T)],
+                    'range': [-len(label_diffs.T), len(label_diffs.T)],
                     'tickfont': {'size': 15},
                 },
                 'yaxis': {
@@ -1534,6 +1546,7 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
         [Input('threshold-slider2', 'value'),
          Input('well-selector', 'value'),
          Input('rise-or-fall', 'value'),
+         Input('weight-check', 'values'),
          Input('filter-check', 'values'),
          Input('gaussian-size', 'value'),
          Input('gaussian-sigma', 'value')],
@@ -1542,8 +1555,8 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(threshold, well_idx, positive_or_negative, checks, size, sigma,
-        data_root, env, csv, morpho, result):
+def callback(threshold, well_idx, positive_or_negative, weight,
+        checks, size, sigma, data_root, env, csv, morpho, result):
 
     # Guard
     if env is None or csv is None or morpho is None:
@@ -1569,7 +1582,7 @@ def callback(threshold, well_idx, positive_or_negative, checks, size, sigma,
                         .flatten() == 0
 
     # Load the data
-    signals = np.load(
+    lum_diffs = np.load(
             os.path.join(data_root, env, 'luminance_signals.npy')).T
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', csv),
@@ -1577,18 +1590,29 @@ def callback(threshold, well_idx, positive_or_negative, checks, size, sigma,
 
     # Smooth the signals
     if len(checks) != 0:
-        signals = my_filter(signals, size=size, sigma=sigma)
+        lum_diffs = my_filter(lum_diffs, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if len(weight) != 0 and morpho == 'adult':
+
+        lum_diffs = lum_diffs *  \
+                10 * np.arange(len(lum_diffs.T)) / len(lum_diffs.T)
+
+    elif len(weight) != 0 and morpho == 'larva':
+
+        lum_diffs = lum_diffs *  \
+                10 * (np.arange(len(lum_diffs.T)) / len(lum_diffs.T))[::-1]
 
     # Compute event times from signals
     if positive_or_negative == 'rise':
-        auto_evals = (signals > threshold).argmax(axis=1)
+        auto_evals = (lum_diffs > threshold).argmax(axis=1)
 
     elif positive_or_negative == 'fall':
         # Scan the signal from the right hand side.
-        auto_evals = (signals.shape[1]
-                - (np.fliplr(signals) > threshold).argmax(axis=1))
+        auto_evals = (lum_diffs.shape[1]
+                - (np.fliplr(lum_diffs) > threshold).argmax(axis=1))
         # If the signal was not more than the threshold.
-        auto_evals[auto_evals == signals.shape[1]] = 0
+        auto_evals[auto_evals == lum_diffs.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
@@ -1597,16 +1621,16 @@ def callback(threshold, well_idx, positive_or_negative, checks, size, sigma,
 
     # Calculate the number of inconsistent wells
     tmp = np.bincount(abs(errors))
-    n_consist_5percent = tmp[:round(0.05 * signals.shape[1])].sum()
-    n_consist_1percent = tmp[:round(0.01 * signals.shape[1])].sum()
+    n_consist_5percent = tmp[:round(0.05 * lum_diffs.shape[1])].sum()
+    n_consist_1percent = tmp[:round(0.01 * lum_diffs.shape[1])].sum()
     n_consist_10frames = tmp[:11].sum()
 
     return {
             'data': [
                 {
                     'x': [
-                        -round(0.05 * signals.shape[1]),
-                        round(0.05 * signals.shape[1])
+                        -round(0.05 * lum_diffs.shape[1]),
+                        round(0.05 * lum_diffs.shape[1])
                     ],
                     'y': [ns.max(), ns.max()],
                     'mode': 'lines',
@@ -1624,17 +1648,17 @@ def callback(threshold, well_idx, positive_or_negative, checks, size, sigma,
             'layout': {
                 'annotations': [
                     {
-                        'x': 0.9 * signals.shape[1],
+                        'x': 0.9 * lum_diffs.shape[1],
                         'y': 1.0 * ns.max(),
                         'text': '#frames: consistency',
                         'showarrow': False,
                         'xanchor': 'right',
                     },
                     {
-                        'x': 0.9 * signals.shape[1],
+                        'x': 0.9 * lum_diffs.shape[1],
                         'y': 0.9 * ns.max(),
                         'text': '{} (5%): {:.1f}% ({}/{})'.format(
-                            round(0.05 * signals.shape[1]),
+                            round(0.05 * lum_diffs.shape[1]),
                             100 * n_consist_5percent / whitelist.sum(),
                             n_consist_5percent,
                             whitelist.sum()),
@@ -1642,10 +1666,10 @@ def callback(threshold, well_idx, positive_or_negative, checks, size, sigma,
                         'xanchor': 'right',
                     },
                     {
-                        'x': 0.9 * signals.shape[1],
+                        'x': 0.9 * lum_diffs.shape[1],
                         'y': 0.8 * ns.max(),
                         'text': '{} (1%): {:.1f}% ({}/{})'.format(
-                            round(0.01 * signals.shape[1]),
+                            round(0.01 * lum_diffs.shape[1]),
                             100 * n_consist_1percent / whitelist.sum(),
                             n_consist_1percent,
                             whitelist.sum()),
@@ -1653,7 +1677,7 @@ def callback(threshold, well_idx, positive_or_negative, checks, size, sigma,
                         'xanchor': 'right',
                     },
                     {
-                        'x': 0.9 * signals.shape[1],
+                        'x': 0.9 * lum_diffs.shape[1],
                         'y': 0.7 * ns.max(),
                         'text': '10: {:.1f}% ({}/{})'.format(
                             100 * n_consist_10frames / whitelist.sum(),
@@ -1666,7 +1690,7 @@ def callback(threshold, well_idx, positive_or_negative, checks, size, sigma,
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'auto - manual',
-                    'range': [-len(signals.T), len(signals.T)],
+                    'range': [-len(lum_diffs.T), len(lum_diffs.T)],
                     'tickfont': {'size': 15},
                 },
                 'yaxis': {
