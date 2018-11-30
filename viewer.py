@@ -2061,14 +2061,9 @@ def callback(tab_name, data_root, env, timestamps):
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value'),
-         State('rise-or-fall', 'value'),
-         State('threshold-slider1', 'value'),
-         State('gaussian-size', 'value'),
-         State('gaussian-sigma', 'value'),
-         State('filter-check', 'values')])
+         State('rise-or-fall', 'value')])
 def callback(
-        tab_name, data_root, env, csv, morpho, result, rise_fall,
-        coef, size, sigma, checks):
+        tab_name, data_root, env, csv, morpho, result, rise_fall):
 
     # Guard
     if data_root is None:
