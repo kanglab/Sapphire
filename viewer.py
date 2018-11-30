@@ -824,6 +824,7 @@ def callback(_, result, click_data, time):
          Input('threshold-slider2', 'value'),
          Input('rise-or-fall', 'value'),
          Input('time-selector', 'value'),
+         Input('weight-check', 'values'),
          Input('filter-check', 'values'),
          Input('gaussian-size', 'value'),
          Input('gaussian-sigma', 'value')],
@@ -833,8 +834,8 @@ def callback(_, result, click_data, time):
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
-        size, sigma, figure, data_root, env, csv, morpho, result):
+def callback(well_idx, coef, threshold2, positive_or_negative, time, weight, 
+        checks, size, sigma, figure, data_root, env, csv, morpho, result):
 
     # Guard
     if env is None or morpho is None:
@@ -861,8 +862,27 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, checks,
 
     # Smooth the signals
     if len(checks) != 0:
+
         signals = my_filter(signals, size=size, sigma=sigma)
-        luminance_signals = my_filter(luminance_signals, size=size, sigma=sigma)
+
+        luminance_signals = my_filter(
+                luminance_signals, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if len(weight) != 0 and morpho == 'adult':
+
+        signals = signals * np.arange(len(signals.T)) / len(signals.T)
+
+        luminance_signals = luminance_signals * np.arange(
+                len(luminance_signals.T)) / len(luminance_signals.T)
+
+    elif len(weight) != 0 and morpho == 'larva':
+
+        signals = signals *  \
+                (np.arange(len(signals.T)) / len(signals.T))[::-1]
+
+        luminance_signals = luminance_signals *  \
+                (np.arange(len(luminance_signals.T)) / len(luminance_signals.T))[::-1]
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(signals, coef=coef)
