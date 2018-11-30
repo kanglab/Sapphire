@@ -211,6 +211,12 @@ app.layout = html.Div([
                         size=5,
                         step=0.1,
                     ),
+                    html.Br(),
+                    dcc.Checklist(
+                        id='weight-check',
+                        options=[{'label': 'Signal Weight', 'value': True}],
+                        values=[],
+                    ),
                     ],
                     style={
                         'display': 'inline-block',
