@@ -855,59 +855,60 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, weight,
         x, y = time, figure['data'][3]['y'][time]
 
     # Load the data
-    signals = np.load(os.path.join(
+    label_diffs = np.load(os.path.join(
             data_root, env, 'inference', morpho, result, 'signals.npy')).T
-    luminance_signals = np.load(
+    lum_diffs = np.load(
             os.path.join(data_root, env, 'luminance_signals.npy')).T
 
     # Smooth the signals
     if len(checks) != 0:
 
-        signals = my_filter(signals, size=size, sigma=sigma)
+        label_diffs = my_filter(label_diffs, size=size, sigma=sigma)
 
-        luminance_signals = my_filter(
-                luminance_signals, size=size, sigma=sigma)
+        lum_diffs = my_filter(
+                lum_diffs, size=size, sigma=sigma)
 
     # Apply weight to the signals
     if len(weight) != 0 and morpho == 'adult':
 
-        signals = signals * np.arange(len(signals.T)) / len(signals.T)
+        label_diffs = label_diffs * np.arange(
+                len(label_diffs.T)) / len(label_diffs.T)
 
-        luminance_signals = luminance_signals * np.arange(
-                len(luminance_signals.T)) / len(luminance_signals.T)
+        lum_diffs = lum_diffs * np.arange(
+                len(lum_diffs.T)) / len(lum_diffs.T)
 
     elif len(weight) != 0 and morpho == 'larva':
 
-        signals = signals *  \
-                (np.arange(len(signals.T)) / len(signals.T))[::-1]
+        label_diffs = label_diffs *  \
+                (np.arange(len(label_diffs.T)) / len(label_diffs.T))[::-1]
 
-        luminance_signals = luminance_signals *  \
-                (np.arange(len(luminance_signals.T)) / len(luminance_signals.T))[::-1]
+        lum_diffs = lum_diffs *  \
+                (np.arange(len(lum_diffs.T)) / len(lum_diffs.T))[::-1]
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(signals, coef=coef)
+    threshold = my_threshold.entire_stats(label_diffs, coef=coef)
 
     # Compute event times from signals
     if positive_or_negative == 'rise':
 
-        auto_evals = (signals > threshold).argmax(axis=1)
-        auto_evals2 = (luminance_signals > threshold2).argmax(axis=1)
+        auto_evals = (label_diffs > threshold).argmax(axis=1)
+        auto_evals2 = (lum_diffs > threshold2).argmax(axis=1)
 
     elif positive_or_negative == 'fall':
 
         # Scan the signal from the right hand side.
-        auto_evals = (signals.shape[1]
-                - (np.fliplr(signals) > threshold).argmax(axis=1))
+        auto_evals = (label_diffs.shape[1]
+                - (np.fliplr(label_diffs) > threshold).argmax(axis=1))
 
         # If the signal was not more than the threshold.
-        auto_evals[auto_evals == signals.shape[1]] = 0
+        auto_evals[auto_evals == label_diffs.shape[1]] = 0
 
         # Scan the signal from the right hand side.
-        auto_evals2 = (luminance_signals.shape[1]
-                - (np.fliplr(luminance_signals) > threshold2).argmax(axis=1))
+        auto_evals2 = (lum_diffs.shape[1]
+                - (np.fliplr(lum_diffs) > threshold2).argmax(axis=1))
 
         # If the signal was not more than the threshold.
-        auto_evals2[auto_evals2 == luminance_signals.shape[1]] = 0
+        auto_evals2[auto_evals2 == lum_diffs.shape[1]] = 0
 
     # Load a manual data and prepare data to be drawn
     # If a manual data exists, draw it
@@ -923,7 +924,7 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, weight,
                 {
                     # Manual evaluation time (vertical line)
                     'x': [manual_evals[well_idx], manual_evals[well_idx]],
-                    'y': [0, signals.max()],
+                    'y': [0, label_diffs.max()],
                     'mode': 'lines',
                     'name': 'Manual',
                     'line': {'width': 5, 'color': '#ffa500'},
@@ -936,7 +937,7 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, weight,
                 {
                     # Auto evaluation time (vertical line)
                     'x': [auto_evals[well_idx], auto_evals[well_idx]],
-                    'y': [0, signals.max()],            
+                    'y': [0, label_diffs.max()],            
                     'name': 'Auto',
                     'mode':'lines',
                     'line': {'width':4,'color': '#4169e1','dash':'dot'},
@@ -945,7 +946,7 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, weight,
                 {
                     # Auto evaluation time (vertical line)
                     'x': [auto_evals2[well_idx], auto_evals2[well_idx]],
-                    'y': [0, luminance_signals.max()],
+                    'y': [0, lum_diffs.max()],
                     'mode': 'lines',
                     'name': 'Auto',
                     'line': {'width':4,'color': '#20b2aa','dash':'dot'},
@@ -953,8 +954,8 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, weight,
                 },
                 {
                     # Signal
-                    'x': list(range(len(signals[0, :]))),
-                    'y': list(signals[well_idx]),
+                    'x': list(range(len(label_diffs[0, :]))),
+                    'y': list(label_diffs[well_idx]),
                     'mode': 'lines',
                     'marker': {'color': '#4169e1'},
                     'name': 'Signal',
@@ -963,8 +964,8 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, weight,
                 },
                 {
                     # Luminance signal
-                    'x': list(range(luminance_signals.shape[1])),
-                    'y': list(luminance_signals[well_idx,:]),
+                    'x': list(range(lum_diffs.shape[1])),
+                    'y': list(lum_diffs[well_idx,:]),
                     'mode': 'lines',
                     'line': {'color': '#20b2aa'},
                     'name': 'Luminance Signal',
@@ -972,7 +973,7 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, weight,
                 },
                 {
                     # Threshold (horizontal line)
-                    'x': [0, len(signals[0, :])],
+                    'x': [0, len(label_diffs[0, :])],
                     'y': [threshold[well_idx, 0], threshold[well_idx, 0]],
                     'mode': 'lines',
                     'name': 'Threshold',
@@ -981,7 +982,7 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, weight,
                 },
                 {
                     # Threshold2 (horizontal line)
-                    'x': [0, len(signals[0, :])],
+                    'x': [0, len(label_diffs[0, :])],
                     'y': [threshold2, threshold2],
                     'mode': 'lines',
                     'name': 'Threshold2',
@@ -1000,12 +1001,13 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, weight,
                 },
             ],
             'layout': {
-                    'title': 'Threshold: {:.1f}={:.1f}{:+.1f}*{:.1f} (blue), {:.1f} (green)'.format(
+                    'title': 'Threshold: {:.1f}={:.1f}{:+.1f}*{:.1f} ' +  \
+                             '(blue), {:.1f} (green)'.format(
                         threshold[well_idx, 0],
-                        signals.mean(),
+                        label_diffs.mean(),
                         coef,
-                        signals.std(),
-                        threshold2
+                        label_diffs.std(),
+                        threshold2,
                     ),
                     'font': {'size': 15},
                     'xaxis': {
@@ -1016,14 +1018,14 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, weight,
                         'title': 'Diff. of ROI',
                         'tickfont': {'size': 15},
                         'overlaying':'y',
-                        'range':[0, signals.max()],
-                        },
+                        'range':[0, label_diffs.max()],
+                    },
                     'yaxis1': {
                         'title':'Diff. of Luminance',
                         'tickfont': {'size': 15},
                         'side':'right',
-                        'range':[0, luminance_signals.max()],
-                },
+                        'range':[0, lum_diffs.max()],
+                    },
                 'showlegend': False,
                 'hovermode': 'closest',
                 'margin': go.layout.Margin(l=50, r=70, b=50, t=50, pad=0),
