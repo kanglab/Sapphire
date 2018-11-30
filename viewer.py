@@ -1041,6 +1041,7 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, weight,
         [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
          Input('rise-or-fall', 'value'),
+         Input('weight-check', 'values'),
          Input('filter-check', 'values'),
          Input('gaussian-size', 'value'),
          Input('gaussian-sigma', 'value')],
@@ -1049,8 +1050,8 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, weight,
          State('csv-dropdown', 'value'),
          State('morpho-dropdown', 'value'),
          State('result-dropdown', 'value')])
-def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
-        data_root, env, csv, morpho, result):
+def callback(coef, well_idx, positive_or_negative, weight,
+        checks, size, sigma, data_root, env, csv, morpho, result):
 
     # Guard
     if env is None or csv is None or morpho is None:
@@ -1079,7 +1080,7 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
     whitelist = np.logical_not(blacklist)
 
     # Load the data
-    signals = np.load(os.path.join(
+    label_diffs = np.load(os.path.join(
             data_root, env, 'inference', morpho, result, 'signals.npy')).T
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', csv),
@@ -1087,21 +1088,32 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
 
     # Smooth the signals
     if len(checks) != 0:
-        signals = my_filter(signals, size=size, sigma=sigma)
+        label_diffs = my_filter(label_diffs, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if len(weight) != 0 and morpho == 'adult':
+
+        label_diffs = label_diffs * np.arange(
+                len(label_diffs.T)) / len(label_diffs.T)
+
+    elif len(weight) != 0 and morpho == 'larva':
+
+        label_diffs = label_diffs *  \
+                (np.arange(len(label_diffs.T)) / len(label_diffs.T))[::-1]
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(signals, coef=coef)
+    threshold = my_threshold.entire_stats(label_diffs, coef=coef)
 
     # Compute event times from signals
     if positive_or_negative == 'rise':
-        auto_evals = (signals > threshold).argmax(axis=1)
+        auto_evals = (label_diffs > threshold).argmax(axis=1)
 
     elif positive_or_negative == 'fall':
         # Scan the signal from the right hand side.
-        auto_evals = (signals.shape[1]
-                - (np.fliplr(signals) > threshold).argmax(axis=1))
+        auto_evals = (label_diffs.shape[1]
+                - (np.fliplr(label_diffs) > threshold).argmax(axis=1))
         # If the signal was not more than the threshold.
-        auto_evals[auto_evals == signals.shape[1]] = 0
+        auto_evals[auto_evals == label_diffs.shape[1]] = 0
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals[whitelist] - manual_evals[whitelist]
@@ -1113,12 +1125,13 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
             'data': [
                 {
                     'x': [
-                        round(0.05 * len(signals[0, :])),
-                        len(signals[0, :])
+                        round(0.05 * len(label_diffs[0, :])),
+                        len(label_diffs[0, :])
                     ],
                     'y': [
                         0,
-                        len(signals[0, :])-round(0.05 * len(signals[0, :]))
+                        len(label_diffs[0, :]) -  \
+                        round(0.05 * len(label_diffs[0, :]))
                     ],
                     'mode': 'lines',
                     'fill': None,
@@ -1127,12 +1140,13 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
                 },
                 {
                     'x': [
-                        -round(0.05 * len(signals[0, :])),
-                        len(signals[0, :])
+                        -round(0.05 * len(label_diffs[0, :])),
+                        len(label_diffs[0, :])
                     ],
                     'y': [
                         0,
-                        len(signals[0, :])+round(0.05 * len(signals[0, :]))
+                        len(label_diffs[0, :]) +  \
+                        round(0.05 * len(label_diffs[0, :]))
                     ],
                     'mode': 'lines',
                     'fill': 'tonexty',
@@ -1140,8 +1154,8 @@ def callback(coef, well_idx, positive_or_negative, checks, size, sigma,
                     'name': 'Upper bound',
                 },
                 {
-                    'x': [0, len(signals[0, :])],
-                    'y': [0, len(signals[0, :])],
+                    'x': [0, len(label_diffs[0, :])],
+                    'y': [0, len(label_diffs[0, :])],
                     'mode': 'lines',
                     'line': {'width': .5, 'color': '#000000'},
                     'name': 'Auto = Manual',
