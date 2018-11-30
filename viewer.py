@@ -2142,12 +2142,13 @@ def callback(
          State('result-dropdown', 'value'),
          State('rise-or-fall', 'value'),
          State('threshold-slider1', 'value'),
+         State('weight-check', 'values'),
          State('gaussian-size', 'value'),
          State('gaussian-sigma', 'value'),
          State('filter-check', 'values')])
 def callback(
         tab_name, data_root, env, morpho, result, rise_fall,
-        coef, size, sigma, checks):
+        coef, weight, size, sigma, checks):
 
     # Guard
     if data_root is None:
@@ -2166,26 +2167,41 @@ def callback(
     with open(os.path.join(data_root, env, 'mask_params.json')) as f:
         params = json.load(f)
 
-    signals = np.load(os.path.join(
+    label_diffs = np.load(os.path.join(
             data_root, env, 'inference', morpho, result, 'signals.npy')).T
 
     # Smooth the signals
     if len(checks) != 0:
-        signals = my_filter(signals, size=size, sigma=sigma)
+        label_diffs = my_filter(label_diffs, size=size, sigma=sigma)
+
+    # Smooth the signals
+    if len(checks) != 0:
+        label_diffs = my_filter(label_diffs, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if len(weight) != 0 and morpho == 'adult':
+
+        label_diffs = label_diffs *  \
+                10 * np.arange(len(label_diffs.T)) / len(label_diffs.T)
+
+    elif len(weight) != 0 and morpho == 'larva':
+
+        label_diffs = label_diffs *  \
+                10 * (np.arange(len(label_diffs.T)) / len(label_diffs.T))[::-1]
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(signals, coef=coef)
+    threshold = my_threshold.entire_stats(label_diffs, coef=coef)
 
     # Compute event times from signals
     if rise_fall == 'rise':
-        auto_evals = (signals > threshold).argmax(axis=1)
+        auto_evals = (label_diffs > threshold).argmax(axis=1)
 
     elif rise_fall == 'fall':
         # Scan the signal from the right hand side.
-        auto_evals = (signals.shape[1]
-                - (np.fliplr(signals) > threshold).argmax(axis=1))
+        auto_evals = (label_diffs.shape[1]
+                - (np.fliplr(label_diffs) > threshold).argmax(axis=1))
         # If the signal was not more than the threshold.
-        auto_evals[auto_evals == signals.shape[1]] = 0
+        auto_evals[auto_evals == label_diffs.shape[1]] = 0
 
     auto_evals = auto_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
@@ -2197,9 +2213,9 @@ def callback(
             + 'Thresholding,{}\n'.format(rise_fall) \
             + 'Threshold Value,{}\n'.format(threshold[0, 0]) \
             + '(Threshold Value = mean + coef * std)\n' \
-            + 'Mean (mean),{}\n'.format(signals.mean()) \
+            + 'Mean (mean),{}\n'.format(label_diffs.mean()) \
             + 'Coefficient (coef),{}\n'.format(coef) \
-            + 'Standard Deviation (std),{}\n'.format(signals.std()) \
+            + 'Standard Deviation (std),{}\n'.format(label_diffs.std()) \
             + 'Smoothing Window Size,{}\n'.format(size) \
             + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma) \
             + pd.DataFrame(auto_evals).to_csv(
