@@ -1001,14 +1001,12 @@ def callback(well_idx, coef, threshold2, positive_or_negative, time, weight,
                 },
             ],
             'layout': {
-                    'title': 'Threshold: {:.1f}={:.1f}{:+.1f}*{:.1f} ' +  \
-                             '(blue), {:.1f} (green)'.format(
-                        threshold[well_idx, 0],
-                        label_diffs.mean(),
-                        coef,
-                        label_diffs.std(),
-                        threshold2,
-                    ),
+                    'title':
+                        'Threshold: {:.1f}'.format(threshold[well_idx, 0]) +  \
+                         '={:.1f}'.format(label_diffs.mean()) +  \
+                         '{:+.1f}'.format(coef) +  \
+                         '*{:.1f} '.format(label_diffs.std()) +  \
+                         '(blue), {:.1f} (green)'.format(threshold2),
                     'font': {'size': 15},
                     'xaxis': {
                         'title': 'Time step',
