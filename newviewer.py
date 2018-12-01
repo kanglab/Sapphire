@@ -455,9 +455,6 @@ def callback(detect, data_root, env):
         return True
 
 
-# ======================================================
-#  Initialize larva-dropdown.
-# ======================================================
 @app.callback(
         Output('larva-dropdown', 'options'),
         [Input('detect-target', 'value')],
@@ -481,6 +478,18 @@ def callback(detect, data_root, env):
         return []
 
 
+@app.callback(
+        Output('larva-dropdown', 'value'),
+        [Input('larva-dropdown', 'options')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(_, data_root, env):
+    if env is None:
+        return None
+
+    return None
+
+
 # ======================================================
 #  Initialize adult-dropdown.
 # ======================================================
@@ -499,6 +508,18 @@ def callback(detect, data_root, env):
             if os.path.isdir(i)]
 
     return [{'label': i, 'value': i} for i in results]
+
+
+@app.callback(
+        Output('adult-dropdown', 'value'),
+        [Input('adult-dropdown', 'options')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(_, data_root, env):
+    if env is None:
+        return None
+
+    return None
 
 
 # =====================================================
@@ -760,7 +781,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
         adult_label_img2.save(adult_label_buf2, format='JPEG')
 
         data = data + [
-                html.Div('Larva'),
+            html.Div('Larva'),
+            html.Div([
                 html.Img(
                     src='data:image/jpeg;base64,{}'.format(
                             base64.b64encode(
@@ -785,6 +807,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                         'display': 'inline-block',
                     },
                 ),
+            ]),
+            html.Div([
                 html.Img(
                     src='data:image/jpeg;base64,{}'.format(
                             base64.b64encode(
@@ -809,6 +833,7 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                         'display': 'inline-block',
                     },
                 ),
+            ]),
             ]
 
     # Load a npz file storing prob images
@@ -839,54 +864,61 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
 
     return data + [
             html.Div('Adult'),
-            html.Img(
-                src='data:image/jpeg;base64,{}'.format(
-                        base64.b64encode(
-                            adult_label_buf1.getvalue()).decode('utf-8')),
-                style={
-                    'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
-                    'padding': '5px',
-                    'display': 'inline-block',
-                },
-            ),
-            html.Img(
-                src='data:image/jpeg;base64,{}'.format(
-                        base64.b64encode(
-                            adult_label_buf2.getvalue()).decode('utf-8')),
-                style={
-                    'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
-                    'padding': '5px',
-                    'display': 'inline-block',
-                },
-            ),
-            html.Img(
-                src='data:image/jpeg;base64,{}'.format(
-                        base64.b64encode(
-                            adult_prob_buf1.getvalue()).decode('utf-8')),
-                style={
-                    'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
-                    'padding': '5px',
-                    'display': 'inline-block',
-                },
-            ),
-            html.Img(
-                src='data:image/jpeg;base64,{}'.format(
-                        base64.b64encode(
-                            adult_prob_buf2.getvalue()).decode('utf-8')),
-                style={
-                    'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
-                    'padding': '5px',
-                    'display': 'inline-block',
-                },
-            ),
+            html.Div([
+                html.Img(
+                    src='data:image/jpeg;base64,{}'.format(
+                            base64.b64encode(
+                                adult_label_buf1.getvalue()).decode('utf-8')),
+                    style={
+                        'background': '#555555',
+                        'height': '80px',
+                        'width': '80px',
+                        'padding': '5px',
+                        'display': 'inline-block',
+                    },
+                ),
+                html.Img(
+                    src='data:image/jpeg;base64,{}'.format(
+                            base64.b64encode(
+                                adult_label_buf2.getvalue()).decode('utf-8')),
+                    style={
+                        'background': '#555555',
+                        'height': '80px',
+                        'width': '80px',
+                        'padding': '5px',
+                        'display': 'inline-block',
+                    },
+                ),
+            ]),
+            html.Div([
+                html.Img(
+                    src='data:image/jpeg;base64,{}'.format(
+                            base64.b64encode(
+                                adult_prob_buf1.getvalue()).decode('utf-8')),
+                    style={
+                        'background': '#555555',
+                        'height': '80px',
+                        'width': '80px',
+                        'padding': '5px',
+                        'display': 'inline-block',
+                    },
+                ),
+                html.Img(
+                    src='data:image/jpeg;base64,{}'.format(
+                            base64.b64encode(
+                                adult_prob_buf2.getvalue()).decode('utf-8')),
+                    style={
+                        'background': '#555555',
+                        'height': '80px',
+                        'width': '80px',
+                        'padding': '5px',
+                        'display': 'inline-block',
+                    },
+                ),
+            ]),
+            html.Div('Image at "t"',
+                    style={'display': 'inline-block', 'margin-right': '25px'}),
+            html.Div('"t+1"', style={'display': 'inline-block'}),
         ]
 
 
