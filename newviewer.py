@@ -205,77 +205,11 @@ app.layout = html.Div([
                         values=[],
                         style={'display': 'table'},
                     ),
-                    html.Div([
-                        'Original Image',
-                        html.Img(
-                            id='t-image',
-                            style={
-                                'background': '#555555',
-                                'height': '80px',
-                                'width': '80px',
-                                'padding': '5px',
-                                'display': 'block',
-                            },
-                        ),
-                        html.Img(
-                            id='t+1-image',
-                            style={
-                                'background': '#555555',
-                                'height': '80px',
-                                'width': '80px',
-                                'padding': '5px',
-                                'display': 'block',
-                            },
-                        ),
-                    ], style={'display': 'table'}),
-                    html.Div([
-                        'Label',
-                        html.Img(
-                            id='t-label',
-                            style={
-                                'background': '#555555',
-                                'height': '80px',
-                                'width': '80px',
-                                'padding': '5px',
-                                'display': 'block',
-                            },
-                        ),
-                        html.Img(
-                            id='t+1-label',
-                            style={
-                                'background': '#555555',
-                                'height': '80px',
-                                'width': '80px',
-                                'padding': '5px',
-                                'display': 'block',
-                            },
-                        ),
-                    ], style={'display': 'table'}),
-                    html.Div([
-                        'Probability',
-                        html.Img(
-                            id='t-prob',
-                            style={
-                                'background': '#555555',
-                                'height': '80px',
-                                'width': '80px',
-                                'padding': '5px',
-                                'display': 'block',
-                            },
-                        ),
-                        html.Img(
-                            id='t+1-prob',
-                            style={
-                                'background': '#555555',
-                                'height': '80px',
-                                'width': '80px',
-                                'padding': '5px',
-                                'display': 'block',
-                            },
-                        ),
-                    ], style={'display': 'table'}),
-                    html.Div(['Image at "t"'], style={'display': 'table'}),
-                    html.Div(['"t+1"'], style={'display': 'table'}),
+
+                    html.Div(id='org-image', style={'display': 'table'}),
+
+                    html.Div(id='label-and-prob', style={'display': 'table'}),
+
                     ],
                     style={
                         'display': 'inline-block',
@@ -461,6 +395,238 @@ def my_filter(signals, size=10, sigma=5):
                 for signal in signals])
 
     return signals
+
+
+# =================================================
+#  Initialize env-dropdown when opening the page.
+# =================================================
+@app.callback(
+        Output('env-dropdown', 'options'),
+        [Input('data-root', 'children')])
+def callback(data_root):
+
+    imaging_envs = [os.path.basename(i)
+            for i in sorted(glob.glob(os.path.join(data_root, '*')))]
+
+    return [{'label': i, 'value': i} for i in imaging_envs]
+
+
+# =================================================================
+#  Initialize detect-target.
+# =================================================================
+@app.callback(
+        Output('detect-target', 'value'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    # Guard
+    if env is None:
+        print(1)
+        return
+    if not os.path.exists(os.path.join(data_root, env, 'config.json')):
+        print(2)
+        return
+
+    with open(os.path.join(data_root, env, 'config.json')) as f:
+        config = json.load(f)
+
+    if config['detect'] == 'pupa&eclo':
+        print(3)
+        return 'v1'
+    elif config['detect'] == 'death':
+        print(4)
+        return 'v2'
+    else:
+        print(5)
+        return
+
+
+# =====================================================
+#  Initialize the maximum value of the well-selector.
+# =====================================================
+@app.callback(
+        Output('well-selector', 'max'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None or data_root is None:
+        return
+
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+
+    return params['n-rows'] * params['n-plates'] * params['n-clms'] - 1
+        
+
+# ====================================================
+#  Initialize the current value of the well-selector
+#  when selecting a value on the well-slider.
+# ====================================================
+@app.callback(
+        Output('well-selector', 'value'),
+        [Input('well-slider', 'value')])
+def callback(well_idx):
+    return well_idx
+
+
+# ===================================================
+#  Initialize the maximum value of the well-slider.
+# ===================================================
+@app.callback(
+        Output('well-slider', 'max'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None or data_root is None:
+        return
+
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+
+    return params['n-rows'] * params['n-plates'] * params['n-clms'] - 1
+
+
+# =======================================================
+#  Initialize the current value of the well-slider
+#  when selecting a dataset
+#  or when clicking a data point in the summary-graph
+#  or when selecting a result directory to draw graphs.
+# =======================================================
+@app.callback(
+        Output('well-slider', 'value'),
+        [Input('env-dropdown', 'value'),
+         Input('summary-graph', 'clickData'),
+         Input('current-result', 'children')],
+        [State('well-slider', 'value')])
+def callback(_, click_data, result, well_idx):
+    if click_data is None or result is None:
+        return well_idx
+
+    return int(click_data['points'][0]['text'])
+
+
+# =====================================================
+#  Initialize the maximum value of the time-selector.
+# =====================================================
+@app.callback(
+        Output('time-selector', 'max'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None:
+        return
+
+    return len(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg'))) - 2
+
+
+# ====================================================
+#  Initialize the current value of the time-selector
+#  when selecting a value on the time-slider.
+# ====================================================
+@app.callback(
+        Output('time-selector', 'value'),
+        [Input('time-slider', 'value')])
+def callback(timestep):
+    return timestep
+
+
+# ===================================================
+#  Initialize the maximum value of the time-slider.
+# ===================================================
+@app.callback(
+        Output('time-slider', 'max'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None:
+        return 100
+
+    return len(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg'))) - 2
+
+
+# ======================================================
+#  Initialize the current value of the time-slider
+#  when selecting a dataset
+#  or when clicking a data point in the summary-graph.
+# ======================================================
+@app.callback(
+        Output('time-slider', 'value'),
+        [Input('env-dropdown', 'value'),
+         Input('current-result', 'children'),
+         Input('summary-graph', 'clickData')],
+        [State('time-slider', 'value')])
+def callback(_, result, click_data, time):
+    if click_data is None or result is None:
+        return time
+
+    return click_data['points'][0]['x']
+
+
+# ========================
+#  Update the org-image.
+# ========================
+@app.callback(
+        Output('org-image', 'children'),
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(time, well_idx, data_root, env):
+
+    # Exception handling
+    if env is None:
+        return
+
+    # Load the mask
+    mask = np.load(os.path.join(data_root, env, 'mask.npy'))
+
+    # Load an original image
+    orgimg_paths = sorted(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg')))
+    orgimg1 = np.array(
+            PIL.Image.open(orgimg_paths[time]).convert('L'), dtype=np.uint8)
+    orgimg2 = np.array(
+            PIL.Image.open(orgimg_paths[time+1]).convert('L'), dtype=np.uint8)
+
+    # Cut out an well image from the original image
+    r, c = np.where(mask == well_idx)
+    orgimg1 = orgimg1[r.min():r.max(), c.min():c.max()]
+    orgimg2 = orgimg2[r.min():r.max(), c.min():c.max()]
+    orgimg1 = PIL.Image.fromarray(orgimg1)
+    orgimg2 = PIL.Image.fromarray(orgimg2)
+
+    # Buffer the well image as byte stream
+    buf1 = io.BytesIO()
+    buf2 = io.BytesIO()
+    orgimg1.save(buf1, format='JPEG')
+    orgimg2.save(buf2, format='JPEG')
+
+    return [
+            html.Img(
+                src='data:image/jpeg;base64,{}'.format(
+                        base64.b64encode(buf1.getvalue()).decode('utf-8')),
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'inline-block',
+                },
+            ),
+            html.Img(
+                src='data:image/jpeg;base64,{}'.format(
+                        base64.b64encode(buf2.getvalue()).decode('utf-8')),
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'inline-block',
+                },
+            ),
+        ]
 
 
 if __name__ == '__main__':
