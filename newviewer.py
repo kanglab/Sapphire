@@ -71,12 +71,12 @@ app.layout = html.Div([
                         options=[
                             {
                                 'label': 'Pupariation&Eclosion',
-                                'value': 'v1',
+                                'value': 'pupa-and-eclo',
                                 'disabled': True,
                             },
                             {
                                 'label': 'Death',
-                                'value': 'v2',
+                                'value': 'death',
                                 'disabled': True,
                             },
                         ],
@@ -417,10 +417,10 @@ def callback(env, data_root):
 
     if config['detect'] == 'pupa&eclo':
         print(3)
-        return 'v1'
+        return 'pupa-and-eclo'
     elif config['detect'] == 'death':
         print(4)
-        return 'v2'
+        return 'death'
     else:
         print(5)
         return
@@ -438,11 +438,11 @@ def callback(detect, data_root, env):
     if env is None:
         return
 
-    if detect == 'v1':
+    if detect == 'pupa-and-eclo':
 
         return False
 
-    elif detect == 'v2':
+    elif detect == 'death':
 
         return True
 
@@ -456,7 +456,7 @@ def callback(detect, data_root, env):
     if env is None:
         return []
 
-    if detect == 'v1':
+    if detect == 'pupa-and-eclo':
 
         results = [os.path.basename(i)
                 for i in sorted(glob.glob(os.path.join(
@@ -465,7 +465,7 @@ def callback(detect, data_root, env):
 
         return [{'label': i, 'value': i} for i in results]
 
-    elif detect == 'v2':
+    elif detect == 'death':
 
         return []
 
@@ -724,7 +724,7 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
 
     data = []
 
-    if detect == 'v1':
+    if detect == 'pupa-and-eclo':
 
         # Load a npz file storing prob images
         # and get a prob image
@@ -1097,10 +1097,10 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'v1':
+    if detect == 'pupa-and-eclo':
         return {'height': '300px'}
 
-    elif detect == 'v2':
+    elif detect == 'death':
         return {'display': 'none'}
 
     else:
@@ -1150,11 +1150,11 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
 
     # Apply weight to the signals
-    if len(weight) != 0 and detect == 'v1':
+    if len(weight) != 0 and detect == 'pupa-and-eclo':
         adult_diffs = adult_diffs *  \
                 10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
 
-    elif len(weight) != 0 and detect == 'v2':
+    elif len(weight) != 0 and detect == 'death':
         adult_diffs = adult_diffs *  \
                 10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
 
@@ -1253,10 +1253,10 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'v1':
+    if detect == 'pupa-and-eclo':
         return {'height': '300px'}
 
-    elif detect == 'v2':
+    elif detect == 'death':
         return {'height': '400px'}
 
     else:
@@ -1433,14 +1433,14 @@ def callback(coef, well_idx, weight,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'v1':
+    if detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
                 'height': '300px',
                 'width': '25%',
             }
 
-    elif detect == 'v2':
+    elif detect == 'death':
         return {
                 'display': 'none',
             }
@@ -1492,12 +1492,12 @@ def callback(coef, well_idx, weight,
     whitelist = np.logical_not(blacklist)
 
     # Load a manual evaluation of event timing
-    if detect == 'v1':
+    if detect == 'pupa-and-eclo':
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
                 dtype=np.uint16, delimiter=',').flatten()
 
-    elif detect == 'v2':
+    elif detect == 'death':
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
                 dtype=np.uint16, delimiter=',').flatten()
@@ -1511,11 +1511,11 @@ def callback(coef, well_idx, weight,
         adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
 
     # Apply weight to the signals
-    if len(weight) != 0 and detect == 'v1':
+    if len(weight) != 0 and detect == 'pupa-and-eclo':
         adult_diffs = adult_diffs *  \
                 10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
 
-    elif len(weight) != 0 and detect == 'v2':
+    elif len(weight) != 0 and detect == 'death':
         adult_diffs = adult_diffs *  \
                 10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
 
@@ -1523,10 +1523,10 @@ def callback(coef, well_idx, weight,
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
 
     # Evaluate event timing
-    if detect == 'v1':
+    if detect == 'pupa-and-eclo':
         auto_evals = (adult_diffs > threshold).argmax(axis=1)
 
-    elif detect == 'v2':
+    elif detect == 'death':
         # Compute event times from signals
         # Scan the signal from the right hand side.
         auto_evals = (adult_diffs.shape[1]
@@ -1636,14 +1636,14 @@ def callback(coef, well_idx, weight,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'v1':
+    if detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
                 'height': '300px',
                 'width': '25%',
             }
 
-    elif detect == 'v2':
+    elif detect == 'death':
         return {
                 'display': 'inline-block',
                 'height': '300px',
@@ -1814,14 +1814,14 @@ def callback(coef, well_idx, weight,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'v1':
+    if detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
                 'height': '300px',
                 'width': '25%',
             }
 
-    elif detect == 'v2':
+    elif detect == 'death':
         return {
                 'display': 'none',
             }
@@ -1870,12 +1870,12 @@ def callback(coef, well_idx, weight,
                 ).flatten() == 0
 
     # Load a manual evaluation of event timing
-    if detect == 'v1':
+    if detect == 'pupa-and-eclo':
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
                 dtype=np.uint16, delimiter=',').flatten()
 
-    elif detect == 'v2':
+    elif detect == 'death':
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
                 dtype=np.uint16, delimiter=',').flatten()
@@ -1889,11 +1889,11 @@ def callback(coef, well_idx, weight,
         adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
 
     # Apply weight to the signals
-    if len(weight) != 0 and detect == 'v1':
+    if len(weight) != 0 and detect == 'pupa-and-eclo':
         adult_diffs = adult_diffs *  \
                 10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
 
-    elif len(weight) != 0 and detect == 'v2':
+    elif len(weight) != 0 and detect == 'death':
         adult_diffs = adult_diffs *  \
                 10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
 
@@ -1901,10 +1901,10 @@ def callback(coef, well_idx, weight,
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
 
     # Evaluate event timing
-    if detect == 'v1':
+    if detect == 'pupa-and-eclo':
         auto_evals = (adult_diffs > threshold).argmax(axis=1)
 
-    elif detect == 'v2':
+    elif detect == 'death':
         # Compute event times from signals
         # Scan the signal from the right hand side.
         auto_evals = (adult_diffs.shape[1]
@@ -2008,14 +2008,14 @@ def callback(coef, well_idx, weight,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'v1':
+    if detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
                 'height': '300px',
                 'width': '25%',
             }
 
-    elif detect == 'v2':
+    elif detect == 'death':
         return {
                 'display': 'inline-block',
                 'height': '300px',
