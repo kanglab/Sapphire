@@ -560,7 +560,7 @@ def callback(env, data_root):
          Input('adult-dropdown', 'value')],
         [State('well-slider', 'value')])
 def callback(_, click_data, larva_data, adult_data, well_idx):
-    if click_data is None or result is None:
+    if click_data is None:
         return well_idx
 
     return int(click_data['points'][0]['text'])
@@ -620,7 +620,7 @@ def callback(env, data_root):
          Input('summary-graph', 'clickData')],
         [State('time-slider', 'value')])
 def callback(_, larva_data, adult_data, click_data, time):
-    if click_data is None or result is None:
+    if click_data is None:
         return time
 
     return click_data['points'][0]['x']
@@ -666,6 +666,7 @@ def callback(time, well_idx, data_root, env):
     orgimg2.save(buf2, format='JPEG')
 
     return [
+            html.Div('Original Image'),
             html.Img(
                 src='data:image/jpeg;base64,{}'.format(
                         base64.b64encode(buf1.getvalue()).decode('utf-8')),
@@ -680,6 +681,204 @@ def callback(time, well_idx, data_root, env):
             html.Img(
                 src='data:image/jpeg;base64,{}'.format(
                         base64.b64encode(buf2.getvalue()).decode('utf-8')),
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'inline-block',
+                },
+            ),
+        ]
+
+
+# =============================
+#  Update the label-and-prob.
+# =============================
+@app.callback(
+        Output('label-and-prob', 'children'),
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
+         State('larva-dropdown', 'value'),
+         State('adult-dropdown', 'value')])
+def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
+    # Guard
+    if env is None or adult_data is None:
+        return
+
+    data = []
+
+    if detect == 'v1':
+
+        # Load a npz file storing prob images
+        # and get a prob image
+        larva_probs = np.load(os.path.join(
+                data_root, env, 'inference', 'larva', larva_data, 'probs',
+                '{:03d}.npz'.format(well_idx)))['arr_0'].astype(np.int32)
+        adult_probs = np.load(os.path.join(
+                data_root, env, 'inference', 'adult', adult_data, 'probs',
+                '{:03d}.npz'.format(well_idx)))['arr_0'].astype(np.int32)
+
+        larva_prob_img1 = PIL.Image.fromarray(
+                larva_probs[time] / 100 * 255).convert('L')
+        larva_prob_img2 = PIL.Image.fromarray(
+                larva_probs[time+1] / 100 * 255).convert('L')
+        adult_prob_img1 = PIL.Image.fromarray(
+                adult_probs[time] / 100 * 255).convert('L')
+        adult_prob_img2 = PIL.Image.fromarray(
+                adult_probs[time+1] / 100 * 255).convert('L')
+
+        larva_label_img1 = PIL.Image.fromarray(
+                ((larva_probs[time] > THETA) * 255).astype(np.uint8)).convert('L')
+        larva_label_img2 = PIL.Image.fromarray(
+                ((larva_probs[time+1] > THETA) * 255).astype(np.uint8)).convert('L')
+        adult_label_img1 = PIL.Image.fromarray(
+                ((adult_probs[time] > THETA) * 255).astype(np.uint8)).convert('L')
+        adult_label_img2 = PIL.Image.fromarray(
+                ((adult_probs[time+1] > THETA) * 255).astype(np.uint8)).convert('L')
+
+        # Buffer the well image as byte stream
+        larva_prob_buf1 = io.BytesIO()
+        larva_prob_buf2 = io.BytesIO()
+        larva_label_buf1 = io.BytesIO()
+        larva_label_buf2 = io.BytesIO()
+        larva_prob_img1.save(larva_prob_buf1, format='JPEG')
+        larva_prob_img2.save(larva_prob_buf2, format='JPEG')
+        larva_label_img1.save(larva_label_buf1, format='JPEG')
+        larva_label_img2.save(larva_label_buf2, format='JPEG')
+
+        adult_prob_buf1 = io.BytesIO()
+        adult_prob_buf2 = io.BytesIO()
+        adult_label_buf1 = io.BytesIO()
+        adult_label_buf2 = io.BytesIO()
+        adult_prob_img1.save(adult_prob_buf1, format='JPEG')
+        adult_prob_img2.save(adult_prob_buf2, format='JPEG')
+        adult_label_img1.save(adult_label_buf1, format='JPEG')
+        adult_label_img2.save(adult_label_buf2, format='JPEG')
+
+        data = data + [
+                html.Div('Larva'),
+                html.Img(
+                    src='data:image/jpeg;base64,{}'.format(
+                            base64.b64encode(
+                                larva_label_buf1.getvalue()).decode('utf-8')),
+                    style={
+                        'background': '#555555',
+                        'height': '80px',
+                        'width': '80px',
+                        'padding': '5px',
+                        'display': 'inline-block',
+                    },
+                ),
+                html.Img(
+                    src='data:image/jpeg;base64,{}'.format(
+                            base64.b64encode(
+                                larva_label_buf2.getvalue()).decode('utf-8')),
+                    style={
+                        'background': '#555555',
+                        'height': '80px',
+                        'width': '80px',
+                        'padding': '5px',
+                        'display': 'inline-block',
+                    },
+                ),
+                html.Img(
+                    src='data:image/jpeg;base64,{}'.format(
+                            base64.b64encode(
+                                larva_prob_buf1.getvalue()).decode('utf-8')),
+                    style={
+                        'background': '#555555',
+                        'height': '80px',
+                        'width': '80px',
+                        'padding': '5px',
+                        'display': 'inline-block',
+                    },
+                ),
+                html.Img(
+                    src='data:image/jpeg;base64,{}'.format(
+                            base64.b64encode(
+                                larva_prob_buf2.getvalue()).decode('utf-8')),
+                    style={
+                        'background': '#555555',
+                        'height': '80px',
+                        'width': '80px',
+                        'padding': '5px',
+                        'display': 'inline-block',
+                    },
+                ),
+            ]
+
+    # Load a npz file storing prob images
+    # and get a prob image
+    adult_probs = np.load(os.path.join(
+            data_root, env, 'inference', 'adult', adult_data, 'probs',
+            '{:03d}.npz'.format(well_idx)))['arr_0'].astype(np.int32)
+
+    adult_prob_img1 = PIL.Image.fromarray(
+            adult_probs[time] / 100 * 255).convert('L')
+    adult_prob_img2 = PIL.Image.fromarray(
+            adult_probs[time+1] / 100 * 255).convert('L')
+
+    adult_label_img1 = PIL.Image.fromarray(
+            ((adult_probs[time] > THETA) * 255).astype(np.uint8)).convert('L')
+    adult_label_img2 = PIL.Image.fromarray(
+            ((adult_probs[time+1] > THETA) * 255).astype(np.uint8)).convert('L')
+
+    # Buffer the well image as byte stream
+    adult_prob_buf1 = io.BytesIO()
+    adult_prob_buf2 = io.BytesIO()
+    adult_label_buf1 = io.BytesIO()
+    adult_label_buf2 = io.BytesIO()
+    adult_prob_img1.save(adult_prob_buf1, format='JPEG')
+    adult_prob_img2.save(adult_prob_buf2, format='JPEG')
+    adult_label_img1.save(adult_label_buf1, format='JPEG')
+    adult_label_img2.save(adult_label_buf2, format='JPEG')
+
+    return data + [
+            html.Div('Adult'),
+            html.Img(
+                src='data:image/jpeg;base64,{}'.format(
+                        base64.b64encode(
+                            adult_label_buf1.getvalue()).decode('utf-8')),
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'inline-block',
+                },
+            ),
+            html.Img(
+                src='data:image/jpeg;base64,{}'.format(
+                        base64.b64encode(
+                            adult_label_buf2.getvalue()).decode('utf-8')),
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'inline-block',
+                },
+            ),
+            html.Img(
+                src='data:image/jpeg;base64,{}'.format(
+                        base64.b64encode(
+                            adult_prob_buf1.getvalue()).decode('utf-8')),
+                style={
+                    'background': '#555555',
+                    'height': '80px',
+                    'width': '80px',
+                    'padding': '5px',
+                    'display': 'inline-block',
+                },
+            ),
+            html.Img(
+                src='data:image/jpeg;base64,{}'.format(
+                        base64.b64encode(
+                            adult_prob_buf2.getvalue()).decode('utf-8')),
                 style={
                     'background': '#555555',
                     'height': '80px',
