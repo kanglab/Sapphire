@@ -997,12 +997,17 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     if len(weight) != 0:
 
         larva_diffs = larva_diffs *  \
-                10 * np.arange(len(larva_diffs.T)) / len(larva_diffs.T)
+                10 * (np.arange(len(larva_diffs.T)) / len(larva_diffs.T))[::-1]
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
 
-    auto_evals = (larva_diffs > threshold).argmax(axis=1)
+    # Scan the signal from the right hand side.
+    auto_evals = (larva_diffs.shape[1]
+            - (np.fliplr(larva_diffs) > threshold).argmax(axis=1))
+
+    # If the signal was not more than the threshold.
+    auto_evals[auto_evals == larva_diffs.shape[1]] = 0
 
     if os.path.exists(
             os.path.join(data_root, env, 'original', 'pupariation.csv')):
@@ -1148,8 +1153,11 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
 
     # Apply weight to the signals
-    if len(weight) != 0:
+    if len(weight) != 0 and detect == 'v1':
+        adult_diffs = adult_diffs *  \
+                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
 
+    elif len(weight) != 0 and detect == 'v2':
         adult_diffs = adult_diffs *  \
                 10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
 
