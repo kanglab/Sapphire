@@ -972,11 +972,12 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     # Guard
     if env is None:
         return {'data': []}
-
+    if larva is None:
+        return {'data': []}
     if len(figure['data']) == 0:
         x, y = 0, 0
     else:
-        x, y = time, figure['data'][3]['y'][time]
+        x, y = time, figure['data'][0]['y'][time]
 
     larva_data = []
     manual_data = []
@@ -1114,11 +1115,12 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     # Guard
     if env is None:
         return {'data': []}
-
+    if adult is None:
+        return {'data': []}
     if len(figure['data']) == 0:
         x, y = 0, 0
     else:
-        x, y = time, figure['data'][3]['y'][time]
+        x, y = time, figure['data'][0]['y'][time]
 
     adult_data = []
     manual_data = []
