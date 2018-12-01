@@ -988,6 +988,17 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
             data_root, env, 'inference',
             'larva', larva, 'signals.npy')).T
 
+    # Smooth the signals
+    if len(checks) != 0:
+
+        larva_diffs = my_filter(larva_diffs, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if len(weight) != 0:
+
+        larva_diffs = larva_diffs *  \
+                10 * np.arange(len(larva_diffs.T)) / len(larva_diffs.T)
+
     # Compute thresholds
     threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
 
@@ -1130,6 +1141,17 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference',
             'adult', adult, 'signals.npy')).T
+
+    # Smooth the signals
+    if len(checks) != 0:
+
+        adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if len(weight) != 0:
+
+        adult_diffs = adult_diffs *  \
+                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
