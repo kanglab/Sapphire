@@ -85,8 +85,13 @@ app.layout = html.Div([
                     html.Br(),
                     html.Div([
                         dcc.Dropdown(
-                            id='result-dropdown',
-                            placeholder='Select a result dir...',
+                            id='larva-dropdown',
+                            placeholder='Select a larva data...',
+                            clearable=False,
+                        ),
+                        dcc.Dropdown(
+                            id='adult-dropdown',
+                            placeholder='Select a adult data...',
                             clearable=False,
                         ),
                         ],
@@ -238,18 +243,6 @@ app.layout = html.Div([
                 html.Div([
                     'Data root :',
                     html.Div(DATA_ROOT, id='data-root'),
-                    html.Br(),
-                    'Imaging environment :',
-                    html.Div(id='current-env'),
-                    html.Br(),
-                    'File name :',
-                    html.Div(id='current-csv'),
-                    html.Br(),
-                    'Current morpho :',
-                    html.Div(id='current-morpho'),
-                    html.Br(),
-                    'Current result :',
-                    html.Div(id='current-result'),
                     ],
                     style={
                         'display': 'none',
@@ -441,6 +434,73 @@ def callback(env, data_root):
         return
 
 
+# ======================================================
+#  Initialize larva-dropdown.
+# ======================================================
+@app.callback(
+        Output('larva-dropdown', 'disabled'),
+        [Input('detect-target', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(detect, data_root, env):
+    if env is None:
+        return
+
+    if detect == 'v1':
+
+        return False
+
+    elif detect == 'v2':
+
+        return True
+
+
+# ======================================================
+#  Initialize larva-dropdown.
+# ======================================================
+@app.callback(
+        Output('larva-dropdown', 'options'),
+        [Input('detect-target', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(detect, data_root, env):
+    if env is None:
+        return []
+
+    if detect == 'v1':
+
+        results = [os.path.basename(i)
+                for i in sorted(glob.glob(os.path.join(
+                    data_root, env, 'inference', 'larva', '*')))
+                if os.path.isdir(i)]
+
+        return [{'label': i, 'value': i} for i in results]
+
+    elif detect == 'v2':
+
+        return []
+
+
+# ======================================================
+#  Initialize adult-dropdown.
+# ======================================================
+@app.callback(
+        Output('adult-dropdown', 'options'),
+        [Input('detect-target', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(detect, data_root, env):
+    if env is None:
+        return []
+
+    results = [os.path.basename(i)
+            for i in sorted(glob.glob(os.path.join(
+                data_root, env, 'inference', 'adult', '*')))
+            if os.path.isdir(i)]
+
+    return [{'label': i, 'value': i} for i in results]
+
+
 # =====================================================
 #  Initialize the maximum value of the well-selector.
 # =====================================================
@@ -496,9 +556,10 @@ def callback(env, data_root):
         Output('well-slider', 'value'),
         [Input('env-dropdown', 'value'),
          Input('summary-graph', 'clickData'),
-         Input('current-result', 'children')],
+         Input('larva-dropdown', 'value'),
+         Input('adult-dropdown', 'value')],
         [State('well-slider', 'value')])
-def callback(_, click_data, result, well_idx):
+def callback(_, click_data, larva_data, adult_data, well_idx):
     if click_data is None or result is None:
         return well_idx
 
@@ -554,10 +615,11 @@ def callback(env, data_root):
 @app.callback(
         Output('time-slider', 'value'),
         [Input('env-dropdown', 'value'),
-         Input('current-result', 'children'),
+         Input('larva-dropdown', 'value'),
+         Input('adult-dropdown', 'value'),
          Input('summary-graph', 'clickData')],
         [State('time-slider', 'value')])
-def callback(_, result, click_data, time):
+def callback(_, larva_data, adult_data, click_data, time):
     if click_data is None or result is None:
         return time
 
