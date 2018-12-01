@@ -290,7 +290,7 @@ app.layout = html.Div([
             ),
             html.Div([
                 dcc.Graph(
-                    id='summary-graph',
+                    id='larva-summary',
                     style={
                         'display': 'inline-block',
                         'height': '400px',
@@ -306,7 +306,7 @@ app.layout = html.Div([
                     },
                 ),
                 dcc.Graph(
-                    id='summary-graph2',
+                    id='adult-summary',
                     style={
                         'display': 'inline-block',
                         'height': '400px',
@@ -562,13 +562,13 @@ def callback(env, data_root):
 # =======================================================
 #  Initialize the current value of the well-slider
 #  when selecting a dataset
-#  or when clicking a data point in the summary-graph
+#  or when clicking a data point in the larva-summary
 #  or when selecting a result directory to draw graphs.
 # =======================================================
 @app.callback(
         Output('well-slider', 'value'),
         [Input('env-dropdown', 'value'),
-         Input('summary-graph', 'clickData'),
+         Input('larva-summary', 'clickData'),
          Input('larva-dropdown', 'value'),
          Input('adult-dropdown', 'value')],
         [State('well-slider', 'value')])
@@ -623,14 +623,14 @@ def callback(env, data_root):
 # ======================================================
 #  Initialize the current value of the time-slider
 #  when selecting a dataset
-#  or when clicking a data point in the summary-graph.
+#  or when clicking a data point in the larva-summary.
 # ======================================================
 @app.callback(
         Output('time-slider', 'value'),
         [Input('env-dropdown', 'value'),
          Input('larva-dropdown', 'value'),
          Input('adult-dropdown', 'value'),
-         Input('summary-graph', 'clickData')],
+         Input('larva-summary', 'clickData')],
         [State('time-slider', 'value')])
 def callback(_, larva_data, adult_data, click_data, time):
     if click_data is None:
@@ -1256,6 +1256,340 @@ def callback(detect):
 
     else:
         return {}
+
+
+# ==========================================
+#  Update the figure in the larva-summary.
+# ==========================================
+@app.callback(
+        Output('larva-summary', 'figure'),
+        [Input('threshold-slider1', 'value'),
+         Input('well-selector', 'value'),
+         Input('weight-check', 'values'),
+         Input('filter-check', 'values'),
+         Input('gaussian-size', 'value'),
+         Input('gaussian-sigma', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
+         State('larva-dropdown', 'value'),
+         State('adult-dropdown', 'value')])
+def callback(coef, well_idx, weight,
+        checks, size, sigma, data_root, env, detect, larva, adult):
+    # Guard
+    if env is None:
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')):
+        return {'data': []}
+
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    
+    # Load a blacklist
+    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
+
+        blacklist = np.loadtxt(
+                os.path.join(data_root, env, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 1
+
+    else:
+        blacklist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])
+                ).flatten() == 1
+
+    # Make a whitelist
+    whitelist = np.logical_not(blacklist)
+
+    # Load the data
+    larva_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+    manual_evals = np.loadtxt(
+            os.path.join(data_root, env, 'original', 'pupariation.csv'),
+            dtype=np.uint16, delimiter=',').flatten()
+
+    # Smooth the signals
+    if len(checks) != 0:
+        larva_diffs = my_filter(larva_diffs, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if len(weight) != 0:
+
+        larva_diffs = larva_diffs *  \
+                10 * (np.arange(len(larva_diffs.T)) / len(larva_diffs.T))[::-1]
+
+    # Compute thresholds
+    threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+
+    # Compute event times from signals
+    # Scan the signal from the right hand side.
+    auto_evals = (larva_diffs.shape[1]
+            - (np.fliplr(larva_diffs) > threshold).argmax(axis=1))
+    # If the signal was not more than the threshold.
+    auto_evals[auto_evals == larva_diffs.shape[1]] = 0
+
+    # Calculate how many frames auto-evaluation is far from manual's one
+    errors = auto_evals[whitelist] - manual_evals[whitelist]
+
+    # Calculate the root mean square
+    rms = np.sqrt((errors**2).sum() / len(errors))
+
+    return {
+            'data': [
+                {
+                    'x': [
+                        round(0.05 * len(larva_diffs[0, :])),
+                        len(larva_diffs[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(larva_diffs[0, :]) -  \
+                        round(0.05 * len(larva_diffs[0, :]))
+                    ],
+                    'mode': 'lines',
+                    'fill': None,
+                    'line': {'width': .1, 'color': '#43d86b'},
+                    'name': 'Lower bound',
+                },
+                {
+                    'x': [
+                        -round(0.05 * len(larva_diffs[0, :])),
+                        len(larva_diffs[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(larva_diffs[0, :]) +  \
+                        round(0.05 * len(larva_diffs[0, :]))
+                    ],
+                    'mode': 'lines',
+                    'fill': 'tonexty',
+                    'line': {'width': .1, 'color': '#43d86b'},
+                    'name': 'Upper bound',
+                },
+                {
+                    'x': [0, len(larva_diffs[0, :])],
+                    'y': [0, len(larva_diffs[0, :])],
+                    'mode': 'lines',
+                    'line': {'width': .5, 'color': '#000000'},
+                    'name': 'Auto = Manual',
+                },
+                {
+                    'x': list(auto_evals[blacklist]),
+                    'y': list(manual_evals[blacklist]),
+                    'text': [str(i) for i in np.where(blacklist)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#000000'},
+                    'name': 'Well in Blacklist',
+                },
+                {
+                    'x': list(auto_evals[whitelist]),
+                    'y': list(manual_evals[whitelist]),
+                    'text': [str(i) for i in np.where(whitelist)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#1f77b4'},
+                    'name': 'Well in Whitelist',
+                },
+                {
+                    'x': [auto_evals[well_idx]],
+                    'y': [manual_evals[well_idx]],
+                    'text': str(well_idx),
+                    'mode': 'markers',
+                    'marker': {'size': 10, 'color': '#ff0000'},
+                    'name': 'Selected well',
+                },
+            ],
+            'layout': {
+                'title': 'RMS: {:.1f}'.format(rms),
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'Auto',
+                    'tickfont': {'size': 15},
+                },
+                'yaxis': {
+                    'title': 'Manual',
+                    'tickfont': {'size': 15},
+                },
+                'showlegend': False,
+                'hovermode': 'closest',
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=50, pad=0),
+            },
+        }
+
+
+# ==========================================
+#  Update the figure in the adult-summary.
+# ==========================================
+@app.callback(
+        Output('adult-summary', 'figure'),
+        [Input('threshold-slider1', 'value'),
+         Input('well-selector', 'value'),
+         Input('weight-check', 'values'),
+         Input('filter-check', 'values'),
+         Input('gaussian-size', 'value'),
+         Input('gaussian-sigma', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
+         State('adult-dropdown', 'value')])
+def callback(coef, well_idx, weight,
+        checks, size, sigma, data_root, env, detect, adult):
+    # Guard
+    if env is None:
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+        return {'data': []}
+
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    
+    # Load a blacklist
+    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
+
+        blacklist = np.loadtxt(
+                os.path.join(data_root, env, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 1
+
+    else:
+        blacklist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])
+                ).flatten() == 1
+
+    # Make a whitelist
+    whitelist = np.logical_not(blacklist)
+
+    # Load a manual evaluation of event timing
+    if detect == 'v1':
+        manual_evals = np.loadtxt(
+                os.path.join(data_root, env, 'original', 'eclosion.csv'),
+                dtype=np.uint16, delimiter=',').flatten()
+
+    elif detect == 'v2':
+        manual_evals = np.loadtxt(
+                os.path.join(data_root, env, 'original', 'death.csv'),
+                dtype=np.uint16, delimiter=',').flatten()
+
+    # Load the data
+    adult_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
+
+    # Smooth the signals
+    if len(checks) != 0:
+        adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if len(weight) != 0 and detect == 'v1':
+        adult_diffs = adult_diffs *  \
+                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
+
+    elif len(weight) != 0 and detect == 'v2':
+        adult_diffs = adult_diffs *  \
+                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
+
+    # Compute thresholds
+    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+
+    # Evaluate event timing
+    if detect == 'v1':
+        auto_evals = (adult_diffs > threshold).argmax(axis=1)
+
+    elif detect == 'v2':
+        # Compute event times from signals
+        # Scan the signal from the right hand side.
+        auto_evals = (adult_diffs.shape[1]
+                - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
+
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == adult_diffs.shape[1]] = 0
+
+    # Calculate how many frames auto-evaluation is far from manual's one
+    errors = auto_evals[whitelist] - manual_evals[whitelist]
+
+    # Calculate the root mean square
+    rms = np.sqrt((errors**2).sum() / len(errors))
+
+    return {
+            'data': [
+                {
+                    'x': [
+                        round(0.05 * len(adult_diffs[0, :])),
+                        len(adult_diffs[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(adult_diffs[0, :]) -  \
+                        round(0.05 * len(adult_diffs[0, :]))
+                    ],
+                    'mode': 'lines',
+                    'fill': None,
+                    'line': {'width': .1, 'color': '#43d86b'},
+                    'name': 'Lower bound',
+                },
+                {
+                    'x': [
+                        -round(0.05 * len(adult_diffs[0, :])),
+                        len(adult_diffs[0, :])
+                    ],
+                    'y': [
+                        0,
+                        len(adult_diffs[0, :]) +  \
+                        round(0.05 * len(adult_diffs[0, :]))
+                    ],
+                    'mode': 'lines',
+                    'fill': 'tonexty',
+                    'line': {'width': .1, 'color': '#43d86b'},
+                    'name': 'Upper bound',
+                },
+                {
+                    'x': [0, len(adult_diffs[0, :])],
+                    'y': [0, len(adult_diffs[0, :])],
+                    'mode': 'lines',
+                    'line': {'width': .5, 'color': '#000000'},
+                    'name': 'Auto = Manual',
+                },
+                {
+                    'x': list(auto_evals[blacklist]),
+                    'y': list(manual_evals[blacklist]),
+                    'text': [str(i) for i in np.where(blacklist)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#000000'},
+                    'name': 'Well in Blacklist',
+                },
+                {
+                    'x': list(auto_evals[whitelist]),
+                    'y': list(manual_evals[whitelist]),
+                    'text': [str(i) for i in np.where(whitelist)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#1f77b4'},
+                    'name': 'Well in Whitelist',
+                },
+                {
+                    'x': [auto_evals[well_idx]],
+                    'y': [manual_evals[well_idx]],
+                    'text': str(well_idx),
+                    'mode': 'markers',
+                    'marker': {'size': 10, 'color': '#ff0000'},
+                    'name': 'Selected well',
+                },
+            ],
+            'layout': {
+                'title': 'RMS: {:.1f}'.format(rms),
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'Auto',
+                    'tickfont': {'size': 15},
+                },
+                'yaxis': {
+                    'title': 'Manual',
+                    'tickfont': {'size': 15},
+                },
+                'showlegend': False,
+                'hovermode': 'closest',
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=50, pad=0),
+            },
+        }
 
 
 if __name__ == '__main__':
