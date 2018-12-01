@@ -922,5 +922,41 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
         ]
 
 
+# ===========================
+#  Update the current-well.
+# ===========================
+@app.callback(
+        Output('current-well', 'src'),
+        [Input('time-selector', 'value'),
+         Input('well-selector', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(time, well_idx, data_root, env):
+    # Guard
+    if env is None:
+        return ''
+
+    # Load the mask
+    mask = np.load(os.path.join(data_root, env, 'mask.npy'))
+
+    # Load an original image
+    orgimg_paths = sorted(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg')))
+    org_img = np.array(
+            PIL.Image.open(orgimg_paths[time]).convert('RGB'), dtype=np.uint8)
+
+    r, c = np.where(mask == well_idx)
+    org_img[r.min():r.max(), c.min():c.max(), [0, ]] = 255
+    org_img[r.min():r.max(), c.min():c.max(), [1, 2]] = 0
+    org_img = PIL.Image.fromarray(org_img).convert('RGB')
+
+    # Buffer the well image as byte stream
+    buf = io.BytesIO()
+    org_img.save(buf, format='JPEG')
+
+    return 'data:image/jpeg;base64,{}'.format(
+            base64.b64encode(buf.getvalue()).decode('utf-8'))
+
+
 if __name__ == '__main__':
     app.run_server(debug=True)
