@@ -293,7 +293,7 @@ app.layout = html.Div([
                     id='larva-summary',
                     style={
                         'display': 'inline-block',
-                        'height': '400px',
+                        'height': '300px',
                         'width': '25%',
                     },
                 ),
@@ -301,7 +301,7 @@ app.layout = html.Div([
                     id='error-hist',
                     style={
                         'display': 'inline-block',
-                        'height': '400px',
+                        'height': '300px',
                         'width': '25%',
                     },
                 ),
@@ -309,7 +309,7 @@ app.layout = html.Div([
                     id='adult-summary',
                     style={
                         'display': 'inline-block',
-                        'height': '400px',
+                        'height': '300px',
                         'width': '25%',
                     },
                 ),
@@ -317,7 +317,7 @@ app.layout = html.Div([
                     id='error-hist2',
                     style={
                         'display': 'inline-block',
-                        'height': '400px',
+                        'height': '300px',
                         'width': '25%',
                     },
                 ),
@@ -990,12 +990,10 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
 
     # Smooth the signals
     if len(checks) != 0:
-
         larva_diffs = my_filter(larva_diffs, size=size, sigma=sigma)
 
     # Apply weight to the signals
     if len(weight) != 0:
-
         larva_diffs = larva_diffs *  \
                 10 * (np.arange(len(larva_diffs.T)) / len(larva_diffs.T))[::-1]
 
@@ -1149,7 +1147,6 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
 
     # Smooth the signals
     if len(checks) != 0:
-
         adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
 
     # Apply weight to the signals
@@ -1297,7 +1294,6 @@ def callback(coef, well_idx, weight,
     
     # Load a blacklist
     if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-
         blacklist = np.loadtxt(
                 os.path.join(data_root, env, 'blacklist.csv'),
                 dtype=np.uint16, delimiter=',').flatten() == 1
@@ -1323,7 +1319,6 @@ def callback(coef, well_idx, weight,
 
     # Apply weight to the signals
     if len(weight) != 0:
-
         larva_diffs = larva_diffs *  \
                 10 * (np.arange(len(larva_diffs.T)) / len(larva_diffs.T))[::-1]
 
@@ -1425,6 +1420,27 @@ def callback(coef, well_idx, weight,
         }
 
 
+@app.callback(
+        Output('larva-summary', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'v1':
+        return {
+                'display': 'inline-block',
+                'height': '300px',
+                'width': '25%',
+            }
+
+    elif detect == 'v2':
+        return {
+                'display': 'none',
+            }
+
+    else:
+        return {}
+
+
 # ==========================================
 #  Update the figure in the adult-summary.
 # ==========================================
@@ -1455,7 +1471,6 @@ def callback(coef, well_idx, weight,
     
     # Load a blacklist
     if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-
         blacklist = np.loadtxt(
                 os.path.join(data_root, env, 'blacklist.csv'),
                 dtype=np.uint16, delimiter=',').flatten() == 1
@@ -1598,6 +1613,29 @@ def callback(coef, well_idx, weight,
                 'margin': go.layout.Margin(l=50, r=0, b=50, t=50, pad=0),
             },
         }
+
+
+@app.callback(
+        Output('adult-summary', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'v1':
+        return {
+                'display': 'inline-block',
+                'height': '300px',
+                'width': '25%',
+            }
+
+    elif detect == 'v2':
+        return {
+                'display': 'inline-block',
+                'height': '300px',
+                'width': '25%',
+            }
+
+    else:
+        return {}
 
 
 if __name__ == '__main__':
