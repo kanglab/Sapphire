@@ -1077,6 +1077,21 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         }
 
 
+@app.callback(
+        Output('larva-signal', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'v1':
+        return {'height': '300px'}
+
+    elif detect == 'v2':
+        return {'display': 'none'}
+
+    else:
+        return {}
+
+
 # =========================================
 #  Update the figure in the adult-signal.
 # =========================================
@@ -1202,6 +1217,21 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                 'margin': go.layout.Margin(l=50, r=70, b=50, t=50, pad=0),
             },
         }
+
+
+@app.callback(
+        Output('adult-signal', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'v1':
+        return {'height': '300px'}
+
+    elif detect == 'v2':
+        return {'height': '400px'}
+
+    else:
+        return {}
 
 
 if __name__ == '__main__':
