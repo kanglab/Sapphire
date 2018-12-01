@@ -958,5 +958,210 @@ def callback(time, well_idx, data_root, env):
             base64.b64encode(buf.getvalue()).decode('utf-8'))
 
 
+# =========================================
+#  Update the figure in the signal-graph.
+# =========================================
+@app.callback(
+        Output('signal-graph', 'figure'),
+        [Input('well-selector', 'value'),
+         Input('threshold-slider1', 'value'),
+         Input('time-selector', 'value'),
+         Input('weight-check', 'values'),
+         Input('filter-check', 'values'),
+         Input('gaussian-size', 'value'),
+         Input('gaussian-sigma', 'value')],
+        [State('signal-graph', 'figure'),
+         State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
+         State('larva-dropdown', 'value'),
+         State('adult-dropdown', 'value')])
+def callback(well_idx, coef, time, weight, checks, size, sigma,
+        figure, data_root, env, detect, larva, adult):
+    # Guard
+    if env is None:
+        return {'data': []}
+
+    if len(figure['data']) == 0:
+        x, y = 0, 0
+    else:
+        x, y = time, figure['data'][3]['y'][time]
+
+    larva_data = []
+    adult_data = []
+    manual_data = []
+    common_data = []
+
+    if detect == 'v1':
+
+        # Load the data
+        larva_diffs = np.load(os.path.join(
+                data_root, env, 'inference',
+                'larva', larva, 'signals.npy')).T
+
+        # Compute thresholds
+        threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+
+        # Scan the signal from the right hand side.
+        auto_evals = (larva_diffs.shape[1]
+                - (np.fliplr(larva_diffs) > threshold).argmax(axis=1))
+
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == larva_diffs.shape[1]] = 0
+
+        if os.path.exists(
+                os.path.join(data_root, env, 'original', 'pupariation.csv')):
+
+            manual_evals = np.loadtxt(
+                    os.path.join(
+                        data_root, env, 'original', 'pupariation.csv'),
+                    dtype=np.uint16, delimiter=',').flatten()
+
+            manual_data = [
+                {
+                    # Manual evaluation time (vertical line)
+                    'x': [manual_evals[well_idx], manual_evals[well_idx]],
+                    'y': [0, larva_diffs.max()],
+                    'mode': 'lines',
+                    'name': 'Manual',
+                    'line': {'width': 5, 'color': '#4169e1'},
+                    'yaxis': 'y2',
+                },
+            ]
+
+        larva_data = manual_data + [
+                {
+                    # Signal
+                    'x': list(range(len(larva_diffs[0, :]))),
+                    'y': list(larva_diffs[well_idx]),
+                    'mode': 'lines',
+                    'marker': {'color': '#4169e1'},
+                    'name': 'Signal',
+                    'opacity':1.0,
+                    'yaxis': 'y2',
+                },
+                {
+                    # Threshold (horizontal line)
+                    'x': [0, len(larva_diffs[0, :])],
+                    'y': [threshold[well_idx, 0], threshold[well_idx, 0]],
+                    'mode': 'lines',
+                    'name': 'Threshold',
+                    'line': {'width': 2, 'color': '#4169e1'},
+                    'yaxis': 'y2',
+                },
+                {
+                    # Auto evaluation time (vertical line)
+                    'x': [auto_evals[well_idx], auto_evals[well_idx]],
+                    'y': [0, larva_diffs.max()],            
+                    'name': 'Auto',
+                    'mode':'lines',
+                    'line': {'width': 4, 'color': '#4169e1', 'dash': 'dot'},
+                    'yaxis': 'y2',
+                },
+            ]
+
+    # Load the data
+    adult_diffs = np.load(os.path.join(
+            data_root, env, 'inference',
+            'adult', adult, 'signals.npy')).T
+
+    # Compute thresholds
+    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+
+    auto_evals = (adult_diffs > threshold).argmax(axis=1)
+
+    if os.path.exists(
+            os.path.join(data_root, env, 'original', 'pupariation.csv')):
+
+        manual_evals = np.loadtxt(
+                os.path.join(
+                    data_root, env, 'original', 'pupariation.csv'),
+                dtype=np.uint16, delimiter=',').flatten()
+
+        manual_data = [
+            {
+                # Manual evaluation time (vertical line)
+                'x': [manual_evals[well_idx], manual_evals[well_idx]],
+                'y': [0, adult_diffs.max()],
+                'mode': 'lines',
+                'name': 'Manual',
+                'line': {'width': 5, 'color': '#20b2aa'},
+            },
+        ]
+
+    adult_data = manual_data + [
+            {
+                # Signal
+                'x': list(range(len(adult_diffs[0, :]))),
+                'y': list(adult_diffs[well_idx]),
+                'mode': 'lines',
+                'marker': {'color': '#20b2aa'},
+                'name': 'Signal',
+                'opacity':1.0,
+            },
+            {
+                # Threshold (horizontal line)
+                'x': [0, len(adult_diffs[0, :])],
+                'y': [threshold[well_idx, 0], threshold[well_idx, 0]],
+                'mode': 'lines',
+                'name': 'Threshold',
+                'line': {'width': 2, 'color': '#20b2aa'},
+            },
+            {
+                # Auto evaluation time (vertical line)
+                'x': [auto_evals[well_idx], auto_evals[well_idx]],
+                'y': [0, adult_diffs.max()],            
+                'name': 'Auto',
+                'mode':'lines',
+                'line': {'width': 4, 'color': '#20b2aa', 'dash': 'dot'},
+            },
+        ]
+
+    common_data = [
+            {
+                # Selected data point
+                'x': [x],
+                'y': [y],
+                'mode': 'markers',
+                'marker': {'size': 10, 'color': '#ff0000'},
+                'name': '',
+                'yaxis': 'y2',
+            },
+        ]
+
+    data = larva_data + adult_data + common_data
+
+    return {
+            'data': data,
+            'layout': {
+                    'title':
+                        'Threshold: {:.1f}'.format(threshold[well_idx, 0]) +  \
+                         '={:.1f}'.format(larva_diffs.mean()) +  \
+                         '{:+.1f}'.format(coef) +  \
+                         '*{:.1f}'.format(larva_diffs.std()),
+                    'font': {'size': 15},
+                    'xaxis': {
+                        'title': 'Time step',
+                        'tickfont': {'size': 15},
+                    },
+                    'yaxis2': {
+                        'title': 'Diff. of ROI',
+                        'tickfont': {'size': 15},
+                        'overlaying':'y',
+                        'range':[0, larva_diffs.max()],
+                    },
+                    'yaxis1': {
+                        'title':'Diff. of Luminance',
+                        'tickfont': {'size': 15},
+                        'side':'right',
+                        'range':[0, adult_diffs.max()],
+                    },
+                'showlegend': False,
+                'hovermode': 'closest',
+                'margin': go.layout.Margin(l=50, r=70, b=50, t=50, pad=0),
+            },
+        }
+
+
 if __name__ == '__main__':
     app.run_server(debug=True)
