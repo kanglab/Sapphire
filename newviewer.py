@@ -639,6 +639,36 @@ def callback(_, larva_data, adult_data, click_data, time):
     return click_data['points'][0]['x']
 
 
+# =====================================================
+#  Toggle validation or invalidation of gaussian-size
+# =====================================================
+@app.callback(
+        Output('gaussian-size', 'disabled'),
+        [Input('filter-check', 'values')])
+def callback(checks):
+
+    if len(checks) == 0:
+        return True
+
+    else:
+        return False
+
+
+# ======================================================
+#  Toggle validation or invalidation of gaussian-sigma
+# ======================================================
+@app.callback(
+        Output('gaussian-sigma', 'disabled'),
+        [Input('filter-check', 'values')])
+def callback(checks):
+
+    if len(checks) == 0:
+        return True
+
+    else:
+        return False
+
+
 # ========================
 #  Update the org-image.
 # ========================
