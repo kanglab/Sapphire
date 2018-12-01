@@ -298,7 +298,7 @@ app.layout = html.Div([
                     },
                 ),
                 dcc.Graph(
-                    id='error-hist',
+                    id='larva-hist',
                     style={
                         'display': 'inline-block',
                         'height': '300px',
@@ -314,7 +314,7 @@ app.layout = html.Div([
                     },
                 ),
                 dcc.Graph(
-                    id='error-hist2',
+                    id='adult-hist',
                     style={
                         'display': 'inline-block',
                         'height': '300px',
@@ -1403,7 +1403,15 @@ def callback(coef, well_idx, weight,
                 },
             ],
             'layout': {
-                'title': 'RMS: {:.1f}'.format(rms),
+                'annotations': [
+                    {
+                        'x': 0.01 * len(larva_diffs.T),
+                        'y': 1.0 * len(larva_diffs.T),
+                        'text': 'RMS: {:.1f}'.format(rms),
+                        'showarrow': False,
+                        'xanchor': 'left',
+                    },
+                ],
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'Auto',
@@ -1415,7 +1423,7 @@ def callback(coef, well_idx, weight,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=50, r=0, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=0, pad=0),
             },
         }
 
@@ -1598,7 +1606,15 @@ def callback(coef, well_idx, weight,
                 },
             ],
             'layout': {
-                'title': 'RMS: {:.1f}'.format(rms),
+                'annotations': [
+                    {
+                        'x': 0.01 * len(adult_diffs.T),
+                        'y': 1.0 * len(adult_diffs.T),
+                        'text': 'RMS: {:.1f}'.format(rms),
+                        'showarrow': False,
+                        'xanchor': 'left',
+                    },
+                ],
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'Auto',
@@ -1610,13 +1626,385 @@ def callback(coef, well_idx, weight,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=50, r=0, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=0, pad=0),
             },
         }
 
 
 @app.callback(
         Output('adult-summary', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'v1':
+        return {
+                'display': 'inline-block',
+                'height': '300px',
+                'width': '25%',
+            }
+
+    elif detect == 'v2':
+        return {
+                'display': 'inline-block',
+                'height': '300px',
+                'width': '25%',
+            }
+
+    else:
+        return {}
+
+
+# =======================================
+#  Update the figure in the larva-hist.
+# =======================================
+@app.callback(
+        Output('larva-hist', 'figure'),
+        [Input('threshold-slider1', 'value'),
+         Input('well-selector', 'value'),
+         Input('weight-check', 'values'),
+         Input('filter-check', 'values'),
+         Input('gaussian-size', 'value'),
+         Input('gaussian-sigma', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
+         State('larva-dropdown', 'value')])
+def callback(coef, well_idx, weight,
+        checks, size, sigma, data_root, env, detect, larva):
+    # Guard
+    if env is None:
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')):
+        return {'data': []}
+
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    
+    # Load a blacklist
+    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
+        whitelist = np.loadtxt(
+                os.path.join(data_root, env, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 0
+
+    else:
+        whitelist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])
+                ).flatten() == 0
+
+    # Load the data
+    larva_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+    manual_evals = np.loadtxt(
+            os.path.join(data_root, env, 'original', 'pupariation.csv'),
+            dtype=np.uint16, delimiter=',').flatten()
+
+    # Smooth the signals
+    if len(checks) != 0:
+        larva_diffs = my_filter(larva_diffs, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if len(weight) != 0:
+        larva_diffs = larva_diffs *  \
+                10 * (np.arange(len(larva_diffs.T)) / len(larva_diffs.T))[::-1]
+
+    # Compute thresholds
+    threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+
+    # Compute event times from signals
+    # Scan the signal from the right hand side.
+    auto_evals = (larva_diffs.shape[1]
+            - (np.fliplr(larva_diffs) > threshold).argmax(axis=1))
+    # If the signal was not more than the threshold.
+    auto_evals[auto_evals == larva_diffs.shape[1]] = 0
+
+    # Calculate how many frames auto-evaluation is far from manual's one
+    errors = auto_evals - manual_evals
+    errors = errors[whitelist]
+    ns, bins = np.histogram(errors, 1000)
+
+    # Calculate the number of inconsistent wells
+    tmp = np.bincount(abs(errors))
+    n_consist_5percent = tmp[:round(0.05 * larva_diffs.shape[1])].sum()
+    n_consist_1percent = tmp[:round(0.01 * larva_diffs.shape[1])].sum()
+    n_consist_10frames = tmp[:11].sum()
+
+    return {
+            'data': [
+                {
+                    'x': [
+                        -round(0.05 * larva_diffs.shape[1]),
+                        round(0.05 * larva_diffs.shape[1])
+                    ],
+                    'y': [ns.max(), ns.max()],
+                    'mode': 'lines',
+                    'fill': 'tozeroy',
+                    'line': {'width': 0, 'color': '#43d86b'},
+                },
+                {
+                    'x': list(bins[1:]),
+                    'y': list(ns),
+                    'mode': 'markers',
+                    'type': 'bar',
+                    'marker': {'size': 5, 'color': '#1f77b4'},
+                },
+            ],
+            'layout': {
+                'annotations': [
+                    {
+                        'x': 0.9 * larva_diffs.shape[1],
+                        'y': 1.0 * ns.max(),
+                        'text': '#frames: consistency',
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * larva_diffs.shape[1],
+                        'y': 0.9 * ns.max(),
+                        'text': '{} (5%): {:.1f}% ({}/{})'.format(
+                            round(0.05 * larva_diffs.shape[1]),
+                            100 * n_consist_5percent / whitelist.sum(),
+                            n_consist_5percent,
+                            whitelist.sum()),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * larva_diffs.shape[1],
+                        'y': 0.8 * ns.max(),
+                        'text': '{} (1%): {:.1f}% ({}/{})'.format(
+                            round(0.01 * larva_diffs.shape[1]),
+                            100 * n_consist_1percent / whitelist.sum(),
+                            n_consist_1percent,
+                            whitelist.sum()),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * larva_diffs.shape[1],
+                        'y': 0.7 * ns.max(),
+                        'text': '10: {:.1f}% ({}/{})'.format(
+                            100 * n_consist_10frames / whitelist.sum(),
+                            n_consist_10frames,
+                            whitelist.sum()),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                ],
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'auto - manual',
+                    'range': [-len(larva_diffs.T), len(larva_diffs.T)],
+                    'tickfont': {'size': 15},
+                },
+                'yaxis': {
+                    'title': 'Count',
+                    'tickfont': {'size': 15},
+                },
+                'showlegend': False,
+                'hovermode': 'closest',
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=0, pad=0),
+            },
+        }
+
+
+@app.callback(
+        Output('larva-hist', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'v1':
+        return {
+                'display': 'inline-block',
+                'height': '300px',
+                'width': '25%',
+            }
+
+    elif detect == 'v2':
+        return {
+                'display': 'none',
+            }
+
+    else:
+        return {}
+
+
+# =======================================
+#  Update the figure in the adult-hist.
+# =======================================
+@app.callback(
+        Output('adult-hist', 'figure'),
+        [Input('threshold-slider1', 'value'),
+         Input('well-selector', 'value'),
+         Input('weight-check', 'values'),
+         Input('filter-check', 'values'),
+         Input('gaussian-size', 'value'),
+         Input('gaussian-sigma', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
+         State('adult-dropdown', 'value')])
+def callback(coef, well_idx, weight,
+        checks, size, sigma, data_root, env, detect, adult):
+    # Guard
+    if env is None:
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+        return {'data': []}
+
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    
+    # Load a blacklist
+    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
+        whitelist = np.loadtxt(
+                os.path.join(data_root, env, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 0
+
+    else:
+        whitelist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])
+                ).flatten() == 0
+
+    # Load a manual evaluation of event timing
+    if detect == 'v1':
+        manual_evals = np.loadtxt(
+                os.path.join(data_root, env, 'original', 'eclosion.csv'),
+                dtype=np.uint16, delimiter=',').flatten()
+
+    elif detect == 'v2':
+        manual_evals = np.loadtxt(
+                os.path.join(data_root, env, 'original', 'death.csv'),
+                dtype=np.uint16, delimiter=',').flatten()
+
+    # Load the data
+    adult_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
+
+    # Smooth the signals
+    if len(checks) != 0:
+        adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if len(weight) != 0 and detect == 'v1':
+        adult_diffs = adult_diffs *  \
+                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
+
+    elif len(weight) != 0 and detect == 'v2':
+        adult_diffs = adult_diffs *  \
+                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
+
+    # Compute thresholds
+    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+
+    # Evaluate event timing
+    if detect == 'v1':
+        auto_evals = (adult_diffs > threshold).argmax(axis=1)
+
+    elif detect == 'v2':
+        # Compute event times from signals
+        # Scan the signal from the right hand side.
+        auto_evals = (adult_diffs.shape[1]
+                - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
+
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == adult_diffs.shape[1]] = 0
+
+    # Calculate how many frames auto-evaluation is far from manual's one
+    errors = auto_evals - manual_evals
+    errors = errors[whitelist]
+    ns, bins = np.histogram(errors, 1000)
+
+    # Calculate the number of inconsistent wells
+    tmp = np.bincount(abs(errors))
+    n_consist_5percent = tmp[:round(0.05 * adult_diffs.shape[1])].sum()
+    n_consist_1percent = tmp[:round(0.01 * adult_diffs.shape[1])].sum()
+    n_consist_10frames = tmp[:11].sum()
+
+    return {
+            'data': [
+                {
+                    'x': [
+                        -round(0.05 * adult_diffs.shape[1]),
+                        round(0.05 * adult_diffs.shape[1])
+                    ],
+                    'y': [ns.max(), ns.max()],
+                    'mode': 'lines',
+                    'fill': 'tozeroy',
+                    'line': {'width': 0, 'color': '#43d86b'},
+                },
+                {
+                    'x': list(bins[1:]),
+                    'y': list(ns),
+                    'mode': 'markers',
+                    'type': 'bar',
+                    'marker': {'size': 5, 'color': '#1f77b4'},
+                },
+            ],
+            'layout': {
+                'annotations': [
+                    {
+                        'x': 0.9 * adult_diffs.shape[1],
+                        'y': 1.0 * ns.max(),
+                        'text': '#frames: consistency',
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * adult_diffs.shape[1],
+                        'y': 0.9 * ns.max(),
+                        'text': '{} (5%): {:.1f}% ({}/{})'.format(
+                            round(0.05 * adult_diffs.shape[1]),
+                            100 * n_consist_5percent / whitelist.sum(),
+                            n_consist_5percent,
+                            whitelist.sum()),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * adult_diffs.shape[1],
+                        'y': 0.8 * ns.max(),
+                        'text': '{} (1%): {:.1f}% ({}/{})'.format(
+                            round(0.01 * adult_diffs.shape[1]),
+                            100 * n_consist_1percent / whitelist.sum(),
+                            n_consist_1percent,
+                            whitelist.sum()),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                    {
+                        'x': 0.9 * adult_diffs.shape[1],
+                        'y': 0.7 * ns.max(),
+                        'text': '10: {:.1f}% ({}/{})'.format(
+                            100 * n_consist_10frames / whitelist.sum(),
+                            n_consist_10frames,
+                            whitelist.sum()),
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },
+                ],
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'auto - manual',
+                    'range': [-len(adult_diffs.T), len(adult_diffs.T)],
+                    'tickfont': {'size': 15},
+                },
+                'yaxis': {
+                    'title': 'Count',
+                    'tickfont': {'size': 15},
+                },
+                'showlegend': False,
+                'hovermode': 'closest',
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=0, pad=0),
+            },
+        }
+
+
+@app.callback(
+        Output('adult-hist', 'style'),
         [Input('detect-target', 'value')])
 def callback(detect):
 
