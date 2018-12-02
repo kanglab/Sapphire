@@ -326,39 +326,48 @@ app.layout = html.Div([
         ]),
         dcc.Tab(id='tab-2', label='Tab 2', value='tab-2', children=[
             html.Div(
-                [
-                    html.H3('Timestamp'),
-                    html.Div(id='timestamp-table'),
-                ],
+                id='timestamp-table',
                 style={
                     'display': 'inline-block',
                     'vertical-align': 'top',
-                    'margin': '20px',
+                    'margin': '10px',
                     'width': '200px',
                 },
             ),
             html.Div(
-                [
-                    html.H3('Manual Detection'),
-                    html.Div(id='manual-table'),
-                ],
+                id='larva-man-table',
                 style={
                     'display': 'inline-block',
                     'vertical-align': 'top',
-                    'margin': '20px',
-                    'width': '500px',
+                    'margin': '10px',
+                    'width': '400px',
                 },
             ),
             html.Div(
-                [
-                    html.H3('Auto Detection'),
-                    html.Div(id='auto-table'),
-                ],
+                id='larva-auto-table',
                 style={
                     'display': 'inline-block',
                     'vertical-align': 'top',
-                    'margin': '20px',
-                    'width': '500px',
+                    'margin': '10px',
+                    'width': '400px',
+                },
+            ),
+            html.Div(
+                id='adult-man-table',
+                style={
+                    'display': 'inline-block',
+                    'vertical-align': 'top',
+                    'margin': '10px',
+                    'width': '400px',
+                },
+            ),
+            html.Div(
+                id='adult-auto-table',
+                style={
+                    'display': 'inline-block',
+                    'vertical-align': 'top',
+                    'margin': '10px',
+                    'width': '400px',
                 },
             ),
         ], style={'width': '1200px'}),
@@ -995,10 +1004,9 @@ def callback(time, well_idx, data_root, env):
         [State('larva-signal', 'figure'),
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('detect-target', 'value'),
          State('larva-dropdown', 'value')])
 def callback(well_idx, coef, time, weight, checks, size, sigma,
-        figure, data_root, env, detect, larva):
+        figure, data_root, env, larva):
     # Guard
     if env is None:
         return {'data': []}
@@ -2054,6 +2062,470 @@ def callback(detect):
 
     else:
         return {}
+
+
+# =======================================================================
+#  Store image file names and their timestamps as json in a hidden div.
+# =======================================================================
+@app.callback(
+        Output('hidden-timestamp', 'children'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    # Guard
+    if env is None:
+        return
+
+    # Load an original image
+    orgimg_paths = sorted(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg')))
+
+    return pd.DataFrame([[
+            os.path.basename(orgimg_path),
+            datetime.datetime.fromtimestamp(os.stat(orgimg_path).st_mtime)  \
+                    .strftime('%Y-%m-%d %H:%M:%S')]
+            for orgimg_path in orgimg_paths],
+            columns=['frame', 'create time']).T.to_json()
+
+
+# ======================================================
+#  Timestamp table
+# ======================================================
+@app.callback(
+        Output('timestamp-table', 'children'),
+        [Input('tabs', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('hidden-timestamp', 'children')])
+def callback(tab_name, data_root, env, timestamps):
+    # Guard
+    if data_root is None:
+        return 'Not available.'
+    if env is None:
+        return 'Not available.'
+    if timestamps is None:
+        return 'Now loading...'
+    if tab_name != 'tab-2':
+        return
+
+    data = list(json.loads(timestamps).values())
+    time_to_csv = 'data:text/csv;charset=utf-8,'  \
+            + pd.DataFrame(data).to_csv(index=False)
+
+    return [
+            html.H4('Timestamp'),
+            dash_table.DataTable(
+                columns=[
+                    {'id': 'frame', 'name': 'frame'},
+                    {'id': 'create time', 'name': 'create time'}],
+                data=data,
+                n_fixed_rows=1,
+                style_table={'width': '100%'},
+                pagination_mode=False,
+            ),
+            html.Br(),
+            html.A(
+                'Download Time Stamp',
+                id='download-link',
+                download='Timestamp({}).csv'.format(env[0:20]),
+                href=time_to_csv,
+                target="_blank"
+            ),
+        ]
+
+
+# ======================================================
+#  Manual table for larva
+# ======================================================
+@app.callback(
+        Output('larva-man-table', 'children'),
+        [Input('tabs', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
+         State('larva-dropdown', 'value')])
+def callback(tab_name, data_root, env, detect, larva):
+    # Guard
+    if data_root is None:
+        return 'Not available.'
+    if env is None:
+        return 'Not available.'
+    if detect is None:
+        return 'Not available.'
+    if tab_name != 'tab-2':
+        return
+
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+
+    if detect == 'pupa-and-eclo':
+        # Load a manual data
+        larva_evals = np.loadtxt(
+                os.path.join(data_root, env, 'original', 'pupariation.csv'),
+                dtype=np.uint16, delimiter=',').flatten()
+
+        larva_evals = larva_evals.reshape(
+                params['n-rows']*params['n-plates'], params['n-clms'])
+
+        larva_csv = \
+                  'data:text/csv;charset=utf-8,'  \
+                + 'Dataset,{}\n'.format(env)  \
+                + 'Morphology,larva\n'  \
+                + 'Inference Data,{}\n'.format(larva)  \
+                + 'Event Timing\n'  \
+                + pd.DataFrame(larva_evals).to_csv(
+                        index=False, encoding='utf-8', header=False)
+
+        larva_style = [{
+                'if': {
+                    'column_id': '{}'.format(clm),
+                    'filter': 'num({2}) > {0} && {1} >= num({3})'.format(
+                            clm, clm, int(t)+100, int(t)),
+                },
+                'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
+                'color': 'black',
+            }
+            for clm in range(params['n-clms'])
+            for t, c in zip(
+                range(0, larva_evals.max(), 100),
+                np.linspace(0, 255, len(range(0, larva_evals.max(), 100))))
+        ]
+
+        return [
+                html.H4('Event Timings of Larva (manual)'),
+                dash_table.DataTable(
+                    columns=[{'name': str(clm), 'id': str(clm)}
+                            for clm in range(params['n-clms'])],
+                    data=pd.DataFrame(larva_evals).to_dict('rows'),
+                    style_data_conditional=larva_style,
+                    style_table={'width': '100%'}
+                ),
+                html.Br(),
+                html.A(
+                    'Download Manual Data',
+                    id='download-link',
+                    download='Manual_Detection.csv',
+                    href=larva_csv,
+                    target='_blank',
+                ),
+            ]
+
+    if detect == 'death':
+        return []
+
+
+# ======================================================
+#  Auto table for larva
+# ======================================================
+@app.callback(
+        Output('larva-auto-table', 'children'),
+        [Input('tabs', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
+         State('larva-dropdown', 'value'),
+         State('threshold-slider1', 'value'),
+         State('weight-check', 'values'),
+         State('gaussian-size', 'value'),
+         State('gaussian-sigma', 'value'),
+         State('filter-check', 'values')])
+def callback(tab_name, data_root, env,
+        detect, larva, coef, weight, size, sigma, checks):
+    # Guard
+    if data_root is None:
+        return 'Not available.'
+    if env is None:
+        return 'Not available.'
+    if tab_name != 'tab-2':
+        return
+    if detect is None or larva is None:
+        return 'Not available.'
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')):
+        return 'Not available.'
+
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+
+    if detect == 'pupa-and-eclo':
+        larva_diffs = np.load(os.path.join(
+                data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+
+        # Smooth the signals
+        if len(checks) != 0:
+            larva_diffs = my_filter(larva_diffs, size=size, sigma=sigma)
+
+        # Apply weight to the signals
+        larva_diffs = larva_diffs *  \
+                10 * (np.arange(len(larva_diffs.T)) / len(larva_diffs.T))[::-1]
+
+        # Compute thresholds
+        threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+
+        # Compute event times from signals
+        # Scan the signal from the right hand side.
+        auto_evals = (larva_diffs.shape[1]
+                - (np.fliplr(larva_diffs) > threshold).argmax(axis=1))
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == larva_diffs.shape[1]] = 0
+
+        auto_evals = auto_evals.reshape(
+                params['n-rows']*params['n-plates'], params['n-clms'])
+
+        auto_to_csv =  \
+                  'data:text/csv;charset=utf-8,'  \
+                + 'Dataset,{}\n'.format(env)  \
+                + 'Morphology,larva\n'  \
+                + 'Inference Data,{}\n'.format(larva)  \
+                + 'Threshold Value,{}\n'.format(threshold[0, 0])  \
+                + '(Threshold Value = mean + coef * std)\n'  \
+                + 'Mean (mean),{}\n'.format(larva_diffs.mean())  \
+                + 'Coefficient (coef),{}\n'.format(coef)  \
+                + 'Standard Deviation (std),{}\n'.format(larva_diffs.std())  \
+                + 'Smoothing Window Size,{}\n'.format(size)  \
+                + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma)  \
+                + pd.DataFrame(auto_evals).to_csv(
+                        index=False, encoding='utf-8', header=False),
+
+        style = [{
+                'if': {
+                    'column_id': '{}'.format(clm),
+                    'filter': 'num({2}) > {0} && {1} >= num({3})'.format(
+                            clm, clm, int(t)+100, int(t)),
+                },
+                'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
+                'color': 'black',
+            }
+            for clm in range(params['n-clms'])
+            for t, c in zip(
+                range(0, auto_evals.max(), 100),
+                np.linspace(0, 255, len(range(0, auto_evals.max(), 100))))
+        ]
+
+        return [
+                html.H4('Event Timings of Larva (auto)'),
+                dash_table.DataTable(
+                    columns=[{'name': str(clm), 'id': str(clm)}
+                            for clm in range(params['n-clms'])],
+                    data=pd.DataFrame(auto_evals).to_dict('rows'),
+                    style_data_conditional=style,
+                    style_table={'width': '100%'}
+                ),
+                html.Br(),
+                html.A(
+                    'Download Auto Data',
+                    id='download-link',
+                    download='Auto_Detection.csv',
+                    href=auto_to_csv,
+                    target='_blank',
+                ),
+            ]
+
+    elif detect == 'death':
+        return []
+
+
+# ======================================================
+#  Manual table for adult
+# ======================================================
+@app.callback(
+        Output('adult-man-table', 'children'),
+        [Input('tabs', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
+         State('adult-dropdown', 'value')])
+def callback(tab_name, data_root, env, detect, adult):
+    # Guard
+    if data_root is None:
+        return 'Not available.'
+    if env is None:
+        return 'Not available.'
+    if detect is None:
+        return 'Not available.'
+    if tab_name != 'tab-2':
+        return
+
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+
+    if detect == 'pupa-and-eclo':
+        # Load a manual data
+        adult_evals = np.loadtxt(
+                os.path.join(data_root, env, 'original', 'eclosion.csv'),
+                dtype=np.uint16, delimiter=',').flatten()
+
+    elif detect == 'death':
+        # Load a manual data
+        adult_evals = np.loadtxt(
+                os.path.join(data_root, env, 'original', 'death.csv'),
+                dtype=np.uint16, delimiter=',').flatten()
+
+    adult_evals = adult_evals.reshape(
+            params['n-rows']*params['n-plates'], params['n-clms'])
+
+    adult_csv = \
+              'data:text/csv;charset=utf-8,'  \
+            + 'Dataset,{}\n'.format(env)  \
+            + 'Morphology,adult\n'  \
+            + 'Inference Data,{}\n'.format(adult)  \
+            + 'Event Timing\n'  \
+            + pd.DataFrame(adult_evals).to_csv(
+                    index=False, encoding='utf-8', header=False)
+
+    adult_style = [{
+            'if': {
+                'column_id': '{}'.format(clm),
+                'filter': 'num({2}) > {0} && {1} >= num({3})'.format(
+                        clm, clm, int(t)+100, int(t)),
+            },
+            'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
+            'color': 'black',
+        }
+        for clm in range(params['n-clms'])
+        for t, c in zip(
+            range(0, adult_evals.max(), 100),
+            np.linspace(0, 255, len(range(0, adult_evals.max(), 100))))
+    ]
+
+    return [
+            html.H4('Event Timings of Adult (manual)'),
+            dash_table.DataTable(
+                columns=[{'name': str(clm), 'id': str(clm)}
+                        for clm in range(params['n-clms'])],
+                data=pd.DataFrame(adult_evals).to_dict('rows'),
+                style_data_conditional=adult_style,
+                style_table={'width': '100%'}
+            ),
+            html.Br(),
+            html.A(
+                'Download Manual Data',
+                id='download-link',
+                download='Manual_Detection.csv',
+                href=adult_csv,
+                target='_blank',
+            ),
+        ]
+
+
+# ======================================================
+#  Auto table for adult
+# ======================================================
+@app.callback(
+        Output('adult-auto-table', 'children'),
+        [Input('tabs', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
+         State('adult-dropdown', 'value'),
+         State('threshold-slider1', 'value'),
+         State('weight-check', 'values'),
+         State('gaussian-size', 'value'),
+         State('gaussian-sigma', 'value'),
+         State('filter-check', 'values')])
+def callback(tab_name, data_root, env,
+        detect, adult, coef, weight, size, sigma, checks):
+    # Guard
+    if data_root is None:
+        return 'Not available.'
+    if env is None:
+        return 'Not available.'
+    if tab_name != 'tab-2':
+        return
+    if detect is None or adult is None:
+        return 'Not available.'
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+        return 'Not available.'
+
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+
+    adult_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
+
+    # Smooth the signals
+    if len(checks) != 0:
+        adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if detect == 'pupa-and-eclo':
+        adult_diffs = adult_diffs *  \
+                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
+
+    elif detect == 'death':
+        adult_diffs = adult_diffs *  \
+                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
+
+    # Compute thresholds
+    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+
+    if detect == 'pupa-and-eclo':
+        # Compute event times from signals
+        auto_evals = (adult_diffs > threshold).argmax(axis=1)
+
+    elif detect == 'death':
+        # Scan the signal from the right hand side.
+        auto_evals = (adult_diffs.shape[1]
+                - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == adult_diffs.shape[1]] = 0
+
+    auto_evals = auto_evals.reshape(
+            params['n-rows']*params['n-plates'], params['n-clms'])
+
+    auto_to_csv =  \
+              'data:text/csv;charset=utf-8,'  \
+            + 'Dataset,{}\n'.format(env)  \
+            + 'Morphology,adult\n'  \
+            + 'Inference Data,{}\n'.format(adult)  \
+            + 'Threshold Value,{}\n'.format(threshold[0, 0])  \
+            + '(Threshold Value = mean + coef * std)\n'  \
+            + 'Mean (mean),{}\n'.format(adult_diffs.mean())  \
+            + 'Coefficient (coef),{}\n'.format(coef)  \
+            + 'Standard Deviation (std),{}\n'.format(adult_diffs.std())  \
+            + 'Smoothing Window Size,{}\n'.format(size)  \
+            + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma)  \
+            + pd.DataFrame(auto_evals).to_csv(
+                    index=False, encoding='utf-8', header=False),
+
+    style = [{
+            'if': {
+                'column_id': '{}'.format(clm),
+                'filter': 'num({2}) > {0} && {1} >= num({3})'.format(
+                        clm, clm, int(t)+100, int(t)),
+            },
+            'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
+            'color': 'black',
+        }
+        for clm in range(params['n-clms'])
+        for t, c in zip(
+            range(0, auto_evals.max(), 100),
+            np.linspace(0, 255, len(range(0, auto_evals.max(), 100))))
+    ]
+
+    return [
+            html.H4('Event Timings of Adult (auto)'),
+            dash_table.DataTable(
+                columns=[{'name': str(clm), 'id': str(clm)}
+                        for clm in range(params['n-clms'])],
+                data=pd.DataFrame(auto_evals).to_dict('rows'),
+                style_data_conditional=style,
+                style_table={'width': '100%'}
+            ),
+            html.Br(),
+            html.A(
+                'Download Auto Data',
+                id='download-link',
+                download='Auto_Detection.csv',
+                href=auto_to_csv,
+                target='_blank',
+            ),
+        ]
 
 
 if __name__ == '__main__':
