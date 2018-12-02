@@ -2129,13 +2129,12 @@ def callback(tab_name, data_root, env, timestamps):
                 style_table={'width': '100%'},
                 pagination_mode=False,
             ),
-            html.Br(),
             html.A(
-                'Download Time Stamp',
+                'Download the Data',
                 id='download-link',
                 download='Timestamp({}).csv'.format(env[0:20]),
                 href=time_to_csv,
-                target="_blank"
+                target='_blank',
             ),
         ]
 
@@ -2207,9 +2206,8 @@ def callback(tab_name, data_root, env, detect, larva):
                     style_data_conditional=larva_style,
                     style_table={'width': '100%'}
                 ),
-                html.Br(),
                 html.A(
-                    'Download Manual Data',
+                    'Download the Data',
                     id='download-link',
                     download='Manual_Detection.csv',
                     href=larva_csv,
@@ -2343,9 +2341,8 @@ def callback(tab_name, data_root, env,
                     style_data_conditional=style,
                     style_table={'width': '100%'}
                 ),
-                html.Br(),
                 html.A(
-                    'Download Auto Data',
+                    'Download the Data',
                     id='download-link',
                     download='Auto_Detection.csv',
                     href=auto_to_csv,
@@ -2452,9 +2449,8 @@ def callback(tab_name, data_root, env, detect, adult):
                 style_data_conditional=adult_style,
                 style_table={'width': '100%'}
             ),
-            html.Br(),
             html.A(
-                'Download Manual Data',
+                'Download the Data',
                 id='download-link',
                 download='Manual_Detection.csv',
                 href=adult_csv,
@@ -2596,9 +2592,8 @@ def callback(tab_name, data_root, env,
                 style_data_conditional=style,
                 style_table={'width': '100%'}
             ),
-            html.Br(),
             html.A(
-                'Download Auto Data',
+                'Download the Data',
                 id='download-link',
                 download='Auto_Detection.csv',
                 href=auto_to_csv,
