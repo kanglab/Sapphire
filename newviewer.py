@@ -1023,8 +1023,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
 
     # Load the data
     larva_diffs = np.load(os.path.join(
-            data_root, env, 'inference',
-            'larva', larva, 'signals.npy')).T
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
 
     # Smooth the signals
     if len(checks) != 0:
@@ -1180,8 +1179,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
 
     # Load the data
     adult_diffs = np.load(os.path.join(
-            data_root, env, 'inference',
-            'adult', adult, 'signals.npy')).T
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
 
     # Smooth the signals
     if len(checks) != 0:
@@ -1321,6 +1319,8 @@ def callback(coef, well_idx, weight,
         checks, size, sigma, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
+        return {'data': []}
+    if larva is None:
         return {'data': []}
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')):
@@ -1506,6 +1506,8 @@ def callback(coef, well_idx, weight,
         checks, size, sigma, data_root, env, detect, adult):
     # Guard
     if env is None:
+        return {'data': []}
+    if adult is None:
         return {'data': []}
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')):
@@ -1712,6 +1714,8 @@ def callback(coef, well_idx, weight,
     # Guard
     if env is None:
         return {'data': []}
+    if larva is None:
+        return {'data': []}
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')):
         return {'data': []}
@@ -1887,6 +1891,8 @@ def callback(coef, well_idx, weight,
         checks, size, sigma, data_root, env, detect, adult):
     # Guard
     if env is None:
+        return {'data': []}
+    if adult is None:
         return {'data': []}
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')):
@@ -2261,7 +2267,9 @@ def callback(tab_name, data_root, env,
         return 'Not available.'
     if tab_name != 'tab-2':
         return
-    if detect is None or larva is None:
+    if detect is None:
+        return 'Not available.'
+    if larva is None:
         return 'Not available.'
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')):
@@ -2504,7 +2512,9 @@ def callback(tab_name, data_root, env,
         return 'Not available.'
     if tab_name != 'tab-2':
         return
-    if detect is None or adult is None:
+    if detect is None:
+        return 'Not available.'
+    if adult is None:
         return 'Not available.'
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')):
