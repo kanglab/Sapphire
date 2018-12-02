@@ -577,15 +577,15 @@ def callback(env, data_root):
 @app.callback(
         Output('well-slider', 'value'),
         [Input('env-dropdown', 'value'),
-         Input('larva-summary', 'clickData'),
+         Input('adult-summary', 'clickData'),
          Input('larva-dropdown', 'value'),
          Input('adult-dropdown', 'value')],
         [State('well-slider', 'value')])
-def callback(_, click_data, larva_data, adult_data, well_idx):
-    if click_data is None:
+def callback(_, adult_summary, larva_data, adult_data, well_idx):
+    if adult_summary is None:
         return well_idx
 
-    return int(click_data['points'][0]['text'])
+    return int(adult_summary['points'][0]['text'])
 
 
 # =====================================================
@@ -639,13 +639,13 @@ def callback(env, data_root):
         [Input('env-dropdown', 'value'),
          Input('larva-dropdown', 'value'),
          Input('adult-dropdown', 'value'),
-         Input('larva-summary', 'clickData')],
+         Input('adult-summary', 'clickData')],
         [State('time-slider', 'value')])
-def callback(_, larva_data, adult_data, click_data, time):
-    if click_data is None:
+def callback(_, larva_data, adult_data, adult_summary, time):
+    if adult_summary is None:
         return time
 
-    return click_data['points'][0]['x']
+    return adult_summary['points'][0]['x']
 
 
 # =====================================================
@@ -784,13 +784,17 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                 adult_probs[time+1] / 100 * 255).convert('L')
 
         larva_label_img1 = PIL.Image.fromarray(
-                ((larva_probs[time] > THETA) * 255).astype(np.uint8)).convert('L')
+                ((larva_probs[time] > THETA) * 255).astype(np.uint8)
+                ).convert('L')
         larva_label_img2 = PIL.Image.fromarray(
-                ((larva_probs[time+1] > THETA) * 255).astype(np.uint8)).convert('L')
+                ((larva_probs[time+1] > THETA) * 255).astype(np.uint8)
+                ).convert('L')
         adult_label_img1 = PIL.Image.fromarray(
-                ((adult_probs[time] > THETA) * 255).astype(np.uint8)).convert('L')
+                ((adult_probs[time] > THETA) * 255).astype(np.uint8)
+                ).convert('L')
         adult_label_img2 = PIL.Image.fromarray(
-                ((adult_probs[time+1] > THETA) * 255).astype(np.uint8)).convert('L')
+                ((adult_probs[time+1] > THETA) * 255).astype(np.uint8)
+                ).convert('L')
 
         # Buffer the well image as byte stream
         larva_prob_buf1 = io.BytesIO()
@@ -879,9 +883,11 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
             adult_probs[time+1] / 100 * 255).convert('L')
 
     adult_label_img1 = PIL.Image.fromarray(
-            ((adult_probs[time] > THETA) * 255).astype(np.uint8)).convert('L')
+            ((adult_probs[time] > THETA) * 255).astype(np.uint8)
+            ).convert('L')
     adult_label_img2 = PIL.Image.fromarray(
-            ((adult_probs[time+1] > THETA) * 255).astype(np.uint8)).convert('L')
+            ((adult_probs[time+1] > THETA) * 255).astype(np.uint8)
+            ).convert('L')
 
     # Buffer the well image as byte stream
     adult_prob_buf1 = io.BytesIO()
