@@ -2215,6 +2215,28 @@ def callback(tab_name, data_root, env, detect, larva):
         return []
 
 
+@app.callback(
+        Output('larva-man-table', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'pupa-and-eclo':
+        return {
+                'display': 'inline-block',
+                'vertical-align': 'top',
+                'margin': '10px',
+                'width': '400px',
+            }
+
+    elif detect == 'death':
+        return {
+                'display': 'none',
+            }
+
+    else:
+        return {}
+
+
 # ======================================================
 #  Auto table for larva
 # ======================================================
@@ -2327,6 +2349,28 @@ def callback(tab_name, data_root, env,
         return []
 
 
+@app.callback(
+        Output('larva-auto-table', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'pupa-and-eclo':
+        return {
+                'display': 'inline-block',
+                'vertical-align': 'top',
+                'margin': '10px',
+                'width': '400px',
+            }
+
+    elif detect == 'death':
+        return {
+                'display': 'none',
+            }
+
+    else:
+        return {}
+
+
 # ======================================================
 #  Manual table for adult
 # ======================================================
@@ -2409,6 +2453,31 @@ def callback(tab_name, data_root, env, detect, adult):
                 target='_blank',
             ),
         ]
+
+
+@app.callback(
+        Output('adult-man-table', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'pupa-and-eclo':
+        return {
+                'display': 'inline-block',
+                'vertical-align': 'top',
+                'margin': '10px',
+                'width': '400px',
+            }
+
+    elif detect == 'death':
+        return {
+                'display': 'inline-block',
+                'vertical-align': 'top',
+                'margin': '10px',
+                'width': '400px',
+            }
+
+    else:
+        return {}
 
 
 # ======================================================
@@ -2526,6 +2595,31 @@ def callback(tab_name, data_root, env,
                 target='_blank',
             ),
         ]
+
+
+@app.callback(
+        Output('adult-auto-table', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'pupa-and-eclo':
+        return {
+                'display': 'inline-block',
+                'vertical-align': 'top',
+                'margin': '10px',
+                'width': '400px',
+            }
+
+    elif detect == 'death':
+        return {
+                'display': 'inline-block',
+                'vertical-align': 'top',
+                'margin': '10px',
+                'width': '400px',
+            }
+
+    else:
+        return {}
 
 
 if __name__ == '__main__':
