@@ -435,23 +435,18 @@ def callback(data_root):
 def callback(env, data_root):
     # Guard
     if env is None:
-        print(1)
         return
     if not os.path.exists(os.path.join(data_root, env, 'config.json')):
-        print(2)
         return
 
     with open(os.path.join(data_root, env, 'config.json')) as f:
         config = json.load(f)
 
     if config['detect'] == 'pupa&eclo':
-        print(3)
         return 'pupa-and-eclo'
     elif config['detect'] == 'death':
-        print(4)
         return 'death'
     else:
-        print(5)
         return
 
 
