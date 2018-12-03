@@ -1215,7 +1215,18 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     # Compute thresholds
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
 
-    auto_evals = (adult_diffs > threshold).argmax(axis=1)
+    # Evaluate event timing
+    if detect == 'pupa-and-eclo':
+        auto_evals = (adult_diffs > threshold).argmax(axis=1)
+
+    elif detect == 'death':
+        # Compute event times from signals
+        # Scan the signal from the right hand side.
+        auto_evals = (adult_diffs.shape[1]
+                - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
+
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == adult_diffs.shape[1]] = 0
 
     if os.path.exists(
             os.path.join(data_root, env, 'original', 'eclosion.csv')):
