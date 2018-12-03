@@ -29,7 +29,11 @@ from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 
 
-DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
+GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#89c3eb',
+                '#84a2d4', '#3e62ad', '#0000ff', '#7f00ff', '#56256e']
+
+
+DATA_ROOT = '/133.24.18.88/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
 
 
@@ -1165,10 +1169,11 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                         'tickfont': {'size': 15},
                         'overlaying':'y',
                         'range':[0, larva_diffs.max()],
+
                     },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=50, r=70, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=70, r=70, b=50, t=50, pad=0),
             },
         }
 
@@ -1334,7 +1339,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                     },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=50, r=70, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=70, r=70, b=50, t=50, pad=0),
             },
         }
 
@@ -1401,6 +1406,19 @@ def callback(coef, well_idx, weight,
     # Make a whitelist
     whitelist = np.logical_not(blacklist)
 
+    # Load a group table
+    if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
+
+        groups = np.loadtxt(
+                os.path.join(data_root, env, 'grouping.csv'),
+                dtype=np.uint16, delimiter=',').flatten()
+
+        group_tables = [groups == i for i in range(groups.max() + 1)]
+
+    else:
+        group_tables = None
+
+
     # Load the data
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
@@ -1432,6 +1450,64 @@ def callback(coef, well_idx, weight,
 
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
+
+    # Create data points
+    if group_tables is None:
+
+        data_list = [
+                {
+                    'x': list(auto_evals[blacklist]),
+                    'y': list(manual_evals[blacklist]),
+                    'text': [str(i) for i in np.where(blacklist)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#000000'},
+                    'name': 'Well in Blacklist',
+                },
+                {
+                    'x': list(auto_evals[whitelist]),
+                    'y': list(manual_evals[whitelist]),
+                    'text': [str(i) for i in np.where(whitelist)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#1f77b4'},
+                    'name': 'Well in Whitelist',
+                },
+            ]
+
+    else:
+
+        data_list = []
+
+        for group_idx, group_table in enumerate(group_tables):
+
+            data_list.append(
+                {
+                    'x': list(
+                        auto_evals[np.logical_and(whitelist, group_table)]),
+                    'y': list(
+                        manual_evals[np.logical_and(whitelist, group_table)]),
+                    'text': [str(i)
+                        for i in np.where(
+                            np.logical_and(whitelist, group_table))[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': GROUP_COLORS[group_idx]},
+                    'name': 'Group{}'.format(group_idx),
+                })
+
+            data_list.append(
+                {
+                    'x': list(
+                        auto_evals[np.logical_and(blacklist, group_table)]),
+                    'y': list(
+                        manual_evals[np.logical_and(blacklist, group_table)]),
+                    'text': [str(i)
+                        for i in np.where(
+                            np.logical_and(blacklist, group_table))[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#000000'},
+                    'name': 'Group{}<br>Blacklist'.format(group_idx),
+                })
+
+
 
     return {
             'data': [
@@ -1472,22 +1548,7 @@ def callback(coef, well_idx, weight,
                     'line': {'width': .5, 'color': '#000000'},
                     'name': 'Auto = Manual',
                 },
-                {
-                    'x': list(auto_evals[blacklist]),
-                    'y': list(manual_evals[blacklist]),
-                    'text': [str(i) for i in np.where(blacklist)[0]],
-                    'mode': 'markers',
-                    'marker': {'size': 4, 'color': '#000000'},
-                    'name': 'Well in Blacklist',
-                },
-                {
-                    'x': list(auto_evals[whitelist]),
-                    'y': list(manual_evals[whitelist]),
-                    'text': [str(i) for i in np.where(whitelist)[0]],
-                    'mode': 'markers',
-                    'marker': {'size': 4, 'color': '#1f77b4'},
-                    'name': 'Well in Whitelist',
-                },
+            ] + data_list + [
                 {
                     'x': [auto_evals[well_idx]],
                     'y': [manual_evals[well_idx]],
@@ -1593,6 +1654,19 @@ def callback(coef, well_idx, weight,
     # Make a whitelist
     whitelist = np.logical_not(blacklist)
 
+    # Load a group table
+    if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
+
+        groups = np.loadtxt(
+                os.path.join(data_root, env, 'grouping.csv'),
+                dtype=np.uint16, delimiter=',').flatten()
+
+        group_tables = [groups == i for i in range(groups.max() + 1)]
+
+    else:
+        group_tables = None
+
+
     # Load a manual evaluation of event timing
     if detect == 'pupa-and-eclo':
         if not os.path.exists(os.path.join(
@@ -1651,6 +1725,63 @@ def callback(coef, well_idx, weight,
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
 
+    # Create data points
+    if group_tables is None:
+
+        data_list = [
+                {
+                    'x': list(auto_evals[blacklist]),
+                    'y': list(manual_evals[blacklist]),
+                    'text': [str(i) for i in np.where(blacklist)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#000000'},
+                    'name': 'Well in Blacklist',
+                },
+                {
+                    'x': list(auto_evals[whitelist]),
+                    'y': list(manual_evals[whitelist]),
+                    'text': [str(i) for i in np.where(whitelist)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#1f77b4'},
+                    'name': 'Well in Whitelist',
+                },
+            ]
+
+    else:
+
+        data_list = []
+
+        for group_idx, group_table in enumerate(group_tables):
+
+            data_list.append(
+                {
+                    'x': list(
+                        auto_evals[np.logical_and(whitelist, group_table)]),
+                    'y': list(
+                        manual_evals[np.logical_and(whitelist, group_table)]),
+                    'text': [str(i)
+                        for i in np.where(
+                            np.logical_and(whitelist, group_table))[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': GROUP_COLORS[group_idx]},
+                    'name': 'Group{}'.format(group_idx),
+                })
+
+            data_list.append(
+                {
+                    'x': list(
+                        auto_evals[np.logical_and(blacklist, group_table)]),
+                    'y': list(
+                        manual_evals[np.logical_and(blacklist, group_table)]),
+                    'text': [str(i)
+                        for i in np.where(
+                            np.logical_and(blacklist, group_table))[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#000000'},
+                    'name': 'Group{}<br>Blacklist'.format(group_idx),
+                })
+
+
     return {
             'data': [
                 {
@@ -1690,22 +1821,7 @@ def callback(coef, well_idx, weight,
                     'line': {'width': .5, 'color': '#000000'},
                     'name': 'Auto = Manual',
                 },
-                {
-                    'x': list(auto_evals[blacklist]),
-                    'y': list(manual_evals[blacklist]),
-                    'text': [str(i) for i in np.where(blacklist)[0]],
-                    'mode': 'markers',
-                    'marker': {'size': 4, 'color': '#000000'},
-                    'name': 'Well in Blacklist',
-                },
-                {
-                    'x': list(auto_evals[whitelist]),
-                    'y': list(manual_evals[whitelist]),
-                    'text': [str(i) for i in np.where(whitelist)[0]],
-                    'mode': 'markers',
-                    'marker': {'size': 4, 'color': '#1f77b4'},
-                    'name': 'Well in Whitelist',
-                },
+            ] + data_list + [
                 {
                     'x': [auto_evals[well_idx]],
                     'y': [manual_evals[well_idx]],
