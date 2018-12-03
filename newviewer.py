@@ -2376,29 +2376,34 @@ def callback(coef, well_idx, weight,
     auto_evals[auto_evals == adult_diffs.shape[1]] = 0
     '''
 
-    trace = go.Box(
-            x=list(auto_evals[whitelist]),
-            name='Group1',
-            boxpoints='all',
-            pointpos=1.8,
-            marker={'size': 2},
+    # Make data to be drawn
+    data = []
+    data.append(
+            go.Box(
+                x=list(auto_evals[whitelist]),
+                name='Group0',
+                boxpoints='all',
+                pointpos=1.8,
+                marker={'size': 2},
+                line={'width': 2},
+            )
         )
 
     return {
-            'data': [trace],
+            'data': data,
             'layout': {
                 'font': {'size': 15},
                 'xaxis': {
-                    'title': 'Event Time',
+                    'title': 'Time Step',
                     'tickfont': {'size': 15},
+                    'range': [0, 1.1 * len(adult_diffs.T)],
                 },
                 'yaxis': {
-                    'title': 'Group',
                     'tickfont': {'size': 15},
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=50, r=0, b=50, t=0, pad=0),
+                'margin': go.layout.Margin(l=70, r=0, b=50, t=0, pad=0),
             },
         }
 
