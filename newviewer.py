@@ -2036,8 +2036,10 @@ def callback(coef, well_idx, weight,
         auto_evals = (adult_diffs.shape[1]
                 - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
 
+        '''
         # If the signal was not more than the threshold.
         auto_evals[auto_evals == adult_diffs.shape[1]] = 0
+        '''
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
@@ -2221,8 +2223,10 @@ def callback(coef, well_idx, weight,
     auto_evals = (adult_diffs.shape[1]
             - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
 
+    '''
     # If the signal was not more than the threshold.
     auto_evals[auto_evals == adult_diffs.shape[1]] = 0
+    '''
 
     # Compute lifespan of all the animals
     lifespan_curve = np.zeros_like(adult_diffs)
