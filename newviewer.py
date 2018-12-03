@@ -278,13 +278,13 @@ app.layout = html.Div([
                     dcc.Graph(
                         id='larva-signal',
                         style={
-                            'height': '300px',
+                            'height': '280px',
                         },
                     ),
                     dcc.Graph(
                         id='adult-signal',
                         style={
-                            'height': '300px',
+                            'height': '280px',
                         },
                     ),
                 ], style={
@@ -297,7 +297,7 @@ app.layout = html.Div([
                     id='larva-summary',
                     style={
                         'display': 'inline-block',
-                        'height': '300px',
+                        'height': '250px',
                         'width': '20%',
                     },
                 ),
@@ -305,7 +305,7 @@ app.layout = html.Div([
                     id='larva-hist',
                     style={
                         'display': 'inline-block',
-                        'height': '300px',
+                        'height': '250px',
                         'width': '20%',
                     },
                 ),
@@ -313,7 +313,7 @@ app.layout = html.Div([
                     id='adult-summary',
                     style={
                         'display': 'inline-block',
-                        'height': '300px',
+                        'height': '250px',
                         'width': '20%',
                     },
                 ),
@@ -321,7 +321,7 @@ app.layout = html.Div([
                     id='adult-hist',
                     style={
                         'display': 'inline-block',
-                        'height': '300px',
+                        'height': '250px',
                         'width': '20%',
                     },
                 ),
@@ -329,7 +329,7 @@ app.layout = html.Div([
                     id='pupa-vs-eclo',
                     style={
                         'display': 'inline-block',
-                        'height': '300px',
+                        'height': '250px',
                         'width': '20%',
                     },
                 ),
@@ -337,7 +337,7 @@ app.layout = html.Div([
                     id='survival-curve',
                     style={
                         'display': 'inline-block',
-                        'height': '300px',
+                        'height': '250px',
                         'width': '20%',
                     },
                 ),
@@ -345,7 +345,7 @@ app.layout = html.Div([
                     id='box-plot',
                     style={
                         'display': 'inline-block',
-                        'height': '300px',
+                        'height': '250px',
                         'width': '20%',
                     },
                 ),
@@ -773,8 +773,8 @@ def callback(time, well_idx, data_root, env):
                         base64.b64encode(buf1.getvalue()).decode('utf-8')),
                 style={
                     'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
+                    'height': '65px',
+                    'width': '65px',
                     'padding': '5px',
                     'display': 'inline-block',
                 },
@@ -784,8 +784,8 @@ def callback(time, well_idx, data_root, env):
                         base64.b64encode(buf2.getvalue()).decode('utf-8')),
                 style={
                     'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
+                    'height': '65px',
+                    'width': '65px',
                     'padding': '5px',
                     'display': 'inline-block',
                 },
@@ -873,8 +873,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 larva_label_buf1.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -885,8 +885,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 larva_label_buf2.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -899,8 +899,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 larva_prob_buf1.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -911,8 +911,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 larva_prob_buf2.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -957,8 +957,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 adult_label_buf1.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -969,8 +969,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 adult_label_buf2.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -983,8 +983,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 adult_prob_buf1.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -995,8 +995,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 adult_prob_buf2.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -1190,7 +1190,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
 def callback(detect):
 
     if detect == 'pupa-and-eclo':
-        return {'height': '300px'}
+        return {'height': '280px'}
 
     elif detect == 'death':
         return {'display': 'none'}
@@ -1356,7 +1356,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
 def callback(detect):
 
     if detect == 'pupa-and-eclo':
-        return {'height': '300px'}
+        return {'height': '280px'}
 
     elif detect == 'death':
         return {'height': '400px'}
@@ -1542,7 +1542,7 @@ def callback(detect):
     if detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '300px',
+                'height': '250px',
                 'width': '20%',
             }
 
@@ -1760,14 +1760,14 @@ def callback(detect):
     if detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '300px',
+                'height': '250px',
                 'width': '20%',
             }
 
     elif detect == 'death':
         return {
                 'display': 'inline-block',
-                'height': '300px',
+                'height': '250px',
                 'width': '20%',
             }
 
@@ -1944,7 +1944,7 @@ def callback(detect):
     if detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '300px',
+                'height': '250px',
                 'width': '20%',
             }
 
@@ -2150,14 +2150,14 @@ def callback(detect):
     if detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '300px',
+                'height': '250px',
                 'width': '20%',
             }
 
     elif detect == 'death':
         return {
                 'display': 'inline-block',
-                'height': '300px',
+                'height': '250px',
                 'width': '20%',
             }
 
@@ -2298,7 +2298,7 @@ def callback(detect):
     if detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '300px',
+                'height': '250px',
                 'width': '20%',
             }
 
@@ -2443,7 +2443,7 @@ def callback(detect):
     elif detect == 'death':
         return {
                 'display': 'inline-block',
-                'height': '300px',
+                'height': '250px',
                 'width': '20%',
             }
 
@@ -2570,7 +2570,7 @@ def callback(detect):
     elif detect == 'death':
         return {
                 'display': 'inline-block',
-                'height': '300px',
+                'height': '250px',
                 'width': '20%',
             }
 
