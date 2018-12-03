@@ -326,7 +326,7 @@ app.layout = html.Div([
                     },
                 ),
                 dcc.Graph(
-                    id='lifespan-curve',
+                    id='survival-curve',
                     style={
                         'display': 'inline-block',
                         'height': '300px',
@@ -2155,10 +2155,10 @@ def callback(detect):
 
 
 # ===========================================
-#  Update the figure in the lifespan-curve.
+#  Update the figure in the survival-curve.
 # ===========================================
 @app.callback(
-        Output('lifespan-curve', 'figure'),
+        Output('survival-curve', 'figure'),
         [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
@@ -2228,36 +2228,43 @@ def callback(coef, well_idx, weight,
     auto_evals[auto_evals == adult_diffs.shape[1]] = 0
     '''
 
-    # Compute lifespan of all the animals
-    lifespan_curve = np.zeros_like(adult_diffs)
+    # Compute survival ratio of all the animals
+    survival_ratio = np.zeros_like(adult_diffs)
 
     for well_idx, event_time in enumerate(auto_evals):
 
-        lifespan_curve[well_idx, :event_time] = 1
+        survival_ratio[well_idx, :event_time] = 1
 
-    lifespan_curve = 100 * lifespan_curve[whitelist].sum(axis=0)  \
-            / len(lifespan_curve[whitelist])
+    survival_ratio = 100 * survival_ratio[whitelist].sum(axis=0)  \
+            / len(survival_ratio[whitelist])
 
     return {
             'data': [
                 {
-                    'x': list(range(len(lifespan_curve))),
-                    'y': list(lifespan_curve),
+                    'x': list(range(len(survival_ratio))),
+                    'y': list(survival_ratio),
                     'mode': 'lines',
                     'fill': 'tozeroy',
                     'line': {'width': 0, 'color': '#43d86b'},
+                },
+                {
+                    'x': [0, len(survival_ratio)],
+                    'y': [100, 100],
+                    'mode': 'lines',
+                    'line': {'width': 1, 'color': '#000000'},
                 },
             ],
             'layout': {
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'Time Step',
-                    'range': [0, len(lifespan_curve)],
+                    'range': [0, len(survival_ratio)],
                     'tickfont': {'size': 15},
                 },
                 'yaxis': {
-                    'title': '%',
+                    'title': 'Survival Ratio [%]',
                     'tickfont': {'size': 15},
+                    'range': [0, 110],
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
@@ -2267,7 +2274,7 @@ def callback(coef, well_idx, weight,
 
 
 @app.callback(
-        Output('lifespan-curve', 'style'),
+        Output('survival-curve', 'style'),
         [Input('detect-target', 'value')])
 def callback(detect):
 
