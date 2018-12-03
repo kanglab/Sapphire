@@ -197,8 +197,10 @@ app.layout = html.Div([
                     style={
                         'display': 'inline-block',
                         'margin': '10px 10px',
+                        'vertical-align': 'top',
                     },
                 ),
+
                 html.Div([
                     dcc.Checklist(
                         id='blacklist-check',
@@ -218,8 +220,8 @@ app.layout = html.Div([
                     ],
                     style={
                         'display': 'inline-block',
-                        'margin-right': '5px',
-                        'margin-left': '5px',
+                        'margin': '10px 5px',
+                        'vertical-align': 'top',
                     },
                 ),
 
@@ -237,6 +239,8 @@ app.layout = html.Div([
                     style={
                         'display': 'inline-block',
                         'margin-left': '5px',
+                        'margin-top': '55px',
+                        'vertical-align': 'top',
                     },
                 ),
 
@@ -370,11 +374,11 @@ app.layout = html.Div([
                     'width': '400px',
                 },
             ),
-        ], style={'width': '1200px'}),
-    ]),
+        ], style={'width': '100%'}),
+    ], style={'width': '100%'}),
     html.Div(id='hidden-timestamp', style={'display': 'none'}),
 
-], style={'width': '1600px',},)
+], style={'width': '1400px',},)
 
 
 # =========================================
