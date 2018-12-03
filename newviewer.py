@@ -1161,11 +1161,20 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     return {
             'data': larva_data + manual_data + common_data,
             'layout': {
-                    'title':
-                        'Threshold: {:.1f}'.format(threshold[well_idx, 0]) +  \
-                         '={:.1f}'.format(larva_diffs.mean()) +  \
-                         '{:+.1f}'.format(coef) +  \
-                         '*{:.1f}'.format(larva_diffs.std()),
+                    'annotations': [
+                        {
+                            'x': 0.01 * len(larva_diffs.T),
+                            'y': 1.0 * larva_diffs.max(),
+                            'text':
+                                'Threshold: {:.1f}'.format(
+                                        threshold[well_idx, 0]) +  \
+                                 '={:.1f}'.format(larva_diffs.mean()) +  \
+                                 '{:+.1f}'.format(coef) +  \
+                                 '*{:.1f}'.format(larva_diffs.std()),
+                            'showarrow': False,
+                            'xanchor': 'left',
+                        },
+                    ],
                     'font': {'size': 15},
                     'xaxis': {
                         'title': 'Time Step',
@@ -1179,7 +1188,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                     },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=50, r=70, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=50, r=70, b=50, t=10, pad=0),
             },
         }
 
@@ -1327,11 +1336,20 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     return {
             'data': adult_data + manual_data + common_data,
             'layout': {
-                    'title':
-                        'Threshold: {:.1f}'.format(threshold[well_idx, 0]) +  \
-                         '={:.1f}'.format(adult_diffs.mean()) +  \
-                         '{:+.1f}'.format(coef) +  \
-                         '*{:.1f}'.format(adult_diffs.std()),
+                    'annotations': [
+                        {
+                            'x': 0.01 * len(adult_diffs.T),
+                            'y': 1.0 * adult_diffs.max(),
+                            'text':
+                                'Threshold: {:.1f}'.format(
+                                        threshold[well_idx, 0]) +  \
+                                 '={:.1f}'.format(adult_diffs.mean()) +  \
+                                 '{:+.1f}'.format(coef) +  \
+                                 '*{:.1f}'.format(adult_diffs.std()),
+                            'showarrow': False,
+                            'xanchor': 'left',
+                        },
+                    ],
                     'font': {'size': 15},
                     'xaxis': {
                         'title': 'Time Step',
@@ -1345,7 +1363,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                     },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=50, r=70, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=50, r=70, b=50, t=10, pad=0),
             },
         }
 
