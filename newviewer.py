@@ -298,7 +298,7 @@ app.layout = html.Div([
                     style={
                         'display': 'inline-block',
                         'height': '300px',
-                        'width': '25%',
+                        'width': '20%',
                     },
                 ),
                 dcc.Graph(
@@ -306,7 +306,7 @@ app.layout = html.Div([
                     style={
                         'display': 'inline-block',
                         'height': '300px',
-                        'width': '25%',
+                        'width': '20%',
                     },
                 ),
                 dcc.Graph(
@@ -314,7 +314,7 @@ app.layout = html.Div([
                     style={
                         'display': 'inline-block',
                         'height': '300px',
-                        'width': '25%',
+                        'width': '20%',
                     },
                 ),
                 dcc.Graph(
@@ -322,7 +322,15 @@ app.layout = html.Div([
                     style={
                         'display': 'inline-block',
                         'height': '300px',
-                        'width': '25%',
+                        'width': '20%',
+                    },
+                ),
+                dcc.Graph(
+                    id='pupa-vs-eclo',
+                    style={
+                        'display': 'inline-block',
+                        'height': '300px',
+                        'width': '20%',
                     },
                 ),
                 dcc.Graph(
@@ -330,7 +338,7 @@ app.layout = html.Div([
                     style={
                         'display': 'inline-block',
                         'height': '300px',
-                        'width': '25%',
+                        'width': '20%',
                     },
                 ),
                 dcc.Graph(
@@ -338,7 +346,7 @@ app.layout = html.Div([
                     style={
                         'display': 'inline-block',
                         'height': '300px',
-                        'width': '25%',
+                        'width': '20%',
                     },
                 ),
             ]),
@@ -1535,7 +1543,7 @@ def callback(detect):
         return {
                 'display': 'inline-block',
                 'height': '300px',
-                'width': '25%',
+                'width': '20%',
             }
 
     elif detect == 'death':
@@ -1753,14 +1761,14 @@ def callback(detect):
         return {
                 'display': 'inline-block',
                 'height': '300px',
-                'width': '25%',
+                'width': '20%',
             }
 
     elif detect == 'death':
         return {
                 'display': 'inline-block',
                 'height': '300px',
-                'width': '25%',
+                'width': '20%',
             }
 
     else:
@@ -1937,7 +1945,7 @@ def callback(detect):
         return {
                 'display': 'inline-block',
                 'height': '300px',
-                'width': '25%',
+                'width': '20%',
             }
 
     elif detect == 'death':
@@ -2143,14 +2151,158 @@ def callback(detect):
         return {
                 'display': 'inline-block',
                 'height': '300px',
-                'width': '25%',
+                'width': '20%',
             }
 
     elif detect == 'death':
         return {
                 'display': 'inline-block',
                 'height': '300px',
-                'width': '25%',
+                'width': '20%',
+            }
+
+    else:
+        return {}
+
+
+# ==============================================
+#  Update the figure in the pupa-vs-eclo plot.
+# ==============================================
+@app.callback(
+        Output('pupa-vs-eclo', 'figure'),
+        [Input('threshold-slider1', 'value'),
+         Input('well-selector', 'value'),
+         Input('weight-check', 'values'),
+         Input('filter-check', 'values'),
+         Input('gaussian-size', 'value'),
+         Input('gaussian-sigma', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
+         State('larva-dropdown', 'value'),
+         State('adult-dropdown', 'value')])
+def callback(coef, well_idx, weight,
+        checks, size, sigma, data_root, env, detect, larva, adult):
+    # Guard
+    if env is None:
+        return {'data': []}
+    if adult is None:
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')):
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+        return {'data': []}
+    if detect == 'death':
+        return {'data': []}
+
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    
+    # Load a blacklist
+    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
+        blacklist = np.loadtxt(
+                os.path.join(data_root, env, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 1
+
+    else:
+        blacklist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])) \
+                        .flatten() == 1
+
+    # Make a whitelist
+    whitelist = np.logical_not(blacklist)
+
+    # Load the data
+    larva_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+    adult_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
+
+    # Smooth the signals
+    if len(checks) != 0:
+        larva_diffs = my_filter(larva_diffs, size=size, sigma=sigma)
+        adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if len(weight) != 0:
+        larva_diffs = larva_diffs *  \
+                10 * (np.arange(len(larva_diffs.T)) / len(larva_diffs.T))[::-1]
+
+        adult_diffs = adult_diffs *  \
+                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
+
+    # Compute thresholds
+    larva_thresh = my_threshold.entire_stats(larva_diffs, coef=coef)
+    adult_thresh = my_threshold.entire_stats(adult_diffs, coef=coef)
+
+    # Evaluate event timing
+    # Compute event times from signals
+    # Scan the signal from the right hand side.
+    pupars = (larva_diffs.shape[1]
+            - (np.fliplr(larva_diffs) > larva_thresh).argmax(axis=1))
+    pupars[pupars == larva_diffs.shape[1]] = 0
+    eclos = (adult_diffs > adult_thresh).argmax(axis=1)
+
+    manual_evals = np.loadtxt(
+            os.path.join(data_root, env, 'original', 'pupariation.csv'),
+            dtype=np.uint16, delimiter=',').flatten()
+
+    return {
+            'data': [
+                {
+                    'x': list(pupars[blacklist]),
+                    'y': list(eclos[blacklist]),
+                    'text': [str(i) for i in np.where(blacklist)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#000000'},
+                    'name': 'Well in Blacklist',
+                },
+                {
+                    'x': list(pupars[whitelist]),
+                    'y': list(eclos[whitelist]),
+                    'text': [str(i) for i in np.where(whitelist)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#1f77b4'},
+                    'name': 'Well in Whitelist',
+                },
+            ],
+            'layout': {
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'Pupariation',
+                    'tickfont': {'size': 15},
+                    'range': [0, 1.1 * len(larva_diffs.T)],
+                },
+                'yaxis': {
+                    'title': 'Eclosion',
+                    'tickfont': {'size': 15},
+                    'range': [0, 1.1 * len(adult_diffs.T)],
+                },
+                'showlegend': False,
+                'hovermode': 'closest',
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=0, pad=0),
+            },
+        }
+
+
+@app.callback(
+        Output('pupa-vs-eclo', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'pupa-and-eclo':
+        return {
+                'display': 'inline-block',
+                'height': '300px',
+                'width': '20%',
+            }
+
+    elif detect == 'death':
+        return {
+                'display': 'none',
             }
 
     else:
@@ -2290,7 +2442,7 @@ def callback(detect):
         return {
                 'display': 'inline-block',
                 'height': '300px',
-                'width': '25%',
+                'width': '20%',
             }
 
     else:
@@ -2417,7 +2569,7 @@ def callback(detect):
         return {
                 'display': 'inline-block',
                 'height': '300px',
-                'width': '25%',
+                'width': '20%',
             }
 
     else:
