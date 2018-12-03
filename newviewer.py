@@ -2186,6 +2186,8 @@ def callback(coef, well_idx, weight,
     # Guard
     if env is None:
         return {'data': []}
+    if larva is None:
+        return {'data': []}
     if adult is None:
         return {'data': []}
     if not os.path.exists(os.path.join(
