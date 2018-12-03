@@ -333,6 +333,14 @@ app.layout = html.Div([
                         'width': '25%',
                     },
                 ),
+                dcc.Graph(
+                    id='box-plot',
+                    style={
+                        'display': 'inline-block',
+                        'height': '300px',
+                        'width': '25%',
+                    },
+                ),
             ]),
             html.Div(id='dummy-div'),
         ]),
@@ -2238,6 +2246,128 @@ def callback(coef, well_idx, weight,
 
 @app.callback(
         Output('lifespan-curve', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'pupa-and-eclo':
+        return {
+                'display': 'none',
+            }
+
+    elif detect == 'death':
+        return {
+                'display': 'inline-block',
+                'height': '300px',
+                'width': '25%',
+            }
+
+    else:
+        return {}
+
+
+# ===========================================
+#  Update the figure in the boxplot.
+# ===========================================
+@app.callback(
+        Output('box-plot', 'figure'),
+        [Input('threshold-slider1', 'value'),
+         Input('well-selector', 'value'),
+         Input('weight-check', 'values'),
+         Input('filter-check', 'values'),
+         Input('gaussian-size', 'value'),
+         Input('gaussian-sigma', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
+         State('adult-dropdown', 'value')])
+def callback(coef, well_idx, weight,
+        checks, size, sigma, data_root, env, detect, adult):
+    # Guard
+    if env is None:
+        return {'data': []}
+    if adult is None:
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+        return {'data': []}
+    if detect == 'pupa-and-eclo':
+        return {'data': []}
+
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    
+    # Load a blacklist
+    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
+        whitelist = np.loadtxt(
+                os.path.join(data_root, env, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 0
+
+    else:
+        whitelist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])
+                ).flatten() == 0
+
+    # Load the data
+    adult_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
+
+    # Smooth the signals
+    if len(checks) != 0:
+        adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if len(weight) != 0 and detect == 'pupa-and-eclo':
+        adult_diffs = adult_diffs *  \
+                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
+
+    elif len(weight) != 0 and detect == 'death':
+        adult_diffs = adult_diffs *  \
+                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
+
+    # Compute thresholds
+    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+
+    # Evaluate event timing
+    # Compute event times from signals
+    # Scan the signal from the right hand side.
+    auto_evals = (adult_diffs.shape[1]
+            - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
+
+    '''
+    # If the signal was not more than the threshold.
+    auto_evals[auto_evals == adult_diffs.shape[1]] = 0
+    '''
+
+    trace = go.Box(
+            x=list(auto_evals[whitelist]),
+            name='Group1',
+            boxpoints='all',
+            pointpos=1.8,
+            marker={'size': 2},
+        )
+
+    return {
+            'data': [trace],
+            'layout': {
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'Event Time',
+                    'tickfont': {'size': 15},
+                },
+                'yaxis': {
+                    'title': 'Group',
+                    'tickfont': {'size': 15},
+                },
+                'showlegend': False,
+                'hovermode': 'closest',
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=0, pad=0),
+            },
+        }
+
+
+@app.callback(
+        Output('box-plot', 'style'),
         [Input('detect-target', 'value')])
 def callback(detect):
 
