@@ -1318,11 +1318,10 @@ def callback(detect):
          Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
 def callback(coef, well_idx, weight,
-        checks, size, sigma, data_root, env, detect, larva, adult):
+        checks, size, sigma, data_root, env, larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -1330,6 +1329,9 @@ def callback(coef, well_idx, weight,
         return {'data': []}
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')):
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'original', 'pupariation.csv')):
         return {'data': []}
 
     # Load a mask params
@@ -1518,6 +1520,11 @@ def callback(coef, well_idx, weight,
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')):
         return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'original', 'eclosion.csv'))  \
+        and detect == 'pupa-and-eclo':
+        return {'data': []}
+
 
     # Load a mask params
     with open(os.path.join(data_root, env, 'mask_params.json')) as f:
@@ -1539,11 +1546,19 @@ def callback(coef, well_idx, weight,
 
     # Load a manual evaluation of event timing
     if detect == 'pupa-and-eclo':
+        if not os.path.exists(os.path.join(
+                data_root, env, 'original', 'eclosion.csv')):
+            return {'data': []}
+
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
                 dtype=np.uint16, delimiter=',').flatten()
 
     elif detect == 'death':
+        if not os.path.exists(os.path.join(
+                data_root, env, 'original', 'death.csv')):
+            return {'data': []}
+
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
                 dtype=np.uint16, delimiter=',').flatten()
@@ -1713,10 +1728,9 @@ def callback(detect):
          Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('detect-target', 'value'),
          State('larva-dropdown', 'value')])
 def callback(coef, well_idx, weight,
-        checks, size, sigma, data_root, env, detect, larva):
+        checks, size, sigma, data_root, env, larva):
     # Guard
     if env is None:
         return {'data': []}
@@ -1724,6 +1738,9 @@ def callback(coef, well_idx, weight,
         return {'data': []}
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')):
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'original', 'pupariation.csv')):
         return {'data': []}
 
     # Load a mask params
@@ -1744,6 +1761,8 @@ def callback(coef, well_idx, weight,
     # Load the data
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+
+    # Load a manual evaluation of event timing
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', 'pupariation.csv'),
             dtype=np.uint16, delimiter=',').flatten()
@@ -1921,11 +1940,19 @@ def callback(coef, well_idx, weight,
 
     # Load a manual evaluation of event timing
     if detect == 'pupa-and-eclo':
+        if not os.path.exists(os.path.join(
+                data_root, env, 'original', 'eclosion.csv')):
+            return {'data': []}
+
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
                 dtype=np.uint16, delimiter=',').flatten()
 
     elif detect == 'death':
+        if not os.path.exists(os.path.join(
+                data_root, env, 'original', 'death.csv')):
+            return {'data': []}
+
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
                 dtype=np.uint16, delimiter=',').flatten()
