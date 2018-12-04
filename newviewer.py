@@ -282,13 +282,13 @@ app.layout = html.Div([
                     dcc.Graph(
                         id='larva-signal',
                         style={
-                            'height': '300px',
+                            'height': '280px',
                         },
                     ),
                     dcc.Graph(
                         id='adult-signal',
                         style={
-                            'height': '300px',
+                            'height': '280px',
                         },
                     ),
                 ], style={
@@ -301,48 +301,56 @@ app.layout = html.Div([
                     id='larva-summary',
                     style={
                         'display': 'inline-block',
-                        'height': '300px',
-                        'width': '25%',
+                        'height': '250px',
+                        'width': '20%',
                     },
                 ),
                 dcc.Graph(
                     id='larva-hist',
                     style={
                         'display': 'inline-block',
-                        'height': '300px',
-                        'width': '25%',
+                        'height': '250px',
+                        'width': '20%',
                     },
                 ),
                 dcc.Graph(
                     id='adult-summary',
                     style={
                         'display': 'inline-block',
-                        'height': '300px',
-                        'width': '25%',
+                        'height': '250px',
+                        'width': '20%',
                     },
                 ),
                 dcc.Graph(
                     id='adult-hist',
                     style={
                         'display': 'inline-block',
-                        'height': '300px',
-                        'width': '25%',
+                        'height': '250px',
+                        'width': '20%',
+                    },
+                ),
+                dcc.Graph(
+                    id='pupa-vs-eclo',
+                    style={
+                        'display': 'inline-block',
+                        'height': '250px',
+                        'width': '20%',
                     },
                 ),
                 dcc.Graph(
                     id='survival-curve',
                     style={
                         'display': 'inline-block',
-                        'height': '300px',
-                        'width': '25%',
+                        'height': '250px',
+                        'width': '20%',
                     },
                 ),
                 dcc.Graph(
                     id='box-plot',
                     style={
                         'display': 'inline-block',
-                        'height': '300px',
-                        'width': '25%',
+                        'height': '250px',
+                        'width': '20%',
                     },
                 ),
             ]),
@@ -769,8 +777,8 @@ def callback(time, well_idx, data_root, env):
                         base64.b64encode(buf1.getvalue()).decode('utf-8')),
                 style={
                     'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
+                    'height': '65px',
+                    'width': '65px',
                     'padding': '5px',
                     'display': 'inline-block',
                 },
@@ -780,8 +788,8 @@ def callback(time, well_idx, data_root, env):
                         base64.b64encode(buf2.getvalue()).decode('utf-8')),
                 style={
                     'background': '#555555',
-                    'height': '80px',
-                    'width': '80px',
+                    'height': '65px',
+                    'width': '65px',
                     'padding': '5px',
                     'display': 'inline-block',
                 },
@@ -869,8 +877,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 larva_label_buf1.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -881,8 +889,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 larva_label_buf2.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -895,8 +903,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 larva_prob_buf1.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -907,8 +915,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 larva_prob_buf2.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -953,8 +961,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 adult_label_buf1.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -965,8 +973,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 adult_label_buf2.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -979,8 +987,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 adult_prob_buf1.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -991,8 +999,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                                 adult_prob_buf2.getvalue()).decode('utf-8')),
                     style={
                         'background': '#555555',
-                        'height': '80px',
-                        'width': '80px',
+                        'height': '65px',
+                        'width': '65px',
                         'padding': '5px',
                         'display': 'inline-block',
                     },
@@ -1157,11 +1165,20 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     return {
             'data': larva_data + manual_data + common_data,
             'layout': {
-                    'title':
-                        'Threshold: {:.1f}'.format(threshold[well_idx, 0]) +  \
-                         '={:.1f}'.format(larva_diffs.mean()) +  \
-                         '{:+.1f}'.format(coef) +  \
-                         '*{:.1f}'.format(larva_diffs.std()),
+                    'annotations': [
+                        {
+                            'x': 0.01 * len(larva_diffs.T),
+                            'y': 1.0 * larva_diffs.max(),
+                            'text':
+                                'Threshold: {:.1f}'.format(
+                                        threshold[well_idx, 0]) +  \
+                                 '={:.1f}'.format(larva_diffs.mean()) +  \
+                                 '{:+.1f}'.format(coef) +  \
+                                 '*{:.1f}'.format(larva_diffs.std()),
+                            'showarrow': False,
+                            'xanchor': 'left',
+                        },
+                    ],
                     'font': {'size': 15},
                     'xaxis': {
                         'title': 'Time Step',
@@ -1176,7 +1193,11 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                     },
                 'showlegend': False,
                 'hovermode': 'closest',
+<<<<<<< HEAD
                 'margin': go.layout.Margin(l=70, r=70, b=50, t=50, pad=0),
+=======
+                'margin': go.layout.Margin(l=50, r=70, b=50, t=10, pad=0),
+>>>>>>> develop
             },
         }
 
@@ -1187,7 +1208,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
 def callback(detect):
 
     if detect == 'pupa-and-eclo':
-        return {'height': '300px'}
+        return {'height': '280px'}
 
     elif detect == 'death':
         return {'display': 'none'}
@@ -1324,11 +1345,20 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     return {
             'data': adult_data + manual_data + common_data,
             'layout': {
-                    'title':
-                        'Threshold: {:.1f}'.format(threshold[well_idx, 0]) +  \
-                         '={:.1f}'.format(adult_diffs.mean()) +  \
-                         '{:+.1f}'.format(coef) +  \
-                         '*{:.1f}'.format(adult_diffs.std()),
+                    'annotations': [
+                        {
+                            'x': 0.01 * len(adult_diffs.T),
+                            'y': 1.0 * adult_diffs.max(),
+                            'text':
+                                'Threshold: {:.1f}'.format(
+                                        threshold[well_idx, 0]) +  \
+                                 '={:.1f}'.format(adult_diffs.mean()) +  \
+                                 '{:+.1f}'.format(coef) +  \
+                                 '*{:.1f}'.format(adult_diffs.std()),
+                            'showarrow': False,
+                            'xanchor': 'left',
+                        },
+                    ],
                     'font': {'size': 15},
                     'xaxis': {
                         'title': 'Time Step',
@@ -1342,7 +1372,11 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                     },
                 'showlegend': False,
                 'hovermode': 'closest',
+<<<<<<< HEAD
                 'margin': go.layout.Margin(l=70, r=70, b=50, t=50, pad=0),
+=======
+                'margin': go.layout.Margin(l=50, r=70, b=50, t=10, pad=0),
+>>>>>>> develop
             },
         }
 
@@ -1353,7 +1387,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
 def callback(detect):
 
     if detect == 'pupa-and-eclo':
-        return {'height': '300px'}
+        return {'height': '280px'}
 
     elif detect == 'death':
         return {'height': '400px'}
@@ -1595,8 +1629,8 @@ def callback(detect):
     if detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '300px',
-                'width': '25%',
+                'height': '250px',
+                'width': '20%',
             }
 
     elif detect == 'death':
@@ -1868,15 +1902,15 @@ def callback(detect):
     if detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '300px',
-                'width': '25%',
+                'height': '250px',
+                'width': '20%',
             }
 
     elif detect == 'death':
         return {
                 'display': 'inline-block',
-                'height': '300px',
-                'width': '25%',
+                'height': '250px',
+                'width': '20%',
             }
 
     else:
@@ -2052,8 +2086,8 @@ def callback(detect):
     if detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '300px',
-                'width': '25%',
+                'height': '250px',
+                'width': '20%',
             }
 
     elif detect == 'death':
@@ -2258,15 +2292,161 @@ def callback(detect):
     if detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '300px',
-                'width': '25%',
+                'height': '250px',
+                'width': '20%',
             }
 
     elif detect == 'death':
         return {
                 'display': 'inline-block',
-                'height': '300px',
-                'width': '25%',
+                'height': '250px',
+                'width': '20%',
+            }
+
+    else:
+        return {}
+
+
+# ==============================================
+#  Update the figure in the pupa-vs-eclo plot.
+# ==============================================
+@app.callback(
+        Output('pupa-vs-eclo', 'figure'),
+        [Input('threshold-slider1', 'value'),
+         Input('well-selector', 'value'),
+         Input('weight-check', 'values'),
+         Input('filter-check', 'values'),
+         Input('gaussian-size', 'value'),
+         Input('gaussian-sigma', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
+         State('larva-dropdown', 'value'),
+         State('adult-dropdown', 'value')])
+def callback(coef, well_idx, weight,
+        checks, size, sigma, data_root, env, detect, larva, adult):
+    # Guard
+    if env is None:
+        return {'data': []}
+    if larva is None:
+        return {'data': []}
+    if adult is None:
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')):
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+        return {'data': []}
+    if detect == 'death':
+        return {'data': []}
+
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+    
+    # Load a blacklist
+    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
+        blacklist = np.loadtxt(
+                os.path.join(data_root, env, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 1
+
+    else:
+        blacklist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])) \
+                        .flatten() == 1
+
+    # Make a whitelist
+    whitelist = np.logical_not(blacklist)
+
+    # Load the data
+    larva_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+    adult_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
+
+    # Smooth the signals
+    if len(checks) != 0:
+        larva_diffs = my_filter(larva_diffs, size=size, sigma=sigma)
+        adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if len(weight) != 0:
+        larva_diffs = larva_diffs *  \
+                10 * (np.arange(len(larva_diffs.T)) / len(larva_diffs.T))[::-1]
+
+        adult_diffs = adult_diffs *  \
+                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
+
+    # Compute thresholds
+    larva_thresh = my_threshold.entire_stats(larva_diffs, coef=coef)
+    adult_thresh = my_threshold.entire_stats(adult_diffs, coef=coef)
+
+    # Evaluate event timing
+    # Compute event times from signals
+    # Scan the signal from the right hand side.
+    pupars = (larva_diffs.shape[1]
+            - (np.fliplr(larva_diffs) > larva_thresh).argmax(axis=1))
+    pupars[pupars == larva_diffs.shape[1]] = 0
+    eclos = (adult_diffs > adult_thresh).argmax(axis=1)
+
+    manual_evals = np.loadtxt(
+            os.path.join(data_root, env, 'original', 'pupariation.csv'),
+            dtype=np.uint16, delimiter=',').flatten()
+
+    return {
+            'data': [
+                {
+                    'x': list(pupars[blacklist]),
+                    'y': list(eclos[blacklist]),
+                    'text': [str(i) for i in np.where(blacklist)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#000000'},
+                    'name': 'Well in Blacklist',
+                },
+                {
+                    'x': list(pupars[whitelist]),
+                    'y': list(eclos[whitelist]),
+                    'text': [str(i) for i in np.where(whitelist)[0]],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#1f77b4'},
+                    'name': 'Well in Whitelist',
+                },
+            ],
+            'layout': {
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'Pupariation',
+                    'tickfont': {'size': 15},
+                    'range': [0, 1.1 * len(larva_diffs.T)],
+                },
+                'yaxis': {
+                    'title': 'Eclosion',
+                    'tickfont': {'size': 15},
+                    'range': [0, 1.1 * len(adult_diffs.T)],
+                },
+                'showlegend': False,
+                'hovermode': 'closest',
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=0, pad=0),
+            },
+        }
+
+
+@app.callback(
+        Output('pupa-vs-eclo', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'pupa-and-eclo':
+        return {
+                'display': 'inline-block',
+                'height': '250px',
+                'width': '20%',
+            }
+
+    elif detect == 'death':
+        return {
+                'display': 'none',
             }
 
     else:
@@ -2405,8 +2585,8 @@ def callback(detect):
     elif detect == 'death':
         return {
                 'display': 'inline-block',
-                'height': '300px',
-                'width': '25%',
+                'height': '250px',
+                'width': '20%',
             }
 
     else:
@@ -2532,8 +2712,8 @@ def callback(detect):
     elif detect == 'death':
         return {
                 'display': 'inline-block',
-                'height': '300px',
-                'width': '25%',
+                'height': '250px',
+                'width': '20%',
             }
 
     else:
