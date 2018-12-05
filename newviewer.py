@@ -400,7 +400,9 @@ app.layout = html.Div([
             ),
         ], style={'width': '100%'}),
     ], style={'width': '100%'}),
+
     html.Div(id='hidden-timestamp', style={'display': 'none'}),
+
     html.Div('{"changed": "nobody"}',
             id='changed-data', style={'display': 'none'}),
     html.Div(id='buff-div', style={'display': 'none'}, children=json.dumps(
@@ -409,6 +411,17 @@ app.layout = html.Div([
                 'larva-summary': 0,
                 'adult-summary': 0,
                 'pupa-vs-eclo': 0,
+            }
+        )
+    ),
+
+    html.Div('{"changed": "nobody"}',
+            id='changed-time', style={'display': 'none'}),
+    html.Div(id='time-buff', style={'display': 'none'}, children=json.dumps(
+            {
+                'nobody': 0,
+                'larva-signal': 0,
+                'adult-signal': 0,
             }
         )
     ),
@@ -751,15 +764,76 @@ def callback(env, data_root):
 @app.callback(
         Output('time-slider', 'value'),
         [Input('env-dropdown', 'value'),
+         Input('time-buff', 'children'),
          Input('larva-dropdown', 'value'),
-         Input('adult-dropdown', 'value'),
-         Input('adult-summary', 'clickData')],
-        [State('time-slider', 'value')])
-def callback(_, larva_data, adult_data, adult_summary, time):
-    if adult_summary is None:
-        return time
+         Input('adult-dropdown', 'value')],
+        [State('changed-time', 'children')])
+def callback(_, buff, larva_data, adult_data, changed_data):
 
-    return adult_summary['points'][0]['x']
+    buff = json.loads(buff)
+    changed_data = json.loads(changed_data)['changed']
+
+    return buff[changed_data]
+
+
+@app.callback(
+        Output('changed-time', 'children'),
+        [Input('larva-signal', 'clickData'),
+         Input('adult-signal', 'clickData')],
+        [State('time-buff', 'children')])
+def callback(larva_signal, adult_signal, buff):
+    # Guard
+    if larva_signal is None and adult_signal is None:
+        return '{"changed": "nobody"}'
+
+    if larva_signal is None:
+        larva_signal = 0
+    else:
+        larva_signal = larva_signal['points'][0]['x']
+
+    if adult_signal is None:
+        adult_sumamry = 0
+    else:
+        adult_signal = adult_signal['points'][0]['x']
+
+    buff = json.loads(buff)
+
+    if larva_signal != buff['larva-signal']:
+        return '{"changed": "larva-signal"}'
+
+    if adult_signal != buff['adult-signal']:
+        return '{"changed": "adult-signal"}'
+
+    return '{"changed": "nobody"}'
+
+
+@app.callback(
+        Output('time-buff', 'children'),
+        [Input('changed-time', 'children')],
+        [State('larva-signal', 'clickData'),
+         State('adult-signal', 'clickData'),
+         State('time-buff', 'children')])
+def callback(changed_data, larva_signal, adult_signal, buff):
+
+    buff = json.loads(buff)
+    changed_data = json.loads(changed_data)['changed']
+    print('Previous Value')
+    print(buff)
+
+    if changed_data == 'nobody':
+        return json.dumps(buff)
+
+    if changed_data == 'larva-signal':
+        buff['larva-signal'] = larva_signal['points'][0]['x']
+        print('Current Value')
+        print(buff)
+        return json.dumps(buff)
+
+    if changed_data == 'adult-signal':
+        buff['adult-signal'] = adult_signal['points'][0]['x']
+        print('Current Value')
+        print(buff)
+        return json.dumps(buff)
 
 
 # =====================================================
