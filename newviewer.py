@@ -2453,18 +2453,30 @@ def callback(coef, well_idx, weight,
                     'marker': {'size': 4, 'color': '#1f77b4'},
                     'name': 'Well in Whitelist',
                 },
+                {
+                    'x': [pupars[well_idx]],
+                    'y': [eclos[well_idx]],
+                    'text': str(well_idx),
+                    'mode': 'markers',
+                    'marker': {'size': 10, 'color': '#ff0000'},
+                    'name': 'Selected well',
+                },
             ],
             'layout': {
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'Pupariation',
                     'tickfont': {'size': 15},
-                    'range': [0, 1.1 * len(larva_diffs.T)],
+                    'range': [
+                        -0.1 * len(larva_diffs.T),
+                        1.1 * len(larva_diffs.T)],
                 },
                 'yaxis': {
                     'title': 'Eclosion',
                     'tickfont': {'size': 15},
-                    'range': [0, 1.1 * len(adult_diffs.T)],
+                    'range': [
+                        -0.1 * len(adult_diffs.T),
+                        1.1 * len(adult_diffs.T)],
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
