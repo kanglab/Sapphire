@@ -3330,5 +3330,38 @@ def callback(detect):
         return {}
 
 
+# ====================
+#  Utility functions
+# ====================
+def seasoning(signals, signal_type, detect, size, sigma, smooth, weight):
+
+    # Smooth the signals
+    if smooth:
+        signals = my_filter(signals, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if weight:
+        if detect == 'pupa-and-eclo' and signal_type == 'larva':
+            signals = signals *  \
+                    10 * (np.arange(len(signals.T)) / len(signals.T))[::-1]
+
+        elif detect == 'pupa-and-eclo' and signal_type == 'adult':
+            signals = signals *  \
+                    10 * (np.arange(len(signals.T)) / len(signals.T))
+
+        elif detect == 'death' and signal_type == 'larva':
+            # Never evaluated
+            pass
+
+        elif detect == 'death' and signal_type == 'adult':
+            signals = signals *  \
+                    10 * (np.arange(len(signals.T)) / len(signals.T))[::-1]
+
+    else:
+        pass
+
+    return signals
+
+
 if __name__ == '__main__':
     app.run_server(debug=True)
