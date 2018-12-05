@@ -3296,5 +3296,32 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight):
     return signals
 
 
+def detect_event(signals, thresholds, signal_type, detect):
+
+    if detect == 'pupa-and-eclo' and signal_type == 'larva':
+        # Detect the falling of the signal
+        # Scan the signal from the right hand side.
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > thresholds).argmax(axis=1))
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == signals.shape[1]] = 0
+
+    elif detect == 'pupa-and-eclo' and signal_type == 'adult':
+        # Detect the rising of the signal
+        # Compute event times from signals
+        auto_evals = (signals > thresholds).argmax(axis=1)
+
+    elif detect == 'death' and signal_type == 'larva':
+        # Never evaluated
+        pass
+
+    elif detect == 'death' and signal_type == 'adult':
+        # Scan the signal from the right hand side.
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > thresholds).argmax(axis=1))
+
+    return auto_evals
+
+
 if __name__ == '__main__':
     app.run_server(debug=True)
