@@ -1253,12 +1253,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     # Compute thresholds
     threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
 
-    # Scan the signal from the right hand side.
-    auto_evals = (larva_diffs.shape[1]
-            - (np.fliplr(larva_diffs) > threshold).argmax(axis=1))
-
-    # If the signal was not more than the threshold.
-    auto_evals[auto_evals == larva_diffs.shape[1]] = 0
+    auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
     if os.path.exists(
             os.path.join(data_root, env, 'original', 'pupariation.csv')):
@@ -1414,18 +1409,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     # Compute thresholds
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
 
-    # Evaluate event timing
-    if detect == 'pupa-and-eclo':
-        auto_evals = (adult_diffs > threshold).argmax(axis=1)
-
-    elif detect == 'death':
-        # Compute event times from signals
-        # Scan the signal from the right hand side.
-        auto_evals = (adult_diffs.shape[1]
-                - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
-
-        # If the signal was not more than the threshold.
-        auto_evals[auto_evals == adult_diffs.shape[1]] = 0
+    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     if os.path.exists(
             os.path.join(data_root, env, 'original', 'eclosion.csv')):
@@ -1600,12 +1584,7 @@ def callback(coef, well_idx, weight,
     # Compute thresholds
     threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
 
-    # Compute event times from signals
-    # Scan the signal from the right hand side.
-    auto_evals = (larva_diffs.shape[1]
-            - (np.fliplr(larva_diffs) > threshold).argmax(axis=1))
-    # If the signal was not more than the threshold.
-    auto_evals[auto_evals == larva_diffs.shape[1]] = 0
+    auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals[whitelist] - manual_evals[whitelist]
@@ -1804,18 +1783,7 @@ def callback(coef, well_idx, weight,
     # Compute thresholds
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
 
-    # Evaluate event timing
-    if detect == 'pupa-and-eclo':
-        auto_evals = (adult_diffs > threshold).argmax(axis=1)
-
-    elif detect == 'death':
-        # Compute event times from signals
-        # Scan the signal from the right hand side.
-        auto_evals = (adult_diffs.shape[1]
-                - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
-
-        # If the signal was not more than the threshold.
-        auto_evals[auto_evals == adult_diffs.shape[1]] = 0
+    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals[whitelist] - manual_evals[whitelist]
@@ -1996,12 +1964,7 @@ def callback(coef, well_idx, weight,
     # Compute thresholds
     threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
 
-    # Compute event times from signals
-    # Scan the signal from the right hand side.
-    auto_evals = (larva_diffs.shape[1]
-            - (np.fliplr(larva_diffs) > threshold).argmax(axis=1))
-    # If the signal was not more than the threshold.
-    auto_evals[auto_evals == larva_diffs.shape[1]] = 0
+    auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
@@ -2186,20 +2149,7 @@ def callback(coef, well_idx, weight,
     # Compute thresholds
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
 
-    # Evaluate event timing
-    if detect == 'pupa-and-eclo':
-        auto_evals = (adult_diffs > threshold).argmax(axis=1)
-
-    elif detect == 'death':
-        # Compute event times from signals
-        # Scan the signal from the right hand side.
-        auto_evals = (adult_diffs.shape[1]
-                - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
-
-        '''
-        # If the signal was not more than the threshold.
-        auto_evals[auto_evals == adult_diffs.shape[1]] = 0
-        '''
+    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
@@ -2523,16 +2473,7 @@ def callback(coef, well_idx, weight,
     # Compute thresholds
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
 
-    # Evaluate event timing
-    # Compute event times from signals
-    # Scan the signal from the right hand side.
-    auto_evals = (adult_diffs.shape[1]
-            - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
-
-    '''
-    # If the signal was not more than the threshold.
-    auto_evals[auto_evals == adult_diffs.shape[1]] = 0
-    '''
+    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     # Compute survival ratio of all the animals
     survival_ratio = np.zeros_like(adult_diffs)
@@ -2655,16 +2596,7 @@ def callback(coef, well_idx, weight,
     # Compute thresholds
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
 
-    # Evaluate event timing
-    # Compute event times from signals
-    # Scan the signal from the right hand side.
-    auto_evals = (adult_diffs.shape[1]
-            - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
-
-    '''
-    # If the signal was not more than the threshold.
-    auto_evals[auto_evals == adult_diffs.shape[1]] = 0
-    '''
+    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     # Make data to be drawn
     data = []
@@ -2939,12 +2871,7 @@ def callback(tab_name, data_root, env,
     # Compute thresholds
     threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
 
-    # Compute event times from signals
-    # Scan the signal from the right hand side.
-    auto_evals = (larva_diffs.shape[1]
-            - (np.fliplr(larva_diffs) > threshold).argmax(axis=1))
-    # If the signal was not more than the threshold.
-    auto_evals[auto_evals == larva_diffs.shape[1]] = 0
+    auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
     auto_evals = auto_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
@@ -3175,16 +3102,7 @@ def callback(tab_name, data_root, env,
     # Compute thresholds
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
 
-    if detect == 'pupa-and-eclo':
-        # Compute event times from signals
-        auto_evals = (adult_diffs > threshold).argmax(axis=1)
-
-    elif detect == 'death':
-        # Scan the signal from the right hand side.
-        auto_evals = (adult_diffs.shape[1]
-                - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
-        # If the signal was not more than the threshold.
-        auto_evals[auto_evals == adult_diffs.shape[1]] = 0
+    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     auto_evals = auto_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
