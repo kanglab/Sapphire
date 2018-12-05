@@ -401,6 +401,16 @@ app.layout = html.Div([
         ], style={'width': '100%'}),
     ], style={'width': '100%'}),
     html.Div(id='hidden-timestamp', style={'display': 'none'}),
+    html.Div('{"changed": "nobody"}',
+            id='changed-data', style={'display': 'none'}),
+    html.Div(id='buff-div', style={'display': 'none'}, children=json.dumps(
+            {
+                'nobody': 0,
+                'larva-summary': 0,
+                'adult-summary': 0,
+            }
+        )
+    ),
 
 ], style={'width': '1400px',},)
 
@@ -600,15 +610,75 @@ def callback(env, data_root):
 @app.callback(
         Output('well-slider', 'value'),
         [Input('env-dropdown', 'value'),
-         Input('adult-summary', 'clickData'),
+         Input('buff-div', 'children'),
          Input('larva-dropdown', 'value'),
          Input('adult-dropdown', 'value')],
-        [State('well-slider', 'value')])
-def callback(_, adult_summary, larva_data, adult_data, well_idx):
-    if adult_summary is None:
-        return well_idx
+        [State('changed-data', 'children'),
+         State('well-slider', 'value')])
+def callback(_, buff, larva_data, adult_data, changed_data, well_idx):
 
-    return int(adult_summary['points'][0]['text'])
+    buff = json.loads(buff)
+    changed_data = json.loads(changed_data)['changed']
+
+    return buff[changed_data]
+
+
+@app.callback(
+        Output('changed-data', 'children'),
+        [Input('larva-summary', 'clickData'),
+         Input('adult-summary', 'clickData')],
+        [State('buff-div', 'children')])
+def callback(larva_summary, adult_summary, buff):
+    # Guard
+    if larva_summary is None and adult_summary is None:
+        return '{"changed": "nobody"}'
+
+    if larva_summary is None:
+        larva_summary = 0
+        adult_summary = int(adult_summary['points'][0]['text'])
+
+    else:
+        larva_summary = int(larva_summary['points'][0]['text'])
+        adult_sumamry = 0
+
+    buff = json.loads(buff)
+
+    if larva_summary != buff['larva-summary']:
+        return '{"changed": "larva-summary"}'
+
+    if adult_summary != buff['adult-summary']:
+        return '{"changed": "adult-summary"}'
+
+    return '{"changed": "nobody"}'
+
+
+@app.callback(
+        Output('buff-div', 'children'),
+        [Input('changed-data', 'children')],
+        [State('larva-summary', 'clickData'),
+         State('adult-summary', 'clickData'),
+         State('buff-div', 'children')])
+def callback(changed_data, larva_summary, adult_summary, buff):
+
+    buff = json.loads(buff)
+    changed_data = json.loads(changed_data)['changed']
+    print('Previous Value')
+    print(buff)
+
+    if changed_data == 'nobody':
+        return json.dumps(buff)
+
+    if changed_data == 'larva-summary':
+        buff['larva-summary'] = int(larva_summary['points'][0]['text'])
+        print('Current Value')
+        print(buff)
+        return json.dumps(buff)
+
+    if changed_data == 'adult-summary':
+        buff['adult-summary'] = int(adult_summary['points'][0]['text'])
+        print('Current Value')
+        print(buff)
+        return json.dumps(buff)
 
 
 # =====================================================
