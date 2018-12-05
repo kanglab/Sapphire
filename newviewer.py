@@ -404,8 +404,8 @@ app.layout = html.Div([
     html.Div(id='hidden-timestamp', style={'display': 'none'}),
 
     html.Div('{"changed": "nobody"}',
-            id='changed-data', style={'display': 'none'}),
-    html.Div(id='buff-div', style={'display': 'none'}, children=json.dumps(
+            id='changed-well', style={'display': 'none'}),
+    html.Div(id='well-buff', style={'display': 'none'}, children=json.dumps(
             {
                 'nobody': 0,
                 'larva-summary': 0,
@@ -624,10 +624,10 @@ def callback(env, data_root):
 @app.callback(
         Output('well-slider', 'value'),
         [Input('env-dropdown', 'value'),
-         Input('buff-div', 'children'),
+         Input('well-buff', 'children'),
          Input('larva-dropdown', 'value'),
          Input('adult-dropdown', 'value')],
-        [State('changed-data', 'children'),
+        [State('changed-well', 'children'),
          State('well-slider', 'value')])
 def callback(_, buff, larva_data, adult_data, changed_data, well_idx):
 
@@ -638,11 +638,11 @@ def callback(_, buff, larva_data, adult_data, changed_data, well_idx):
 
 
 @app.callback(
-        Output('changed-data', 'children'),
+        Output('changed-well', 'children'),
         [Input('larva-summary', 'clickData'),
          Input('adult-summary', 'clickData'),
          Input('pupa-vs-eclo', 'clickData')],
-        [State('buff-div', 'children')])
+        [State('well-buff', 'children')])
 def callback(larva_summary, adult_summary, pupa_vs_eclo, buff):
     # Guard
     if larva_summary is None and  \
@@ -680,12 +680,12 @@ def callback(larva_summary, adult_summary, pupa_vs_eclo, buff):
 
 
 @app.callback(
-        Output('buff-div', 'children'),
-        [Input('changed-data', 'children')],
+        Output('well-buff', 'children'),
+        [Input('changed-well', 'children')],
         [State('larva-summary', 'clickData'),
          State('adult-summary', 'clickData'),
          State('pupa-vs-eclo', 'clickData'),
-         State('buff-div', 'children')])
+         State('well-buff', 'children')])
 def callback(changed_data, larva_summary, adult_summary, pupa_vs_eclo, buff):
 
     buff = json.loads(buff)
