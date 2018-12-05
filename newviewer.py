@@ -3231,11 +3231,11 @@ def callback(tab_name, data_root, env,
         adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
 
     # Apply weight to the signals
-    if detect == 'pupa-and-eclo':
+    if len(weight) != 0 and detect == 'pupa-and-eclo':
         adult_diffs = adult_diffs *  \
                 10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
 
-    elif detect == 'death':
+    elif len(weight) != 0 and detect == 'death':
         adult_diffs = adult_diffs *  \
                 10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
 
