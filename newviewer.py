@@ -28,7 +28,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 
-
+                                        
 GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#89c3eb',
                 '#84a2d4', '#3e62ad', '#0000ff', '#7f00ff', '#56256e']
 
@@ -44,7 +44,7 @@ app.css.append_css(
 cache = flask_caching.Cache()
 cache.init_app(
         app.server, config={'CACHE_TYPE': 'filesystem', 'CACHE_DIR': 'cache/'})
-
+    
 
 # ================================
 #  Definition of the viewer page
@@ -1193,11 +1193,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                     },
                 'showlegend': False,
                 'hovermode': 'closest',
-<<<<<<< HEAD
                 'margin': go.layout.Margin(l=70, r=70, b=50, t=50, pad=0),
-=======
-                'margin': go.layout.Margin(l=50, r=70, b=50, t=10, pad=0),
->>>>>>> develop
             },
         }
 
@@ -1372,11 +1368,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                     },
                 'showlegend': False,
                 'hovermode': 'closest',
-<<<<<<< HEAD
                 'margin': go.layout.Margin(l=70, r=70, b=50, t=50, pad=0),
-=======
-                'margin': go.layout.Margin(l=50, r=70, b=50, t=10, pad=0),
->>>>>>> develop
             },
         }
 
@@ -2496,6 +2488,20 @@ def callback(coef, well_idx, weight,
                 (params['n-rows']*params['n-plates'], params['n-clms'])
                 ).flatten() == 0
 
+
+    # Load a group table
+    if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
+
+        groups = np.loadtxt(
+                os.path.join(data_root, env, 'grouping.csv'),
+                dtype=np.uint16, delimiter=',').flatten()
+
+        group_tables = [groups == i for i in range(groups.max() + 1)]
+
+    else:
+        group_tables = None
+
+
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
@@ -2537,22 +2543,38 @@ def callback(coef, well_idx, weight,
     survival_ratio = 100 * survival_ratio[whitelist].sum(axis=0)  \
             / len(survival_ratio[whitelist])
 
-    return {
-            'data': [
+    if group_tables == None :
+        data_list = [
+            {
+                'x': list(range(len(survival_ratio))),
+                'y': list(survival_ratio),
+                'mode': 'lines',
+                'line': {'size': 2, 'color': '#ff4500'},
+            }]
+
+    else :                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+        data_list =[]
+        for group_idx, group_table in enumerate(group_tables):
+
+            data_list.append(
                 {
                     'x': list(range(len(survival_ratio))),
-                    'y': list(survival_ratio),
+                    'y': list(survival_ratio[np.logical_and(whitelist, group_table)]),
                     'mode': 'lines',
-                    'fill': 'tozeroy',
-                    'line': {'width': 0, 'color': '#43d86b'},
-                },
+                    'marker': {'size':2, 'color': GROUP_COLORS[group_idx]},
+                    'name': 'Group{}'.format(group_idx),
+                })
+
+
+    return {
+            'data':data_list + [
                 {
                     'x': [0, len(survival_ratio)],
                     'y': [100, 100],
                     'mode': 'lines',
                     'line': {'width': 1, 'color': '#000000'},
                 },
-            ],
+                ],
             'layout': {
                 'font': {'size': 15},
                 'xaxis': {
@@ -2636,6 +2658,19 @@ def callback(coef, well_idx, weight,
                 (params['n-rows']*params['n-plates'], params['n-clms'])
                 ).flatten() == 0
 
+
+    # Load a group table
+    if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
+
+        groups = np.loadtxt(
+                os.path.join(data_root, env, 'grouping.csv'),
+                dtype=np.uint16, delimiter=',').flatten()
+
+        group_tables = [groups == i for i in range(groups.max() + 1)]
+
+    else:
+        group_tables = None
+
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
@@ -2668,17 +2703,31 @@ def callback(coef, well_idx, weight,
     '''
 
     # Make data to be drawn
-    data = []
-    data.append(
-            go.Box(
-                x=list(auto_evals[whitelist]),
-                name='Group0',
-                boxpoints='all',
-                pointpos=1.8,
-                marker={'size': 2},
-                line={'width': 2},
+    if group_tables == None :
+        data = []
+        data.append(
+                go.Box(
+                    x=list(auto_evals[whitelist]),
+                    name='Group0',
+                    boxpoints='all',
+                    pointpos=1.8,
+                    marker={'size': 2},
+                    line={'width': 2},
+                )
             )
-        )
+
+    else :
+        data =[]
+        for group_idx, group_table in enumerate(group_tables):
+            data.append(
+                go.Box(
+                    x=list(auto_evals[np.logical_and(whitelist, group_table)]),
+                    name='Group{}'.format(group_idx),
+                    boxpoints='all',
+                    pointpos=1.8,
+                    marker={'size': 2},
+                    line={'width': 2},
+                )    )
 
     return {
             'data': data,
