@@ -2467,12 +2467,16 @@ def callback(coef, well_idx, weight,
                 'xaxis': {
                     'title': 'Pupariation',
                     'tickfont': {'size': 15},
-                    'range': [0, 1.1 * len(larva_diffs.T)],
+                    'range': [
+                        -0.1 * len(larva_diffs.T),
+                        1.1 * len(larva_diffs.T)],
                 },
                 'yaxis': {
                     'title': 'Eclosion',
                     'tickfont': {'size': 15},
-                    'range': [0, 1.1 * len(adult_diffs.T)],
+                    'range': [
+                        -0.1 * len(adult_diffs.T),
+                        1.1 * len(adult_diffs.T)],
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
