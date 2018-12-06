@@ -1560,17 +1560,7 @@ def callback(coef, well_idx, weight,
     whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load a group table
-    if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
-
-        groups = np.loadtxt(
-                os.path.join(data_root, env, 'grouping.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
-
-        group_tables = [groups == i for i in range(1, groups.max() + 1)]
-
-    else:
-        group_tables = None
-
+    group_tables = load_grouping_csv(data_root, env)
 
     # Load the data
     larva_diffs = np.load(os.path.join(
@@ -1601,7 +1591,7 @@ def callback(coef, well_idx, weight,
     rms = np.sqrt((errors**2).sum() / len(errors))
 
     # Create data points
-    if group_tables is None:
+    if group_tables == []:
 
         data_list = [
                 {
@@ -1789,17 +1779,7 @@ def callback(coef, well_idx, weight,
     whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load a group table
-    if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
-
-        groups = np.loadtxt(
-                os.path.join(data_root, env, 'grouping.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
-
-        group_tables = [groups == i for i in range(1, groups.max() + 1)]
-
-    else:
-        group_tables = None
-
+    group_tables = load_grouping_csv(data_root, env)
 
     # Load a manual evaluation of event timing
     if detect == 'pupa-and-eclo':
@@ -1841,7 +1821,7 @@ def callback(coef, well_idx, weight,
     rms = np.sqrt((errors**2).sum() / len(errors))
 
     # Create data points
-    if group_tables is None:
+    if group_tables == []:
 
         data_list = [
                 {
@@ -2504,16 +2484,7 @@ def callback(coef, well_idx, weight,
     whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load a group table
-    if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
-
-        groups = np.loadtxt(
-                os.path.join(data_root, env, 'grouping.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
-
-        group_tables = [groups == i for i in range(1, groups.max() + 1)]
-
-    else:
-        group_tables = []
+    group_tables = load_grouping_csv(data_root, env)
 
     # Load the data
     adult_diffs = np.load(os.path.join(
@@ -2529,7 +2500,7 @@ def callback(coef, well_idx, weight,
 
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
-    if len(group_tables) == 0 :
+    if group_tables == []:
 
         # Compute survival ratio of all the animals
         survival_ratio = np.zeros_like(adult_diffs)
@@ -2657,16 +2628,7 @@ def callback(coef, well_idx, weight,
     whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load a group table
-    if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
-
-        groups = np.loadtxt(
-                os.path.join(data_root, env, 'grouping.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
-
-        group_tables = [groups == i for i in range(1, groups.max() + 1)]
-
-    else:
-        group_tables = None
+    group_tables = load_grouping_csv(data_root, env)
 
     # Load the data
     adult_diffs = np.load(os.path.join(
@@ -2683,7 +2645,7 @@ def callback(coef, well_idx, weight,
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     # Make data to be drawn
-    if group_tables == None :
+    if group_tables == []:
         data = []
         data.append(
                 go.Box(
