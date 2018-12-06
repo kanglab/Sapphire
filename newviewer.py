@@ -1570,9 +1570,17 @@ def callback(coef, well_idx, weight,
             data_root, env, 'original', 'pupariation.csv')):
         return {'data': []}
     
-    # Load a blacklist and whitelist
+    # Load a blacklist
     blacklist, _ = load_blacklist(data_root, env)
-    whitelist, _ = load_blacklist(data_root, env, white=True)
+
+    # Load a manual evaluation of event timing
+    manual_evals = np.loadtxt(
+            os.path.join(data_root, env, 'original', 'pupariation.csv'),
+            dtype=np.int16, delimiter=',').flatten()
+
+    # Target wells will be evaluated
+    exceptions = np.logical_or(blacklist, manual_evals == 0)
+    targets = np.logical_not(exceptions)
 
     # Load a group table
     group_tables = load_grouping_csv(data_root, env)
@@ -1600,7 +1608,7 @@ def callback(coef, well_idx, weight,
     auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals[whitelist] - manual_evals[whitelist]
+    errors = auto_evals[targets] - manual_evals[targets]
 
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
@@ -1610,20 +1618,19 @@ def callback(coef, well_idx, weight,
 
         data_list = [
                 {
-                    'x': list(auto_evals[blacklist]),
-                    'y': list(manual_evals[blacklist]),
-                    'text': [str(i) for i in np.where(blacklist)[0]],
+                    'x': list(auto_evals[exceptions]),
+                    'y': list(manual_evals[exceptions]),
+                    'text': [str(i) for i in np.where(exceptions)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#000000'},
-                    'name': 'Well in Blacklist',
+                    'name': 'Exceptions',
                 },
                 {
-                    'x': list(auto_evals[whitelist]),
-                    'y': list(manual_evals[whitelist]),
-                    'text': [str(i) for i in np.where(whitelist)[0]],
+                    'x': list(auto_evals[targets]),
+                    'y': list(manual_evals[targets]),
+                    'text': [str(i) for i in np.where(targets)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#1f77b4'},
-                    'name': 'Well in Whitelist',
                 },
             ]
 
@@ -1636,12 +1643,12 @@ def callback(coef, well_idx, weight,
             data_list.append(
                 {
                     'x': list(
-                        auto_evals[np.logical_and(whitelist, group_table)]),
+                        auto_evals[np.logical_and(targets, group_table)]),
                     'y': list(
-                        manual_evals[np.logical_and(whitelist, group_table)]),
+                        manual_evals[np.logical_and(targets, group_table)]),
                     'text': [str(i)
                         for i in np.where(
-                            np.logical_and(whitelist, group_table))[0]],
+                            np.logical_and(targets, group_table))[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': GROUP_COLORS[group_idx]},
                     'name': 'Group{}'.format(group_idx + 1),
@@ -1650,15 +1657,15 @@ def callback(coef, well_idx, weight,
             data_list.append(
                 {
                     'x': list(
-                        auto_evals[np.logical_and(blacklist, group_table)]),
+                        auto_evals[np.logical_and(exceptions, group_table)]),
                     'y': list(
-                        manual_evals[np.logical_and(blacklist, group_table)]),
+                        manual_evals[np.logical_and(exceptions, group_table)]),
                     'text': [str(i)
                         for i in np.where(
-                            np.logical_and(blacklist, group_table))[0]],
+                            np.logical_and(exceptions, group_table))[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#000000'},
-                    'name': 'Group{}<br>Blacklist'.format(group_idx + 1),
+                    'name': 'Group{}<br>Exceptions'.format(group_idx + 1),
                 })
 
 
@@ -1788,13 +1795,9 @@ def callback(coef, well_idx, weight,
             data_root, env, 'original', 'eclosion.csv'))  \
         and detect == 'pupa-and-eclo':
         return {'data': []}
-
-    # Load a blacklist and whitelist
+    
+    # Load a blacklist
     blacklist, _ = load_blacklist(data_root, env)
-    whitelist, _ = load_blacklist(data_root, env, white=True)
-
-    # Load a group table
-    group_tables = load_grouping_csv(data_root, env)
 
     # Load a manual evaluation of event timing
     if detect == 'pupa-and-eclo':
@@ -1815,6 +1818,13 @@ def callback(coef, well_idx, weight,
                 os.path.join(data_root, env, 'original', 'death.csv'),
                 dtype=np.int16, delimiter=',').flatten()
 
+    # Target wells will be evaluated
+    exceptions = np.logical_or(blacklist, manual_evals == 0)
+    targets = np.logical_not(exceptions)
+
+    # Load a group table
+    group_tables = load_grouping_csv(data_root, env)
+
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
@@ -1830,7 +1840,7 @@ def callback(coef, well_idx, weight,
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals[whitelist] - manual_evals[whitelist]
+    errors = auto_evals[targets] - manual_evals[targets]
 
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
@@ -1840,20 +1850,19 @@ def callback(coef, well_idx, weight,
 
         data_list = [
                 {
-                    'x': list(auto_evals[blacklist]),
-                    'y': list(manual_evals[blacklist]),
-                    'text': [str(i) for i in np.where(blacklist)[0]],
+                    'x': list(auto_evals[exceptions]),
+                    'y': list(manual_evals[exceptions]),
+                    'text': [str(i) for i in np.where(exceptions)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#000000'},
-                    'name': 'Well in Blacklist',
+                    'name': 'Exception',
                 },
                 {
-                    'x': list(auto_evals[whitelist]),
-                    'y': list(manual_evals[whitelist]),
-                    'text': [str(i) for i in np.where(whitelist)[0]],
+                    'x': list(auto_evals[targets]),
+                    'y': list(manual_evals[targets]),
+                    'text': [str(i) for i in np.where(targets)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#1f77b4'},
-                    'name': 'Well in Whitelist',
                 },
             ]
 
@@ -1866,12 +1875,12 @@ def callback(coef, well_idx, weight,
             data_list.append(
                 {
                     'x': list(
-                        auto_evals[np.logical_and(whitelist, group_table)]),
+                        auto_evals[np.logical_and(targets, group_table)]),
                     'y': list(
-                        manual_evals[np.logical_and(whitelist, group_table)]),
+                        manual_evals[np.logical_and(targets, group_table)]),
                     'text': [str(i)
                         for i in np.where(
-                            np.logical_and(whitelist, group_table))[0]],
+                            np.logical_and(targets, group_table))[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': GROUP_COLORS[group_idx]},
                     'name': 'Group{}'.format(group_idx + 1),
@@ -1880,15 +1889,15 @@ def callback(coef, well_idx, weight,
             data_list.append(
                 {
                     'x': list(
-                        auto_evals[np.logical_and(blacklist, group_table)]),
+                        auto_evals[np.logical_and(exceptions, group_table)]),
                     'y': list(
-                        manual_evals[np.logical_and(blacklist, group_table)]),
+                        manual_evals[np.logical_and(exceptions, group_table)]),
                     'text': [str(i)
                         for i in np.where(
-                            np.logical_and(blacklist, group_table))[0]],
+                            np.logical_and(exceptions, group_table))[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#000000'},
-                    'name': 'Group{}<br>Blacklist'.format(group_idx + 1),
+                    'name': 'Group{}<br>Exceptions'.format(group_idx + 1),
                 })
 
 
