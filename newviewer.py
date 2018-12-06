@@ -1431,12 +1431,34 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
 
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
-    if os.path.exists(
-            os.path.join(data_root, env, 'original', 'eclosion.csv')):
+    # Load a manual evaluation of event timing
+    if detect == 'pupa-and-eclo':
+        if not os.path.exists(os.path.join(
+                data_root, env, 'original', 'eclosion.csv')):
+            return {'data': []}
 
         manual_evals = np.loadtxt(
-                os.path.join(
-                    data_root, env, 'original', 'eclosion.csv'),
+                os.path.join(data_root, env, 'original', 'eclosion.csv'),
+                dtype=np.int16, delimiter=',').flatten()
+
+        manual_data = [
+            {
+                # Manual evaluation time (vertical line)
+                'x': [manual_evals[well_idx], manual_evals[well_idx]],
+                'y': [0, adult_diffs.max()],
+                'mode': 'lines',
+                'name': 'Manual',
+                'line': {'width': 2, 'color': '#ffa500'},
+            },
+        ]
+
+    elif detect == 'death':
+        if not os.path.exists(os.path.join(
+                data_root, env, 'original', 'death.csv')):
+            return {'data': []}
+
+        manual_evals = np.loadtxt(
+                os.path.join(data_root, env, 'original', 'death.csv'),
                 dtype=np.int16, delimiter=',').flatten()
 
         manual_data = [
