@@ -1280,7 +1280,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         manual_evals = np.loadtxt(
                 os.path.join(
                     data_root, env, 'original', 'pupariation.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
         manual_data = [
             {
@@ -1431,13 +1431,31 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
 
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
-    if os.path.exists(
+    # Load a manual evaluation of event timing
+    if detect == 'pupa-and-eclo' and os.path.exists(
             os.path.join(data_root, env, 'original', 'eclosion.csv')):
 
         manual_evals = np.loadtxt(
-                os.path.join(
-                    data_root, env, 'original', 'eclosion.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                os.path.join(data_root, env, 'original', 'eclosion.csv'),
+                dtype=np.int16, delimiter=',').flatten()
+
+        manual_data = [
+            {
+                # Manual evaluation time (vertical line)
+                'x': [manual_evals[well_idx], manual_evals[well_idx]],
+                'y': [0, adult_diffs.max()],
+                'mode': 'lines',
+                'name': 'Manual',
+                'line': {'width': 2, 'color': '#ffa500'},
+            },
+        ]
+
+    elif detect == 'death' and os.path.exists(
+            os.path.join(data_root, env, 'original', 'death.csv')):
+
+        manual_evals = np.loadtxt(
+                os.path.join(data_root, env, 'original', 'death.csv'),
+                dtype=np.int16, delimiter=',').flatten()
 
         manual_data = [
             {
@@ -1570,9 +1588,17 @@ def callback(coef, well_idx, weight,
             data_root, env, 'original', 'pupariation.csv')):
         return {'data': []}
     
-    # Load a blacklist and whitelist
+    # Load a blacklist
     blacklist, _ = load_blacklist(data_root, env)
-    whitelist, _ = load_blacklist(data_root, env, white=True)
+
+    # Load a manual evaluation of event timing
+    manual_evals = np.loadtxt(
+            os.path.join(data_root, env, 'original', 'pupariation.csv'),
+            dtype=np.int16, delimiter=',').flatten()
+
+    # Target wells will be evaluated
+    exceptions = np.logical_or(blacklist, manual_evals == 0)
+    targets = np.logical_not(exceptions)
 
     # Load a group table
     group_tables = load_grouping_csv(data_root, env)
@@ -1583,7 +1609,7 @@ def callback(coef, well_idx, weight,
     # Load a manual data
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', 'pupariation.csv'),
-            dtype=np.uint16, delimiter=',').flatten()
+            dtype=np.int16, delimiter=',').flatten()
 
     # Load the data
     larva_diffs = np.load(os.path.join(
@@ -1600,7 +1626,7 @@ def callback(coef, well_idx, weight,
     auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals[whitelist] - manual_evals[whitelist]
+    errors = auto_evals[targets] - manual_evals[targets]
 
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
@@ -1610,20 +1636,19 @@ def callback(coef, well_idx, weight,
 
         data_list = [
                 {
-                    'x': list(auto_evals[blacklist]),
-                    'y': list(manual_evals[blacklist]),
-                    'text': [str(i) for i in np.where(blacklist)[0]],
+                    'x': list(auto_evals[exceptions]),
+                    'y': list(manual_evals[exceptions]),
+                    'text': [str(i) for i in np.where(exceptions)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#000000'},
-                    'name': 'Well in Blacklist',
+                    'name': 'Exceptions',
                 },
                 {
-                    'x': list(auto_evals[whitelist]),
-                    'y': list(manual_evals[whitelist]),
-                    'text': [str(i) for i in np.where(whitelist)[0]],
+                    'x': list(auto_evals[targets]),
+                    'y': list(manual_evals[targets]),
+                    'text': [str(i) for i in np.where(targets)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#1f77b4'},
-                    'name': 'Well in Whitelist',
                 },
             ]
 
@@ -1636,12 +1661,12 @@ def callback(coef, well_idx, weight,
             data_list.append(
                 {
                     'x': list(
-                        auto_evals[np.logical_and(whitelist, group_table)]),
+                        auto_evals[np.logical_and(targets, group_table)]),
                     'y': list(
-                        manual_evals[np.logical_and(whitelist, group_table)]),
+                        manual_evals[np.logical_and(targets, group_table)]),
                     'text': [str(i)
                         for i in np.where(
-                            np.logical_and(whitelist, group_table))[0]],
+                            np.logical_and(targets, group_table))[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': GROUP_COLORS[group_idx]},
                     'name': 'Group{}'.format(group_idx + 1),
@@ -1650,15 +1675,15 @@ def callback(coef, well_idx, weight,
             data_list.append(
                 {
                     'x': list(
-                        auto_evals[np.logical_and(blacklist, group_table)]),
+                        auto_evals[np.logical_and(exceptions, group_table)]),
                     'y': list(
-                        manual_evals[np.logical_and(blacklist, group_table)]),
+                        manual_evals[np.logical_and(exceptions, group_table)]),
                     'text': [str(i)
                         for i in np.where(
-                            np.logical_and(blacklist, group_table))[0]],
+                            np.logical_and(exceptions, group_table))[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#000000'},
-                    'name': 'Group{}<br>Blacklist'.format(group_idx + 1),
+                    'name': 'Group{}<br>Exceptions'.format(group_idx + 1),
                 })
 
 
@@ -1788,13 +1813,9 @@ def callback(coef, well_idx, weight,
             data_root, env, 'original', 'eclosion.csv'))  \
         and detect == 'pupa-and-eclo':
         return {'data': []}
-
-    # Load a blacklist and whitelist
+    
+    # Load a blacklist
     blacklist, _ = load_blacklist(data_root, env)
-    whitelist, _ = load_blacklist(data_root, env, white=True)
-
-    # Load a group table
-    group_tables = load_grouping_csv(data_root, env)
 
     # Load a manual evaluation of event timing
     if detect == 'pupa-and-eclo':
@@ -1804,7 +1825,7 @@ def callback(coef, well_idx, weight,
 
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
     elif detect == 'death':
         if not os.path.exists(os.path.join(
@@ -1813,7 +1834,14 @@ def callback(coef, well_idx, weight,
 
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
+
+    # Target wells will be evaluated
+    exceptions = np.logical_or(blacklist, manual_evals == 0)
+    targets = np.logical_not(exceptions)
+
+    # Load a group table
+    group_tables = load_grouping_csv(data_root, env)
 
     # Load the data
     adult_diffs = np.load(os.path.join(
@@ -1830,7 +1858,7 @@ def callback(coef, well_idx, weight,
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
-    errors = auto_evals[whitelist] - manual_evals[whitelist]
+    errors = auto_evals[targets] - manual_evals[targets]
 
     # Calculate the root mean square
     rms = np.sqrt((errors**2).sum() / len(errors))
@@ -1840,20 +1868,19 @@ def callback(coef, well_idx, weight,
 
         data_list = [
                 {
-                    'x': list(auto_evals[blacklist]),
-                    'y': list(manual_evals[blacklist]),
-                    'text': [str(i) for i in np.where(blacklist)[0]],
+                    'x': list(auto_evals[exceptions]),
+                    'y': list(manual_evals[exceptions]),
+                    'text': [str(i) for i in np.where(exceptions)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#000000'},
-                    'name': 'Well in Blacklist',
+                    'name': 'Exception',
                 },
                 {
-                    'x': list(auto_evals[whitelist]),
-                    'y': list(manual_evals[whitelist]),
-                    'text': [str(i) for i in np.where(whitelist)[0]],
+                    'x': list(auto_evals[targets]),
+                    'y': list(manual_evals[targets]),
+                    'text': [str(i) for i in np.where(targets)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#1f77b4'},
-                    'name': 'Well in Whitelist',
                 },
             ]
 
@@ -1866,12 +1893,12 @@ def callback(coef, well_idx, weight,
             data_list.append(
                 {
                     'x': list(
-                        auto_evals[np.logical_and(whitelist, group_table)]),
+                        auto_evals[np.logical_and(targets, group_table)]),
                     'y': list(
-                        manual_evals[np.logical_and(whitelist, group_table)]),
+                        manual_evals[np.logical_and(targets, group_table)]),
                     'text': [str(i)
                         for i in np.where(
-                            np.logical_and(whitelist, group_table))[0]],
+                            np.logical_and(targets, group_table))[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': GROUP_COLORS[group_idx]},
                     'name': 'Group{}'.format(group_idx + 1),
@@ -1880,15 +1907,15 @@ def callback(coef, well_idx, weight,
             data_list.append(
                 {
                     'x': list(
-                        auto_evals[np.logical_and(blacklist, group_table)]),
+                        auto_evals[np.logical_and(exceptions, group_table)]),
                     'y': list(
-                        manual_evals[np.logical_and(blacklist, group_table)]),
+                        manual_evals[np.logical_and(exceptions, group_table)]),
                     'text': [str(i)
                         for i in np.where(
-                            np.logical_and(blacklist, group_table))[0]],
+                            np.logical_and(exceptions, group_table))[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#000000'},
-                    'name': 'Group{}<br>Blacklist'.format(group_idx + 1),
+                    'name': 'Group{}<br>Exceptions'.format(group_idx + 1),
                 })
 
 
@@ -2019,8 +2046,17 @@ def callback(coef, well_idx, weight,
             data_root, env, 'original', 'pupariation.csv')):
         return {'data': []}
     
-    # Load a whitelist
-    whitelist, _ = load_blacklist(data_root, env, white=True)
+    # Load a blacklist
+    blacklist, _ = load_blacklist(data_root, env)
+
+    # Load a manual evaluation of event timing
+    manual_evals = np.loadtxt(
+            os.path.join(data_root, env, 'original', 'pupariation.csv'),
+            dtype=np.int16, delimiter=',').flatten()
+
+    # Target wells will be evaluated
+    exceptions = np.logical_or(blacklist, manual_evals == 0)
+    targets = np.logical_not(exceptions)
 
     # Load the data
     larva_diffs = np.load(os.path.join(
@@ -2031,11 +2067,6 @@ def callback(coef, well_idx, weight,
             smooth=len(checks) != 0,
             weight=len(weight) != 0)
 
-    # Load a manual evaluation of event timing
-    manual_evals = np.loadtxt(
-            os.path.join(data_root, env, 'original', 'pupariation.csv'),
-            dtype=np.uint16, delimiter=',').flatten()
-
     # Compute thresholds
     threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
 
@@ -2043,7 +2074,7 @@ def callback(coef, well_idx, weight,
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
-    errors = errors[whitelist]
+    errors = errors[targets]
     ns, bins = np.histogram(errors, 1000)
 
     # Calculate the number of inconsistent wells
@@ -2086,9 +2117,9 @@ def callback(coef, well_idx, weight,
                         'y': 0.9 * ns.max(),
                         'text': '{} (5%): {:.1f}% ({}/{})'.format(
                             round(0.05 * larva_diffs.shape[1]),
-                            100 * n_consist_5percent / whitelist.sum(),
+                            100 * n_consist_5percent / targets.sum(),
                             n_consist_5percent,
-                            whitelist.sum()),
+                            targets.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -2097,9 +2128,9 @@ def callback(coef, well_idx, weight,
                         'y': 0.8 * ns.max(),
                         'text': '{} (1%): {:.1f}% ({}/{})'.format(
                             round(0.01 * larva_diffs.shape[1]),
-                            100 * n_consist_1percent / whitelist.sum(),
+                            100 * n_consist_1percent / targets.sum(),
                             n_consist_1percent,
-                            whitelist.sum()),
+                            targets.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -2107,9 +2138,9 @@ def callback(coef, well_idx, weight,
                         'x': 0.9 * larva_diffs.shape[1],
                         'y': 0.7 * ns.max(),
                         'text': '10: {:.1f}% ({}/{})'.format(
-                            100 * n_consist_10frames / whitelist.sum(),
+                            100 * n_consist_10frames / targets.sum(),
                             n_consist_10frames,
-                            whitelist.sum()),
+                            targets.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -2178,8 +2209,8 @@ def callback(coef, well_idx, weight,
             data_root, env, 'inference', 'adult', adult, 'signals.npy')):
         return {'data': []}
     
-    # Load a whitelist
-    whitelist, _ = load_blacklist(data_root, env, white=True)
+    # Load a blacklist
+    blacklist, _ = load_blacklist(data_root, env)
 
     # Load a manual evaluation of event timing
     if detect == 'pupa-and-eclo':
@@ -2189,7 +2220,7 @@ def callback(coef, well_idx, weight,
 
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
     elif detect == 'death':
         if not os.path.exists(os.path.join(
@@ -2198,7 +2229,11 @@ def callback(coef, well_idx, weight,
 
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
+
+    # Target wells will be evaluated
+    exceptions = np.logical_or(blacklist, manual_evals == 0)
+    targets = np.logical_not(exceptions)
 
     # Load the data
     adult_diffs = np.load(os.path.join(
@@ -2216,7 +2251,7 @@ def callback(coef, well_idx, weight,
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
-    errors = errors[whitelist]
+    errors = errors[targets]
     ns, bins = np.histogram(errors, 1000)
 
     # Calculate the number of inconsistent wells
@@ -2259,9 +2294,9 @@ def callback(coef, well_idx, weight,
                         'y': 0.9 * ns.max(),
                         'text': '{} (5%): {:.1f}% ({}/{})'.format(
                             round(0.05 * adult_diffs.shape[1]),
-                            100 * n_consist_5percent / whitelist.sum(),
+                            100 * n_consist_5percent / targets.sum(),
                             n_consist_5percent,
-                            whitelist.sum()),
+                            targets.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -2270,9 +2305,9 @@ def callback(coef, well_idx, weight,
                         'y': 0.8 * ns.max(),
                         'text': '{} (1%): {:.1f}% ({}/{})'.format(
                             round(0.01 * adult_diffs.shape[1]),
-                            100 * n_consist_1percent / whitelist.sum(),
+                            100 * n_consist_1percent / targets.sum(),
                             n_consist_1percent,
-                            whitelist.sum()),
+                            targets.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -2280,9 +2315,9 @@ def callback(coef, well_idx, weight,
                         'x': 0.9 * adult_diffs.shape[1],
                         'y': 0.7 * ns.max(),
                         'text': '10: {:.1f}% ({}/{})'.format(
-                            100 * n_consist_10frames / whitelist.sum(),
+                            100 * n_consist_10frames / targets.sum(),
                             n_consist_10frames,
-                            whitelist.sum()),
+                            targets.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -2391,10 +2426,6 @@ def callback(coef, well_idx, weight,
             - (np.fliplr(larva_diffs) > larva_thresh).argmax(axis=1))
     pupars[pupars == larva_diffs.shape[1]] = 0
     eclos = (adult_diffs > adult_thresh).argmax(axis=1)
-
-    manual_evals = np.loadtxt(
-            os.path.join(data_root, env, 'original', 'pupariation.csv'),
-            dtype=np.uint16, delimiter=',').flatten()
 
     return {
             'data': [
@@ -2516,7 +2547,6 @@ def callback(coef, well_idx, weight,
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     if group_tables == []:
-
         # Compute survival ratio of all the animals
         survival_ratio = np.zeros_like(adult_diffs)
 
@@ -2524,7 +2554,9 @@ def callback(coef, well_idx, weight,
 
             survival_ratio[well_idx, :event_time] = 1
 
-        survival_ratio = 100 * survival_ratio.sum(axis=0) / len(survival_ratio)
+        survival_ratio =  \
+                100 * survival_ratio[whitelist].sum(axis=0) /  \
+                len(survival_ratio[whitelist])
 
         data_list = [
             {
@@ -2536,22 +2568,25 @@ def callback(coef, well_idx, weight,
             }]
 
     else:
-
         survival_ratios = []
         for group_idx, group_table in enumerate(group_tables):
 
             survival_ratio = np.zeros_like(adult_diffs)
 
-            for well_idx, (event_time, is_group) in enumerate(zip(auto_evals, group_table)):
+            for well_idx, (event_time, in_group)  \
+                    in enumerate(zip(auto_evals, group_table)):
 
-                survival_ratio[well_idx, :event_time] = is_group
+                survival_ratio[well_idx, :event_time] = in_group
 
-            survival_ratio = 100 * survival_ratio.sum(axis=0) / group_table.sum()
+            survival_ratio =  \
+                    100 * survival_ratio[whitelist].sum(axis=0) /  \
+                    group_table[whitelist].sum()
 
             survival_ratios.append(survival_ratio)
     
         data_list =[]
-        for group_idx, (group_table, survival_ratio) in enumerate(zip(group_tables, survival_ratios)):
+        for group_idx, (group_table, survival_ratio)  \
+                in enumerate(zip(group_tables, survival_ratios)):
 
             data_list.append(
                 {
@@ -2831,7 +2866,7 @@ def callback(tab_name, data_root, env, detect, larva):
         # Load a manual data
         larva_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'pupariation.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
         larva_evals = larva_evals.reshape(
                 params['n-rows']*params['n-plates'], params['n-clms'])
@@ -3058,13 +3093,13 @@ def callback(tab_name, data_root, env, detect, adult):
         # Load a manual data
         adult_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
     elif detect == 'death':
         # Load a manual data
         adult_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
     adult_evals = adult_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
@@ -3329,7 +3364,7 @@ def load_blacklist(data_root, dataset_name, white=False):
     if os.path.exists(os.path.join(data_root, dataset_name, 'blacklist.csv')):
         blacklist = np.loadtxt(
                 os.path.join(data_root, dataset_name, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 1
+                dtype=np.int16, delimiter=',').flatten() == 1
 
         exist = True
 
@@ -3357,7 +3392,7 @@ def load_grouping_csv(data_root, dataset_name):
 
         groups = np.loadtxt(
                 os.path.join(data_root, dataset_name, 'grouping.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
         return [groups == i for i in range(1, groups.max() + 1)]
 
