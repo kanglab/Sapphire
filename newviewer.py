@@ -2551,7 +2551,6 @@ def callback(coef, well_idx, weight,
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     if group_tables == []:
-
         # Compute survival ratio of all the animals
         survival_ratio = np.zeros_like(adult_diffs)
 
@@ -2571,22 +2570,24 @@ def callback(coef, well_idx, weight,
             }]
 
     else:
-
         survival_ratios = []
         for group_idx, group_table in enumerate(group_tables):
 
             survival_ratio = np.zeros_like(adult_diffs)
 
-            for well_idx, (event_time, is_group) in enumerate(zip(auto_evals, group_table)):
+            for well_idx, (event_time, in_group)  \
+                    in enumerate(zip(auto_evals, group_table)):
 
-                survival_ratio[well_idx, :event_time] = is_group
+                survival_ratio[well_idx, :event_time] = in_group
 
-            survival_ratio = 100 * survival_ratio.sum(axis=0) / group_table.sum()
+            survival_ratio =  \
+                    100 * survival_ratio.sum(axis=0) / group_table.sum()
 
             survival_ratios.append(survival_ratio)
     
         data_list =[]
-        for group_idx, (group_table, survival_ratio) in enumerate(zip(group_tables, survival_ratios)):
+        for group_idx, (group_table, survival_ratio)  \
+                in enumerate(zip(group_tables, survival_ratios)):
 
             data_list.append(
                 {
