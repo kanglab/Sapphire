@@ -881,13 +881,11 @@ def callback(checks):
 def callback(well_idx, data_root, env):
     if well_idx is None or env is None:
         return []
-    
-    if not os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        return []
 
-    blacklist = np.loadtxt(
-            os.path.join(data_root, env, 'blacklist.csv'),
-            dtype=np.uint16, delimiter=',').flatten() == 1
+    blacklist, exist = load_blacklist(data_root, env)
+    
+    if not exist:
+        return []
 
     if blacklist[well_idx]:
         return 'checked'
@@ -1553,24 +1551,10 @@ def callback(coef, well_idx, weight,
     if not os.path.exists(os.path.join(
             data_root, env, 'original', 'pupariation.csv')):
         return {'data': []}
-
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
     
-    # Load a blacklist
-    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        blacklist = np.loadtxt(
-                os.path.join(data_root, env, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 1
-
-    else:
-        blacklist = np.zeros(
-                (params['n-rows']*params['n-plates'], params['n-clms'])
-                ).flatten() == 1
-
-    # Make a whitelist
-    whitelist = np.logical_not(blacklist)
+    # Load a blacklist and whitelist
+    blacklist, _ = load_blacklist(data_root, env)
+    whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load a group table
     if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
@@ -1797,24 +1781,9 @@ def callback(coef, well_idx, weight,
         and detect == 'pupa-and-eclo':
         return {'data': []}
 
-
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
-    
-    # Load a blacklist
-    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        blacklist = np.loadtxt(
-                os.path.join(data_root, env, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 1
-
-    else:
-        blacklist = np.zeros(
-                (params['n-rows']*params['n-plates'], params['n-clms'])
-                ).flatten() == 1
-
-    # Make a whitelist
-    whitelist = np.logical_not(blacklist)
+    # Load a blacklist and whitelist
+    blacklist, _ = load_blacklist(data_root, env)
+    whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load a group table
     if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
@@ -2050,21 +2019,9 @@ def callback(coef, well_idx, weight,
     if not os.path.exists(os.path.join(
             data_root, env, 'original', 'pupariation.csv')):
         return {'data': []}
-
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
     
-    # Load a blacklist
-    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        whitelist = np.loadtxt(
-                os.path.join(data_root, env, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 0
-
-    else:
-        whitelist = np.zeros(
-                (params['n-rows']*params['n-plates'], params['n-clms'])
-                ).flatten() == 0
+    # Load a whitelist
+    whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load the data
     larva_diffs = np.load(os.path.join(
@@ -2221,21 +2178,9 @@ def callback(coef, well_idx, weight,
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')):
         return {'data': []}
-
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
     
-    # Load a blacklist
-    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        whitelist = np.loadtxt(
-                os.path.join(data_root, env, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 0
-
-    else:
-        whitelist = np.zeros(
-                (params['n-rows']*params['n-plates'], params['n-clms'])
-                ).flatten() == 0
+    # Load a whitelist
+    whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load a manual evaluation of event timing
     if detect == 'pupa-and-eclo':
@@ -2417,23 +2362,9 @@ def callback(coef, well_idx, weight,
     if detect == 'death':
         return {'data': []}
 
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
-    
-    # Load a blacklist
-    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        blacklist = np.loadtxt(
-                os.path.join(data_root, env, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 1
-
-    else:
-        blacklist = np.zeros(
-                (params['n-rows']*params['n-plates'], params['n-clms'])) \
-                        .flatten() == 1
-
-    # Make a whitelist
-    whitelist = np.logical_not(blacklist)
+    # Load a blacklist and whitelist
+    blacklist, _ = load_blacklist(data_root, env)
+    whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load the data
     larva_diffs = np.load(os.path.join(
@@ -2565,20 +2496,8 @@ def callback(coef, well_idx, weight,
     if detect == 'pupa-and-eclo':
         return {'data': []}
 
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
-    
-    # Load a blacklist
-    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        whitelist = np.loadtxt(
-                os.path.join(data_root, env, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 0
-
-    else:
-        whitelist = np.zeros(
-                (params['n-rows']*params['n-plates'], params['n-clms'])
-                ).flatten() == 0
+    # Load a whitelist
+    whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load a group table
     if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
@@ -2730,21 +2649,8 @@ def callback(coef, well_idx, weight,
     if detect == 'pupa-and-eclo':
         return {'data': []}
 
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
-    
-    # Load a blacklist
-    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        whitelist = np.loadtxt(
-                os.path.join(data_root, env, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 0
-
-    else:
-        whitelist = np.zeros(
-                (params['n-rows']*params['n-plates'], params['n-clms'])
-                ).flatten() == 0
-
+    # Load a whitelist
+    whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load a group table
     if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
