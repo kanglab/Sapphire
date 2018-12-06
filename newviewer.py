@@ -33,7 +33,7 @@ GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#89c3eb',
                 '#84a2d4', '#3e62ad', '#0000ff', '#7f00ff', '#56256e']
 
 
-DATA_ROOT = '/133.24.18.88/sdb/Research/Drosophila/data/TsukubaRIKEN/'
+DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
 
 
@@ -1442,7 +1442,7 @@ def callback(coef, well_idx, weight,
                 os.path.join(data_root, env, 'grouping.csv'),
                 dtype=np.uint16, delimiter=',').flatten()
 
-        group_tables = [groups == i for i in range(groups.max() + 1)]
+        group_tables = [groups == i for i in range(1, groups.max() + 1)]
 
     else:
         group_tables = None
@@ -1519,7 +1519,7 @@ def callback(coef, well_idx, weight,
                             np.logical_and(whitelist, group_table))[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': GROUP_COLORS[group_idx]},
-                    'name': 'Group{}'.format(group_idx),
+                    'name': 'Group{}'.format(group_idx + 1),
                 })
 
             data_list.append(
@@ -1533,7 +1533,7 @@ def callback(coef, well_idx, weight,
                             np.logical_and(blacklist, group_table))[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#000000'},
-                    'name': 'Group{}<br>Blacklist'.format(group_idx),
+                    'name': 'Group{}<br>Blacklist'.format(group_idx + 1),
                 })
 
 
@@ -1690,7 +1690,7 @@ def callback(coef, well_idx, weight,
                 os.path.join(data_root, env, 'grouping.csv'),
                 dtype=np.uint16, delimiter=',').flatten()
 
-        group_tables = [groups == i for i in range(groups.max() + 1)]
+        group_tables = [groups == i for i in range(1, groups.max() + 1)]
 
     else:
         group_tables = None
@@ -1793,7 +1793,7 @@ def callback(coef, well_idx, weight,
                             np.logical_and(whitelist, group_table))[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': GROUP_COLORS[group_idx]},
-                    'name': 'Group{}'.format(group_idx),
+                    'name': 'Group{}'.format(group_idx + 1),
                 })
 
             data_list.append(
@@ -1807,7 +1807,7 @@ def callback(coef, well_idx, weight,
                             np.logical_and(blacklist, group_table))[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#000000'},
-                    'name': 'Group{}<br>Blacklist'.format(group_idx),
+                    'name': 'Group{}<br>Blacklist'.format(group_idx + 1),
                 })
 
 
@@ -2531,7 +2531,7 @@ def callback(coef, well_idx, weight,
     auto_evals[auto_evals == adult_diffs.shape[1]] = 0
     '''
 
-    if group_tables == None :
+    if len(group_tables) == 0 :
 
         # Compute survival ratio of all the animals
         survival_ratio = np.zeros_like(adult_diffs)
@@ -2548,9 +2548,10 @@ def callback(coef, well_idx, weight,
                 'y': list(survival_ratio),
                 'mode': 'lines',
                 'line': {'size': 2, 'color': '#ff4500'},
+                'name': 'Group1'
             }]
 
-    else :
+    else:
 
         survival_ratios = []
         for group_idx, group_table in enumerate(group_tables):
@@ -2677,7 +2678,7 @@ def callback(coef, well_idx, weight,
                 os.path.join(data_root, env, 'grouping.csv'),
                 dtype=np.uint16, delimiter=',').flatten()
 
-        group_tables = [groups == i for i in range(groups.max() + 1)]
+        group_tables = [groups == i for i in range(1, groups.max() + 1)]
 
     else:
         group_tables = None
@@ -2719,7 +2720,7 @@ def callback(coef, well_idx, weight,
         data.append(
                 go.Box(
                     x=list(auto_evals[whitelist]),
-                    name='Group0',
+                    name='Group1',
                     boxpoints='all',
                     pointpos=1.8,
                     marker={'size': 2},
@@ -2733,12 +2734,14 @@ def callback(coef, well_idx, weight,
             data.append(
                 go.Box(
                     x=list(auto_evals[np.logical_and(whitelist, group_table)]),
-                    name='Group{}'.format(group_idx),
+                    name='Group{}'.format(group_idx +1),
                     boxpoints='all',
                     pointpos=1.8,
-                    marker={'size': 2},
-                    line={'width': 2},
-                )    )
+                    marker={'size': 2,'color':GROUP_COLORS[group_idx]},
+                    line={'width': 2,'color':GROUP_COLORS[group_idx]},
+
+                )  
+              )
 
     return {
             'data': data,
