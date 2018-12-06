@@ -1280,7 +1280,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         manual_evals = np.loadtxt(
                 os.path.join(
                     data_root, env, 'original', 'pupariation.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
         manual_data = [
             {
@@ -1437,7 +1437,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         manual_evals = np.loadtxt(
                 os.path.join(
                     data_root, env, 'original', 'eclosion.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
         manual_data = [
             {
@@ -1583,7 +1583,7 @@ def callback(coef, well_idx, weight,
     # Load a manual data
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', 'pupariation.csv'),
-            dtype=np.uint16, delimiter=',').flatten()
+            dtype=np.int16, delimiter=',').flatten()
 
     # Load the data
     larva_diffs = np.load(os.path.join(
@@ -1804,7 +1804,7 @@ def callback(coef, well_idx, weight,
 
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
     elif detect == 'death':
         if not os.path.exists(os.path.join(
@@ -1813,7 +1813,7 @@ def callback(coef, well_idx, weight,
 
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
     # Load the data
     adult_diffs = np.load(os.path.join(
@@ -2034,7 +2034,7 @@ def callback(coef, well_idx, weight,
     # Load a manual evaluation of event timing
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', 'pupariation.csv'),
-            dtype=np.uint16, delimiter=',').flatten()
+            dtype=np.int16, delimiter=',').flatten()
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
@@ -2189,7 +2189,7 @@ def callback(coef, well_idx, weight,
 
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
     elif detect == 'death':
         if not os.path.exists(os.path.join(
@@ -2198,7 +2198,7 @@ def callback(coef, well_idx, weight,
 
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
     # Load the data
     adult_diffs = np.load(os.path.join(
@@ -2394,7 +2394,7 @@ def callback(coef, well_idx, weight,
 
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', 'pupariation.csv'),
-            dtype=np.uint16, delimiter=',').flatten()
+            dtype=np.int16, delimiter=',').flatten()
 
     return {
             'data': [
@@ -2831,7 +2831,7 @@ def callback(tab_name, data_root, env, detect, larva):
         # Load a manual data
         larva_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'pupariation.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
         larva_evals = larva_evals.reshape(
                 params['n-rows']*params['n-plates'], params['n-clms'])
@@ -3058,13 +3058,13 @@ def callback(tab_name, data_root, env, detect, adult):
         # Load a manual data
         adult_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
     elif detect == 'death':
         # Load a manual data
         adult_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
     adult_evals = adult_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
@@ -3329,7 +3329,7 @@ def load_blacklist(data_root, dataset_name, white=False):
     if os.path.exists(os.path.join(data_root, dataset_name, 'blacklist.csv')):
         blacklist = np.loadtxt(
                 os.path.join(data_root, dataset_name, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 1
+                dtype=np.int16, delimiter=',').flatten() == 1
 
         exist = True
 
@@ -3357,7 +3357,7 @@ def load_grouping_csv(data_root, dataset_name):
 
         groups = np.loadtxt(
                 os.path.join(data_root, dataset_name, 'grouping.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
+                dtype=np.int16, delimiter=',').flatten()
 
         return [groups == i for i in range(1, groups.max() + 1)]
 
