@@ -2671,6 +2671,7 @@ def callback(coef, well_idx, weight,
                     marker={'size': 2},
                     line={'width': 2},
                     text=[str(i) for i in np.where(whitelist)[0]],
+                    boxmean='sd',
                 )
             )
 
@@ -2688,6 +2689,7 @@ def callback(coef, well_idx, weight,
                     text=[str(i)
                         for i in np.where(
                             np.logical_and(whitelist, group_table))[0]],
+                    boxmean='sd',
                 )
             )
 
