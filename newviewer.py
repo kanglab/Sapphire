@@ -2019,8 +2019,17 @@ def callback(coef, well_idx, weight,
             data_root, env, 'original', 'pupariation.csv')):
         return {'data': []}
     
-    # Load a whitelist
-    whitelist, _ = load_blacklist(data_root, env, white=True)
+    # Load a blacklist
+    blacklist, _ = load_blacklist(data_root, env)
+
+    # Load a manual evaluation of event timing
+    manual_evals = np.loadtxt(
+            os.path.join(data_root, env, 'original', 'pupariation.csv'),
+            dtype=np.int16, delimiter=',').flatten()
+
+    # Target wells will be evaluated
+    exceptions = np.logical_or(blacklist, manual_evals == 0)
+    targets = np.logical_not(exceptions)
 
     # Load the data
     larva_diffs = np.load(os.path.join(
@@ -2031,11 +2040,6 @@ def callback(coef, well_idx, weight,
             smooth=len(checks) != 0,
             weight=len(weight) != 0)
 
-    # Load a manual evaluation of event timing
-    manual_evals = np.loadtxt(
-            os.path.join(data_root, env, 'original', 'pupariation.csv'),
-            dtype=np.int16, delimiter=',').flatten()
-
     # Compute thresholds
     threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
 
@@ -2043,7 +2047,7 @@ def callback(coef, well_idx, weight,
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
-    errors = errors[whitelist]
+    errors = errors[targets]
     ns, bins = np.histogram(errors, 1000)
 
     # Calculate the number of inconsistent wells
@@ -2086,9 +2090,9 @@ def callback(coef, well_idx, weight,
                         'y': 0.9 * ns.max(),
                         'text': '{} (5%): {:.1f}% ({}/{})'.format(
                             round(0.05 * larva_diffs.shape[1]),
-                            100 * n_consist_5percent / whitelist.sum(),
+                            100 * n_consist_5percent / targets.sum(),
                             n_consist_5percent,
-                            whitelist.sum()),
+                            targets.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -2097,9 +2101,9 @@ def callback(coef, well_idx, weight,
                         'y': 0.8 * ns.max(),
                         'text': '{} (1%): {:.1f}% ({}/{})'.format(
                             round(0.01 * larva_diffs.shape[1]),
-                            100 * n_consist_1percent / whitelist.sum(),
+                            100 * n_consist_1percent / targets.sum(),
                             n_consist_1percent,
-                            whitelist.sum()),
+                            targets.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -2107,9 +2111,9 @@ def callback(coef, well_idx, weight,
                         'x': 0.9 * larva_diffs.shape[1],
                         'y': 0.7 * ns.max(),
                         'text': '10: {:.1f}% ({}/{})'.format(
-                            100 * n_consist_10frames / whitelist.sum(),
+                            100 * n_consist_10frames / targets.sum(),
                             n_consist_10frames,
-                            whitelist.sum()),
+                            targets.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -2178,8 +2182,8 @@ def callback(coef, well_idx, weight,
             data_root, env, 'inference', 'adult', adult, 'signals.npy')):
         return {'data': []}
     
-    # Load a whitelist
-    whitelist, _ = load_blacklist(data_root, env, white=True)
+    # Load a blacklist
+    blacklist, _ = load_blacklist(data_root, env)
 
     # Load a manual evaluation of event timing
     if detect == 'pupa-and-eclo':
@@ -2200,6 +2204,10 @@ def callback(coef, well_idx, weight,
                 os.path.join(data_root, env, 'original', 'death.csv'),
                 dtype=np.int16, delimiter=',').flatten()
 
+    # Target wells will be evaluated
+    exceptions = np.logical_or(blacklist, manual_evals == 0)
+    targets = np.logical_not(exceptions)
+
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
@@ -2216,7 +2224,7 @@ def callback(coef, well_idx, weight,
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
-    errors = errors[whitelist]
+    errors = errors[targets]
     ns, bins = np.histogram(errors, 1000)
 
     # Calculate the number of inconsistent wells
@@ -2259,9 +2267,9 @@ def callback(coef, well_idx, weight,
                         'y': 0.9 * ns.max(),
                         'text': '{} (5%): {:.1f}% ({}/{})'.format(
                             round(0.05 * adult_diffs.shape[1]),
-                            100 * n_consist_5percent / whitelist.sum(),
+                            100 * n_consist_5percent / targets.sum(),
                             n_consist_5percent,
-                            whitelist.sum()),
+                            targets.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -2270,9 +2278,9 @@ def callback(coef, well_idx, weight,
                         'y': 0.8 * ns.max(),
                         'text': '{} (1%): {:.1f}% ({}/{})'.format(
                             round(0.01 * adult_diffs.shape[1]),
-                            100 * n_consist_1percent / whitelist.sum(),
+                            100 * n_consist_1percent / targets.sum(),
                             n_consist_1percent,
-                            whitelist.sum()),
+                            targets.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
@@ -2280,9 +2288,9 @@ def callback(coef, well_idx, weight,
                         'x': 0.9 * adult_diffs.shape[1],
                         'y': 0.7 * ns.max(),
                         'text': '10: {:.1f}% ({}/{})'.format(
-                            100 * n_consist_10frames / whitelist.sum(),
+                            100 * n_consist_10frames / targets.sum(),
                             n_consist_10frames,
-                            whitelist.sum()),
+                            targets.sum()),
                         'showarrow': False,
                         'xanchor': 'right',
                     },
