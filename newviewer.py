@@ -2499,12 +2499,13 @@ def callback(coef, well_idx, weight,
         group_tables = [groups == i for i in range(groups.max() + 1)]
 
     else:
-        group_tables = None
+        group_tables = []
 
 
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
+    print(adult_diffs.shape)
 
     # Smooth the signals
     if len(checks) != 0:
@@ -2533,21 +2534,36 @@ def callback(coef, well_idx, weight,
     auto_evals[auto_evals == adult_diffs.shape[1]] = 0
     '''
 
+    survival_ratios = []
+    for group_idx, group_table in enumerate(group_tables):
+        survival_ratio = np.zeros_like(adult_diffs)
+        
+        for well_idx, event_time in enumerate(auto_evals):
+
+            survival_ratio[well_idx, :event_time] = 1
+
+        survival_ratio = 100 * survival_ratio.sum(axis=0)  \
+                / len(survival_ratio)
+    
     # Compute survival ratio of all the animals
     survival_ratio = np.zeros_like(adult_diffs)
+    print(survival_ratio.shape)
 
     for well_idx, event_time in enumerate(auto_evals):
 
         survival_ratio[well_idx, :event_time] = 1
 
-    survival_ratio = 100 * survival_ratio[whitelist].sum(axis=0)  \
-            / len(survival_ratio[whitelist])
-
+    survival_ratio = 100 * survival_ratio.sum(axis=0)  \
+            / len(survival_ratio)
+    
+    print(survival_ratio.shape)
+    print(whitelist.shape)
+    print(len(group_tables))
     if group_tables == None :
         data_list = [
             {
-                'x': list(range(len(survival_ratio))),
-                'y': list(survival_ratio),
+                'x': list(range(len(survival_ratio[whitelist]))),
+                'y': list(survival_ratio[whitelist]),
                 'mode': 'lines',
                 'line': {'size': 2, 'color': '#ff4500'},
             }]
