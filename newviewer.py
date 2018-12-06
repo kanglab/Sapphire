@@ -2488,7 +2488,6 @@ def callback(coef, well_idx, weight,
                 (params['n-rows']*params['n-plates'], params['n-clms'])
                 ).flatten() == 0
 
-
     # Load a group table
     if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
 
@@ -2496,16 +2495,14 @@ def callback(coef, well_idx, weight,
                 os.path.join(data_root, env, 'grouping.csv'),
                 dtype=np.uint16, delimiter=',').flatten()
 
-        group_tables = [groups == i for i in range(groups.max() + 1)]
+        group_tables = [groups == i for i in range(1, groups.max() + 1)]
 
     else:
         group_tables = []
 
-
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
-    print(adult_diffs.shape)
 
     # Smooth the signals
     if len(checks) != 0:
@@ -2534,56 +2531,54 @@ def callback(coef, well_idx, weight,
     auto_evals[auto_evals == adult_diffs.shape[1]] = 0
     '''
 
-    survival_ratios = []
-    for group_idx, group_table in enumerate(group_tables):
+    if group_tables == None :
+
+        # Compute survival ratio of all the animals
         survival_ratio = np.zeros_like(adult_diffs)
-        
+
         for well_idx, event_time in enumerate(auto_evals):
 
             survival_ratio[well_idx, :event_time] = 1
 
-        survival_ratio = 100 * survival_ratio.sum(axis=0)  \
-                / len(survival_ratio)
-    
-    # Compute survival ratio of all the animals
-    survival_ratio = np.zeros_like(adult_diffs)
-    print(survival_ratio.shape)
+        survival_ratio = 100 * survival_ratio.sum(axis=0) / len(survival_ratio)
 
-    for well_idx, event_time in enumerate(auto_evals):
-
-        survival_ratio[well_idx, :event_time] = 1
-
-    survival_ratio = 100 * survival_ratio.sum(axis=0)  \
-            / len(survival_ratio)
-    
-    print(survival_ratio.shape)
-    print(whitelist.shape)
-    print(len(group_tables))
-    if group_tables == None :
         data_list = [
             {
-                'x': list(range(len(survival_ratio[whitelist]))),
-                'y': list(survival_ratio[whitelist]),
+                'x': list(range(len(survival_ratio))),
+                'y': list(survival_ratio),
                 'mode': 'lines',
                 'line': {'size': 2, 'color': '#ff4500'},
             }]
 
-    else :                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-        data_list =[]
+    else :
+
+        survival_ratios = []
         for group_idx, group_table in enumerate(group_tables):
+
+            survival_ratio = np.zeros_like(adult_diffs)
+
+            for well_idx, (event_time, is_group) in enumerate(zip(auto_evals, group_table)):
+
+                survival_ratio[well_idx, :event_time] = is_group
+
+            survival_ratio = 100 * survival_ratio.sum(axis=0) / group_table.sum()
+
+            survival_ratios.append(survival_ratio)
+    
+        data_list =[]
+        for group_idx, (group_table, survival_ratio) in enumerate(zip(group_tables, survival_ratios)):
 
             data_list.append(
                 {
                     'x': list(range(len(survival_ratio))),
-                    'y': list(survival_ratio[np.logical_and(whitelist, group_table)]),
+                    'y': list(survival_ratio),
                     'mode': 'lines',
-                    'marker': {'size':2, 'color': GROUP_COLORS[group_idx]},
-                    'name': 'Group{}'.format(group_idx),
+                    'marker': {'size': 2, 'color': GROUP_COLORS[group_idx]},
+                    'name': 'Group{}'.format(group_idx + 1),
                 })
 
-
     return {
-            'data':data_list + [
+            'data': data_list + [
                 {
                     'x': [0, len(survival_ratio)],
                     'y': [100, 100],
