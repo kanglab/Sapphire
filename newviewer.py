@@ -3369,5 +3369,19 @@ def load_blacklist(data_root, dataset_name, white=False):
         return blacklist, exist
 
 
+def load_grouping_csv(data_root, dataset_name):
+
+    if os.path.exists(os.path.join(data_root, dataset_name, 'grouping.csv')):
+
+        groups = np.loadtxt(
+                os.path.join(data_root, dataset_name, 'grouping.csv'),
+                dtype=np.uint16, delimiter=',').flatten()
+
+        return [groups == i for i in range(1, groups.max() + 1)]
+
+    else:
+        return []
+
+
 if __name__ == '__main__':
     app.run_server(debug=True)
