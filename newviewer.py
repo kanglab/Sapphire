@@ -416,6 +416,7 @@ app.layout = html.Div([
                 'larva-summary': 0,
                 'adult-summary': 0,
                 'pupa-vs-eclo': 0,
+                'box-plot': 0,
             }
         )
     ),
@@ -646,13 +647,15 @@ def callback(_, buff, larva_data, adult_data, changed_data, well_idx):
         Output('changed-well', 'children'),
         [Input('larva-summary', 'clickData'),
          Input('adult-summary', 'clickData'),
-         Input('pupa-vs-eclo', 'clickData')],
+         Input('pupa-vs-eclo', 'clickData'),
+         Input('box-plot', 'clickData')],
         [State('well-buff', 'children')])
-def callback(larva_summary, adult_summary, pupa_vs_eclo, buff):
+def callback(larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
     # Guard
     if larva_summary is None and  \
        adult_summary is None and  \
-       pupa_vs_eclo is None:
+       pupa_vs_eclo is None and  \
+       box_plot is None:
         return '{"changed": "nobody"}'
 
     if larva_summary is None:
@@ -661,7 +664,7 @@ def callback(larva_summary, adult_summary, pupa_vs_eclo, buff):
         larva_summary = int(larva_summary['points'][0]['text'])
 
     if adult_summary is None:
-        adult_sumamry = 0
+        adult_summary = 0
     else:
         adult_summary = int(adult_summary['points'][0]['text'])
 
@@ -669,6 +672,11 @@ def callback(larva_summary, adult_summary, pupa_vs_eclo, buff):
         pupa_vs_eclo = 0
     else:
         pupa_vs_eclo = int(pupa_vs_eclo['points'][0]['text'])
+
+    if box_plot is None:
+        box_plot = 0
+    else:
+        box_plot = int(box_plot['points'][0]['text'])
 
     buff = json.loads(buff)
 
@@ -681,6 +689,9 @@ def callback(larva_summary, adult_summary, pupa_vs_eclo, buff):
     if pupa_vs_eclo != buff['pupa-vs-eclo']:
         return '{"changed": "pupa-vs-eclo"}'
 
+    if box_plot != buff['box-plot']:
+        return '{"changed": "box-plot"}'
+
     return '{"changed": "nobody"}'
 
 
@@ -690,8 +701,10 @@ def callback(larva_summary, adult_summary, pupa_vs_eclo, buff):
         [State('larva-summary', 'clickData'),
          State('adult-summary', 'clickData'),
          State('pupa-vs-eclo', 'clickData'),
+         State('box-plot', 'clickData'),
          State('well-buff', 'children')])
-def callback(changed_data, larva_summary, adult_summary, pupa_vs_eclo, buff):
+def callback(changed_data,
+        larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
 
     buff = json.loads(buff)
     changed_data = json.loads(changed_data)['changed']
@@ -699,25 +712,27 @@ def callback(changed_data, larva_summary, adult_summary, pupa_vs_eclo, buff):
     print(buff)
 
     if changed_data == 'nobody':
-        return json.dumps(buff)
+        pass
 
-    if changed_data == 'larva-summary':
+    elif changed_data == 'larva-summary':
         buff['larva-summary'] = int(larva_summary['points'][0]['text'])
-        print('Current Value')
-        print(buff)
-        return json.dumps(buff)
 
-    if changed_data == 'adult-summary':
+    elif changed_data == 'adult-summary':
         buff['adult-summary'] = int(adult_summary['points'][0]['text'])
-        print('Current Value')
-        print(buff)
-        return json.dumps(buff)
 
-    if changed_data == 'pupa-vs-eclo':
+    elif changed_data == 'pupa-vs-eclo':
         buff['pupa-vs-eclo'] = int(pupa_vs_eclo['points'][0]['text'])
-        print('Current Value')
-        print(buff)
-        return json.dumps(buff)
+
+    elif changed_data == 'box-plot':
+        buff['box-plot'] = int(box_plot['points'][0]['text'])
+
+    else:
+        # Never evaluated
+        pass
+
+    print('Current Value')
+    print(buff)
+    return json.dumps(buff)
 
 
 # =====================================================
@@ -797,7 +812,7 @@ def callback(larva_signal, adult_signal, buff):
         larva_signal = larva_signal['points'][0]['x']
 
     if adult_signal is None:
-        adult_sumamry = 0
+        adult_signal = 0
     else:
         adult_signal = adult_signal['points'][0]['x']
 
@@ -2655,6 +2670,7 @@ def callback(coef, well_idx, weight,
                     pointpos=1.8,
                     marker={'size': 2},
                     line={'width': 2},
+                    text=[str(i) for i in np.where(whitelist)[0]],
                 )
             )
 
@@ -2667,11 +2683,13 @@ def callback(coef, well_idx, weight,
                     name='Group{}'.format(group_idx +1),
                     boxpoints='all',
                     pointpos=1.8,
-                    marker={'size': 2,'color':GROUP_COLORS[group_idx]},
-                    line={'width': 2,'color':GROUP_COLORS[group_idx]},
-
-                )  
-              )
+                    marker={'size': 2, 'color': GROUP_COLORS[group_idx]},
+                    line={'width': 2, 'color': GROUP_COLORS[group_idx]},
+                    text=[str(i)
+                        for i in np.where(
+                            np.logical_and(whitelist, group_table))[0]],
+                )
+            )
 
     return {
             'data': data,
