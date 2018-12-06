@@ -404,7 +404,31 @@ app.layout = html.Div([
             ),
         ], style={'width': '100%'}),
     ], style={'width': '100%'}),
+
     html.Div(id='hidden-timestamp', style={'display': 'none'}),
+
+    html.Div('{"changed": "nobody"}',
+            id='changed-well', style={'display': 'none'}),
+    html.Div(id='well-buff', style={'display': 'none'}, children=json.dumps(
+            {
+                'nobody': 0,
+                'larva-summary': 0,
+                'adult-summary': 0,
+                'pupa-vs-eclo': 0,
+            }
+        )
+    ),
+
+    html.Div('{"changed": "nobody"}',
+            id='changed-time', style={'display': 'none'}),
+    html.Div(id='time-buff', style={'display': 'none'}, children=json.dumps(
+            {
+                'nobody': 0,
+                'larva-signal': 0,
+                'adult-signal': 0,
+            }
+        )
+    ),
 
 ], style={'width': '1400px',},)
 
@@ -604,15 +628,95 @@ def callback(env, data_root):
 @app.callback(
         Output('well-slider', 'value'),
         [Input('env-dropdown', 'value'),
-         Input('adult-summary', 'clickData'),
+         Input('well-buff', 'children'),
          Input('larva-dropdown', 'value'),
          Input('adult-dropdown', 'value')],
-        [State('well-slider', 'value')])
-def callback(_, adult_summary, larva_data, adult_data, well_idx):
-    if adult_summary is None:
-        return well_idx
+        [State('changed-well', 'children'),
+         State('well-slider', 'value')])
+def callback(_, buff, larva_data, adult_data, changed_data, well_idx):
 
-    return int(adult_summary['points'][0]['text'])
+    buff = json.loads(buff)
+    changed_data = json.loads(changed_data)['changed']
+
+    return buff[changed_data]
+
+
+@app.callback(
+        Output('changed-well', 'children'),
+        [Input('larva-summary', 'clickData'),
+         Input('adult-summary', 'clickData'),
+         Input('pupa-vs-eclo', 'clickData')],
+        [State('well-buff', 'children')])
+def callback(larva_summary, adult_summary, pupa_vs_eclo, buff):
+    # Guard
+    if larva_summary is None and  \
+       adult_summary is None and  \
+       pupa_vs_eclo is None:
+        return '{"changed": "nobody"}'
+
+    if larva_summary is None:
+        larva_summary = 0
+    else:
+        larva_summary = int(larva_summary['points'][0]['text'])
+
+    if adult_summary is None:
+        adult_sumamry = 0
+    else:
+        adult_summary = int(adult_summary['points'][0]['text'])
+
+    if pupa_vs_eclo is None:
+        pupa_vs_eclo = 0
+    else:
+        pupa_vs_eclo = int(pupa_vs_eclo['points'][0]['text'])
+
+    buff = json.loads(buff)
+
+    if larva_summary != buff['larva-summary']:
+        return '{"changed": "larva-summary"}'
+
+    if adult_summary != buff['adult-summary']:
+        return '{"changed": "adult-summary"}'
+
+    if pupa_vs_eclo != buff['pupa-vs-eclo']:
+        return '{"changed": "pupa-vs-eclo"}'
+
+    return '{"changed": "nobody"}'
+
+
+@app.callback(
+        Output('well-buff', 'children'),
+        [Input('changed-well', 'children')],
+        [State('larva-summary', 'clickData'),
+         State('adult-summary', 'clickData'),
+         State('pupa-vs-eclo', 'clickData'),
+         State('well-buff', 'children')])
+def callback(changed_data, larva_summary, adult_summary, pupa_vs_eclo, buff):
+
+    buff = json.loads(buff)
+    changed_data = json.loads(changed_data)['changed']
+    print('Previous Value')
+    print(buff)
+
+    if changed_data == 'nobody':
+        return json.dumps(buff)
+
+    if changed_data == 'larva-summary':
+        buff['larva-summary'] = int(larva_summary['points'][0]['text'])
+        print('Current Value')
+        print(buff)
+        return json.dumps(buff)
+
+    if changed_data == 'adult-summary':
+        buff['adult-summary'] = int(adult_summary['points'][0]['text'])
+        print('Current Value')
+        print(buff)
+        return json.dumps(buff)
+
+    if changed_data == 'pupa-vs-eclo':
+        buff['pupa-vs-eclo'] = int(pupa_vs_eclo['points'][0]['text'])
+        print('Current Value')
+        print(buff)
+        return json.dumps(buff)
 
 
 # =====================================================
@@ -664,15 +768,76 @@ def callback(env, data_root):
 @app.callback(
         Output('time-slider', 'value'),
         [Input('env-dropdown', 'value'),
+         Input('time-buff', 'children'),
          Input('larva-dropdown', 'value'),
-         Input('adult-dropdown', 'value'),
-         Input('adult-summary', 'clickData')],
-        [State('time-slider', 'value')])
-def callback(_, larva_data, adult_data, adult_summary, time):
-    if adult_summary is None:
-        return time
+         Input('adult-dropdown', 'value')],
+        [State('changed-time', 'children')])
+def callback(_, buff, larva_data, adult_data, changed_data):
 
-    return adult_summary['points'][0]['x']
+    buff = json.loads(buff)
+    changed_data = json.loads(changed_data)['changed']
+
+    return buff[changed_data]
+
+
+@app.callback(
+        Output('changed-time', 'children'),
+        [Input('larva-signal', 'clickData'),
+         Input('adult-signal', 'clickData')],
+        [State('time-buff', 'children')])
+def callback(larva_signal, adult_signal, buff):
+    # Guard
+    if larva_signal is None and adult_signal is None:
+        return '{"changed": "nobody"}'
+
+    if larva_signal is None:
+        larva_signal = 0
+    else:
+        larva_signal = larva_signal['points'][0]['x']
+
+    if adult_signal is None:
+        adult_sumamry = 0
+    else:
+        adult_signal = adult_signal['points'][0]['x']
+
+    buff = json.loads(buff)
+
+    if larva_signal != buff['larva-signal']:
+        return '{"changed": "larva-signal"}'
+
+    if adult_signal != buff['adult-signal']:
+        return '{"changed": "adult-signal"}'
+
+    return '{"changed": "nobody"}'
+
+
+@app.callback(
+        Output('time-buff', 'children'),
+        [Input('changed-time', 'children')],
+        [State('larva-signal', 'clickData'),
+         State('adult-signal', 'clickData'),
+         State('time-buff', 'children')])
+def callback(changed_data, larva_signal, adult_signal, buff):
+
+    buff = json.loads(buff)
+    changed_data = json.loads(changed_data)['changed']
+    print('Previous Value')
+    print(buff)
+
+    if changed_data == 'nobody':
+        return json.dumps(buff)
+
+    if changed_data == 'larva-signal':
+        buff['larva-signal'] = larva_signal['points'][0]['x']
+        print('Current Value')
+        print(buff)
+        return json.dumps(buff)
+
+    if changed_data == 'adult-signal':
+        buff['adult-signal'] = adult_signal['points'][0]['x']
+        print('Current Value')
+        print(buff)
+        return json.dumps(buff)
 
 
 # =====================================================
@@ -2404,18 +2569,30 @@ def callback(coef, well_idx, weight,
                     'marker': {'size': 4, 'color': '#1f77b4'},
                     'name': 'Well in Whitelist',
                 },
+                {
+                    'x': [pupars[well_idx]],
+                    'y': [eclos[well_idx]],
+                    'text': str(well_idx),
+                    'mode': 'markers',
+                    'marker': {'size': 10, 'color': '#ff0000'},
+                    'name': 'Selected well',
+                },
             ],
             'layout': {
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'Pupariation',
                     'tickfont': {'size': 15},
-                    'range': [0, 1.1 * len(larva_diffs.T)],
+                    'range': [
+                        -0.1 * len(larva_diffs.T),
+                        1.1 * len(larva_diffs.T)],
                 },
                 'yaxis': {
                     'title': 'Eclosion',
                     'tickfont': {'size': 15},
-                    'range': [0, 1.1 * len(adult_diffs.T)],
+                    'range': [
+                        -0.1 * len(adult_diffs.T),
+                        1.1 * len(adult_diffs.T)],
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
