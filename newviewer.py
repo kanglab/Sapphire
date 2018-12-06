@@ -882,13 +882,11 @@ def callback(checks):
 def callback(well_idx, data_root, env):
     if well_idx is None or env is None:
         return []
-    
-    if not os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        return []
 
-    blacklist = np.loadtxt(
-            os.path.join(data_root, env, 'blacklist.csv'),
-            dtype=np.uint16, delimiter=',').flatten() == 1
+    blacklist, exist = load_blacklist(data_root, env)
+    
+    if not exist:
+        return []
 
     if blacklist[well_idx]:
         return 'checked'
@@ -1251,24 +1249,15 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
 
-    # Smooth the signals
-    if len(checks) != 0:
-        larva_diffs = my_filter(larva_diffs, size=size, sigma=sigma)
-
-    # Apply weight to the signals
-    if len(weight) != 0:
-        larva_diffs = larva_diffs *  \
-                10 * (np.arange(len(larva_diffs.T)) / len(larva_diffs.T))[::-1]
+    larva_diffs = seasoning(
+            larva_diffs, 'larva', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
 
-    # Scan the signal from the right hand side.
-    auto_evals = (larva_diffs.shape[1]
-            - (np.fliplr(larva_diffs) > threshold).argmax(axis=1))
-
-    # If the signal was not more than the threshold.
-    auto_evals[auto_evals == larva_diffs.shape[1]] = 0
+    auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
     if os.path.exists(
             os.path.join(data_root, env, 'original', 'pupariation.csv')):
@@ -1417,34 +1406,15 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
 
-    # Smooth the signals
-    if len(checks) != 0:
-        adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
-
-    # Apply weight to the signals
-    if len(weight) != 0 and detect == 'pupa-and-eclo':
-        adult_diffs = adult_diffs *  \
-                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
-
-    elif len(weight) != 0 and detect == 'death':
-        adult_diffs = adult_diffs *  \
-                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
+    adult_diffs = seasoning(
+            adult_diffs, 'adult', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
 
-    # Evaluate event timing
-    if detect == 'pupa-and-eclo':
-        auto_evals = (adult_diffs > threshold).argmax(axis=1)
-
-    elif detect == 'death':
-        # Compute event times from signals
-        # Scan the signal from the right hand side.
-        auto_evals = (adult_diffs.shape[1]
-                - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
-
-        # If the signal was not more than the threshold.
-        auto_evals[auto_evals == adult_diffs.shape[1]] = 0
+    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     if os.path.exists(
             os.path.join(data_root, env, 'original', 'eclosion.csv')):
@@ -1584,63 +1554,35 @@ def callback(coef, well_idx, weight,
     if not os.path.exists(os.path.join(
             data_root, env, 'original', 'pupariation.csv')):
         return {'data': []}
-
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
     
-    # Load a blacklist
-    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        blacklist = np.loadtxt(
-                os.path.join(data_root, env, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 1
-
-    else:
-        blacklist = np.zeros(
-                (params['n-rows']*params['n-plates'], params['n-clms'])
-                ).flatten() == 1
-
-    # Make a whitelist
-    whitelist = np.logical_not(blacklist)
+    # Load a blacklist and whitelist
+    blacklist, _ = load_blacklist(data_root, env)
+    whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load a group table
-    if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
-
-        groups = np.loadtxt(
-                os.path.join(data_root, env, 'grouping.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
-
-        group_tables = [groups == i for i in range(1, groups.max() + 1)]
-
-    else:
-        group_tables = None
-
+    group_tables = load_grouping_csv(data_root, env)
 
     # Load the data
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+    # Load a manual data
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', 'pupariation.csv'),
             dtype=np.uint16, delimiter=',').flatten()
 
-    # Smooth the signals
-    if len(checks) != 0:
-        larva_diffs = my_filter(larva_diffs, size=size, sigma=sigma)
+    # Load the data
+    larva_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
 
-    # Apply weight to the signals
-    if len(weight) != 0:
-        larva_diffs = larva_diffs *  \
-                10 * (np.arange(len(larva_diffs.T)) / len(larva_diffs.T))[::-1]
+    larva_diffs = seasoning(
+            larva_diffs, 'larva', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
 
-    # Compute event times from signals
-    # Scan the signal from the right hand side.
-    auto_evals = (larva_diffs.shape[1]
-            - (np.fliplr(larva_diffs) > threshold).argmax(axis=1))
-    # If the signal was not more than the threshold.
-    auto_evals[auto_evals == larva_diffs.shape[1]] = 0
+    auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals[whitelist] - manual_evals[whitelist]
@@ -1649,7 +1591,7 @@ def callback(coef, well_idx, weight,
     rms = np.sqrt((errors**2).sum() / len(errors))
 
     # Create data points
-    if group_tables is None:
+    if group_tables == []:
 
         data_list = [
                 {
@@ -1832,37 +1774,12 @@ def callback(coef, well_idx, weight,
         and detect == 'pupa-and-eclo':
         return {'data': []}
 
-
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
-    
-    # Load a blacklist
-    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        blacklist = np.loadtxt(
-                os.path.join(data_root, env, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 1
-
-    else:
-        blacklist = np.zeros(
-                (params['n-rows']*params['n-plates'], params['n-clms'])
-                ).flatten() == 1
-
-    # Make a whitelist
-    whitelist = np.logical_not(blacklist)
+    # Load a blacklist and whitelist
+    blacklist, _ = load_blacklist(data_root, env)
+    whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load a group table
-    if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
-
-        groups = np.loadtxt(
-                os.path.join(data_root, env, 'grouping.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
-
-        group_tables = [groups == i for i in range(1, groups.max() + 1)]
-
-    else:
-        group_tables = None
-
+    group_tables = load_grouping_csv(data_root, env)
 
     # Load a manual evaluation of event timing
     if detect == 'pupa-and-eclo':
@@ -1887,34 +1804,15 @@ def callback(coef, well_idx, weight,
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
 
-    # Smooth the signals
-    if len(checks) != 0:
-        adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
-
-    # Apply weight to the signals
-    if len(weight) != 0 and detect == 'pupa-and-eclo':
-        adult_diffs = adult_diffs *  \
-                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
-
-    elif len(weight) != 0 and detect == 'death':
-        adult_diffs = adult_diffs *  \
-                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
+    adult_diffs = seasoning(
+            adult_diffs, 'adult', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
 
-    # Evaluate event timing
-    if detect == 'pupa-and-eclo':
-        auto_evals = (adult_diffs > threshold).argmax(axis=1)
-
-    elif detect == 'death':
-        # Compute event times from signals
-        # Scan the signal from the right hand side.
-        auto_evals = (adult_diffs.shape[1]
-                - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
-
-        # If the signal was not more than the threshold.
-        auto_evals[auto_evals == adult_diffs.shape[1]] = 0
+    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals[whitelist] - manual_evals[whitelist]
@@ -1923,7 +1821,7 @@ def callback(coef, well_idx, weight,
     rms = np.sqrt((errors**2).sum() / len(errors))
 
     # Create data points
-    if group_tables is None:
+    if group_tables == []:
 
         data_list = [
                 {
@@ -2105,49 +2003,28 @@ def callback(coef, well_idx, weight,
     if not os.path.exists(os.path.join(
             data_root, env, 'original', 'pupariation.csv')):
         return {'data': []}
-
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
     
-    # Load a blacklist
-    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        whitelist = np.loadtxt(
-                os.path.join(data_root, env, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 0
-
-    else:
-        whitelist = np.zeros(
-                (params['n-rows']*params['n-plates'], params['n-clms'])
-                ).flatten() == 0
+    # Load a whitelist
+    whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load the data
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+
+    larva_diffs = seasoning(
+            larva_diffs, 'larva', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0)
 
     # Load a manual evaluation of event timing
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', 'pupariation.csv'),
             dtype=np.uint16, delimiter=',').flatten()
 
-    # Smooth the signals
-    if len(checks) != 0:
-        larva_diffs = my_filter(larva_diffs, size=size, sigma=sigma)
-
-    # Apply weight to the signals
-    if len(weight) != 0:
-        larva_diffs = larva_diffs *  \
-                10 * (np.arange(len(larva_diffs.T)) / len(larva_diffs.T))[::-1]
-
     # Compute thresholds
     threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
 
-    # Compute event times from signals
-    # Scan the signal from the right hand side.
-    auto_evals = (larva_diffs.shape[1]
-            - (np.fliplr(larva_diffs) > threshold).argmax(axis=1))
-    # If the signal was not more than the threshold.
-    auto_evals[auto_evals == larva_diffs.shape[1]] = 0
+    auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
@@ -2285,21 +2162,9 @@ def callback(coef, well_idx, weight,
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')):
         return {'data': []}
-
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
     
-    # Load a blacklist
-    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        whitelist = np.loadtxt(
-                os.path.join(data_root, env, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 0
-
-    else:
-        whitelist = np.zeros(
-                (params['n-rows']*params['n-plates'], params['n-clms'])
-                ).flatten() == 0
+    # Load a whitelist
+    whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load a manual evaluation of event timing
     if detect == 'pupa-and-eclo':
@@ -2324,36 +2189,15 @@ def callback(coef, well_idx, weight,
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
 
-    # Smooth the signals
-    if len(checks) != 0:
-        adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
-
-    # Apply weight to the signals
-    if len(weight) != 0 and detect == 'pupa-and-eclo':
-        adult_diffs = adult_diffs *  \
-                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
-
-    elif len(weight) != 0 and detect == 'death':
-        adult_diffs = adult_diffs *  \
-                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
+    adult_diffs = seasoning(
+            adult_diffs, 'adult', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
 
-    # Evaluate event timing
-    if detect == 'pupa-and-eclo':
-        auto_evals = (adult_diffs > threshold).argmax(axis=1)
-
-    elif detect == 'death':
-        # Compute event times from signals
-        # Scan the signal from the right hand side.
-        auto_evals = (adult_diffs.shape[1]
-                - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
-
-        '''
-        # If the signal was not more than the threshold.
-        auto_evals[auto_evals == adult_diffs.shape[1]] = 0
-        '''
+    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
@@ -2502,23 +2346,9 @@ def callback(coef, well_idx, weight,
     if detect == 'death':
         return {'data': []}
 
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
-    
-    # Load a blacklist
-    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        blacklist = np.loadtxt(
-                os.path.join(data_root, env, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 1
-
-    else:
-        blacklist = np.zeros(
-                (params['n-rows']*params['n-plates'], params['n-clms'])) \
-                        .flatten() == 1
-
-    # Make a whitelist
-    whitelist = np.logical_not(blacklist)
+    # Load a blacklist and whitelist
+    blacklist, _ = load_blacklist(data_root, env)
+    whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load the data
     larva_diffs = np.load(os.path.join(
@@ -2526,18 +2356,14 @@ def callback(coef, well_idx, weight,
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
 
-    # Smooth the signals
-    if len(checks) != 0:
-        larva_diffs = my_filter(larva_diffs, size=size, sigma=sigma)
-        adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
-
-    # Apply weight to the signals
-    if len(weight) != 0:
-        larva_diffs = larva_diffs *  \
-                10 * (np.arange(len(larva_diffs.T)) / len(larva_diffs.T))[::-1]
-
-        adult_diffs = adult_diffs *  \
-                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
+    larva_diffs = seasoning(
+            larva_diffs, 'larva', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0)
+    adult_diffs = seasoning(
+            adult_diffs, 'adult', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0)
 
     # Compute thresholds
     larva_thresh = my_threshold.entire_stats(larva_diffs, coef=coef)
@@ -2654,65 +2480,27 @@ def callback(coef, well_idx, weight,
     if detect == 'pupa-and-eclo':
         return {'data': []}
 
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
-    
-    # Load a blacklist
-    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        whitelist = np.loadtxt(
-                os.path.join(data_root, env, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 0
-
-    else:
-        whitelist = np.zeros(
-                (params['n-rows']*params['n-plates'], params['n-clms'])
-                ).flatten() == 0
+    # Load a whitelist
+    whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load a group table
-    if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
-
-        groups = np.loadtxt(
-                os.path.join(data_root, env, 'grouping.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
-
-        group_tables = [groups == i for i in range(1, groups.max() + 1)]
-
-    else:
-        group_tables = []
+    group_tables = load_grouping_csv(data_root, env)
 
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
 
-    # Smooth the signals
-    if len(checks) != 0:
-        adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
-
-    # Apply weight to the signals
-    if len(weight) != 0 and detect == 'pupa-and-eclo':
-        adult_diffs = adult_diffs *  \
-                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
-
-    elif len(weight) != 0 and detect == 'death':
-        adult_diffs = adult_diffs *  \
-                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
+    adult_diffs = seasoning(
+            adult_diffs, 'adult', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
 
-    # Evaluate event timing
-    # Compute event times from signals
-    # Scan the signal from the right hand side.
-    auto_evals = (adult_diffs.shape[1]
-            - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
+    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
-    '''
-    # If the signal was not more than the threshold.
-    auto_evals[auto_evals == adult_diffs.shape[1]] = 0
-    '''
-
-    if len(group_tables) == 0 :
+    if group_tables == []:
 
         # Compute survival ratio of all the animals
         survival_ratio = np.zeros_like(adult_diffs)
@@ -2836,67 +2624,28 @@ def callback(coef, well_idx, weight,
     if detect == 'pupa-and-eclo':
         return {'data': []}
 
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
-    
-    # Load a blacklist
-    if os.path.exists(os.path.join(data_root, env, 'blacklist.csv')):
-        whitelist = np.loadtxt(
-                os.path.join(data_root, env, 'blacklist.csv'),
-                dtype=np.uint16, delimiter=',').flatten() == 0
-
-    else:
-        whitelist = np.zeros(
-                (params['n-rows']*params['n-plates'], params['n-clms'])
-                ).flatten() == 0
-
+    # Load a whitelist
+    whitelist, _ = load_blacklist(data_root, env, white=True)
 
     # Load a group table
-    if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
-
-        groups = np.loadtxt(
-                os.path.join(data_root, env, 'grouping.csv'),
-                dtype=np.uint16, delimiter=',').flatten()
-
-        group_tables = [groups == i for i in range(1, groups.max() + 1)]
-
-    else:
-        group_tables = None
+    group_tables = load_grouping_csv(data_root, env)
 
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
 
-    # Smooth the signals
-    if len(checks) != 0:
-        adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
-
-    # Apply weight to the signals
-    if len(weight) != 0 and detect == 'pupa-and-eclo':
-        adult_diffs = adult_diffs *  \
-                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
-
-    elif len(weight) != 0 and detect == 'death':
-        adult_diffs = adult_diffs *  \
-                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
+    adult_diffs = seasoning(
+            adult_diffs, 'adult', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
 
-    # Evaluate event timing
-    # Compute event times from signals
-    # Scan the signal from the right hand side.
-    auto_evals = (adult_diffs.shape[1]
-            - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
-
-    '''
-    # If the signal was not more than the threshold.
-    auto_evals[auto_evals == adult_diffs.shape[1]] = 0
-    '''
+    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     # Make data to be drawn
-    if group_tables == None :
+    if group_tables == []:
         data = []
         data.append(
                 go.Box(
@@ -3163,6 +2912,8 @@ def callback(tab_name, data_root, env,
         return 'Not available.'
     if larva is None:
         return 'Not available.'
+    if detect == 'death':
+        return []
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')):
         return 'Not available.'
@@ -3171,81 +2922,69 @@ def callback(tab_name, data_root, env,
     with open(os.path.join(data_root, env, 'mask_params.json')) as f:
         params = json.load(f)
 
-    if detect == 'pupa-and-eclo':
-        larva_diffs = np.load(os.path.join(
-                data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+    larva_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
 
-        # Smooth the signals
-        if len(checks) != 0:
-            larva_diffs = my_filter(larva_diffs, size=size, sigma=sigma)
+    larva_diffs = seasoning(
+            larva_diffs, 'larva', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0)
 
-        # Apply weight to the signals
-        larva_diffs = larva_diffs *  \
-                10 * (np.arange(len(larva_diffs.T)) / len(larva_diffs.T))[::-1]
+    # Compute thresholds
+    threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
 
-        # Compute thresholds
-        threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+    auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
-        # Compute event times from signals
-        # Scan the signal from the right hand side.
-        auto_evals = (larva_diffs.shape[1]
-                - (np.fliplr(larva_diffs) > threshold).argmax(axis=1))
-        # If the signal was not more than the threshold.
-        auto_evals[auto_evals == larva_diffs.shape[1]] = 0
+    auto_evals = auto_evals.reshape(
+            params['n-rows']*params['n-plates'], params['n-clms'])
 
-        auto_evals = auto_evals.reshape(
-                params['n-rows']*params['n-plates'], params['n-clms'])
+    auto_to_csv =  \
+              'data:text/csv;charset=utf-8,'  \
+            + 'Dataset,{}\n'.format(env)  \
+            + 'Morphology,larva\n'  \
+            + 'Inference Data,{}\n'.format(larva)  \
+            + 'Threshold Value,{}\n'.format(threshold[0, 0])  \
+            + '(Threshold Value = mean + coef * std)\n'  \
+            + 'Mean (mean),{}\n'.format(larva_diffs.mean())  \
+            + 'Coefficient (coef),{}\n'.format(coef)  \
+            + 'Standard Deviation (std),{}\n'.format(larva_diffs.std())  \
+            + 'Smoothing Window Size,{}\n'.format(size)  \
+            + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma)  \
+            + pd.DataFrame(auto_evals).to_csv(
+                    index=False, encoding='utf-8', header=False),
 
-        auto_to_csv =  \
-                  'data:text/csv;charset=utf-8,'  \
-                + 'Dataset,{}\n'.format(env)  \
-                + 'Morphology,larva\n'  \
-                + 'Inference Data,{}\n'.format(larva)  \
-                + 'Threshold Value,{}\n'.format(threshold[0, 0])  \
-                + '(Threshold Value = mean + coef * std)\n'  \
-                + 'Mean (mean),{}\n'.format(larva_diffs.mean())  \
-                + 'Coefficient (coef),{}\n'.format(coef)  \
-                + 'Standard Deviation (std),{}\n'.format(larva_diffs.std())  \
-                + 'Smoothing Window Size,{}\n'.format(size)  \
-                + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma)  \
-                + pd.DataFrame(auto_evals).to_csv(
-                        index=False, encoding='utf-8', header=False),
+    style = [{
+            'if': {
+                'column_id': '{}'.format(clm),
+                'filter': 'num({2}) > {0} && {1} >= num({3})'.format(
+                        clm, clm, int(t)+100, int(t)),
+            },
+            'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
+            'color': 'black',
+        }
+        for clm in range(params['n-clms'])
+        for t, c in zip(
+            range(0, auto_evals.max(), 100),
+            np.linspace(0, 255, len(range(0, auto_evals.max(), 100))))
+    ]
 
-        style = [{
-                'if': {
-                    'column_id': '{}'.format(clm),
-                    'filter': 'num({2}) > {0} && {1} >= num({3})'.format(
-                            clm, clm, int(t)+100, int(t)),
-                },
-                'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
-                'color': 'black',
-            }
-            for clm in range(params['n-clms'])
-            for t, c in zip(
-                range(0, auto_evals.max(), 100),
-                np.linspace(0, 255, len(range(0, auto_evals.max(), 100))))
+    return [
+            html.H4('Event Timings of Larva (auto)'),
+            dash_table.DataTable(
+                columns=[{'name': str(clm), 'id': str(clm)}
+                        for clm in range(params['n-clms'])],
+                data=pd.DataFrame(auto_evals).to_dict('rows'),
+                style_data_conditional=style,
+                style_table={'width': '100%'}
+            ),
+            html.A(
+                'Download the Data',
+                id='download-link',
+                download='Auto_Detection.csv',
+                href=auto_to_csv,
+                target='_blank',
+            ),
         ]
-
-        return [
-                html.H4('Event Timings of Larva (auto)'),
-                dash_table.DataTable(
-                    columns=[{'name': str(clm), 'id': str(clm)}
-                            for clm in range(params['n-clms'])],
-                    data=pd.DataFrame(auto_evals).to_dict('rows'),
-                    style_data_conditional=style,
-                    style_table={'width': '100%'}
-                ),
-                html.A(
-                    'Download the Data',
-                    id='download-link',
-                    download='Auto_Detection.csv',
-                    href=auto_to_csv,
-                    target='_blank',
-                ),
-            ]
-
-    elif detect == 'death':
-        return []
 
 
 @app.callback(
@@ -3417,32 +3156,15 @@ def callback(tab_name, data_root, env,
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
 
-    # Smooth the signals
-    if len(checks) != 0:
-        adult_diffs = my_filter(adult_diffs, size=size, sigma=sigma)
-
-    # Apply weight to the signals
-    if len(weight) != 0 and detect == 'pupa-and-eclo':
-        adult_diffs = adult_diffs *  \
-                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))
-
-    elif len(weight) != 0 and detect == 'death':
-        adult_diffs = adult_diffs *  \
-                10 * (np.arange(len(adult_diffs.T)) / len(adult_diffs.T))[::-1]
+    adult_diffs = seasoning(
+            adult_diffs, 'adult', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
 
-    if detect == 'pupa-and-eclo':
-        # Compute event times from signals
-        auto_evals = (adult_diffs > threshold).argmax(axis=1)
-
-    elif detect == 'death':
-        # Scan the signal from the right hand side.
-        auto_evals = (adult_diffs.shape[1]
-                - (np.fliplr(adult_diffs) > threshold).argmax(axis=1))
-        # If the signal was not more than the threshold.
-        auto_evals[auto_evals == adult_diffs.shape[1]] = 0
+    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
     auto_evals = auto_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
@@ -3519,6 +3241,108 @@ def callback(detect):
 
     else:
         return {}
+
+
+# ====================
+#  Utility functions
+# ====================
+def seasoning(signals, signal_type, detect, size, sigma, smooth, weight):
+
+    # Smooth the signals
+    if smooth:
+        signals = my_filter(signals, size=size, sigma=sigma)
+
+    # Apply weight to the signals
+    if weight:
+        if detect == 'pupa-and-eclo' and signal_type == 'larva':
+            signals = signals *  \
+                    10 * (np.arange(len(signals.T)) / len(signals.T))[::-1]
+
+        elif detect == 'pupa-and-eclo' and signal_type == 'adult':
+            signals = signals *  \
+                    10 * (np.arange(len(signals.T)) / len(signals.T))
+
+        elif detect == 'death' and signal_type == 'larva':
+            # Never evaluated
+            pass
+
+        elif detect == 'death' and signal_type == 'adult':
+            signals = signals *  \
+                    10 * (np.arange(len(signals.T)) / len(signals.T))[::-1]
+
+    else:
+        pass
+
+    return signals
+
+
+def detect_event(signals, thresholds, signal_type, detect):
+
+    if detect == 'pupa-and-eclo' and signal_type == 'larva':
+        # Detect the falling of the signal
+        # Scan the signal from the right hand side.
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > thresholds).argmax(axis=1))
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == signals.shape[1]] = 0
+
+    elif detect == 'pupa-and-eclo' and signal_type == 'adult':
+        # Detect the rising of the signal
+        # Compute event times from signals
+        auto_evals = (signals > thresholds).argmax(axis=1)
+
+    elif detect == 'death' and signal_type == 'larva':
+        # Never evaluated
+        pass
+
+    elif detect == 'death' and signal_type == 'adult':
+        # Scan the signal from the right hand side.
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > thresholds).argmax(axis=1))
+
+    return auto_evals
+
+
+def load_blacklist(data_root, dataset_name, white=False):
+    
+    # Load a blacklist
+    if os.path.exists(os.path.join(data_root, dataset_name, 'blacklist.csv')):
+        blacklist = np.loadtxt(
+                os.path.join(data_root, dataset_name, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 1
+
+        exist = True
+
+    else:
+        # Load a mask params
+        with open(os.path.join(
+                data_root, dataset_name, 'mask_params.json')) as f:
+            params = json.load(f)
+
+        blacklist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])
+                ).flatten() == 1
+
+        exist = False
+
+    if white:
+        return np.logical_not(blacklist), exist
+    else:
+        return blacklist, exist
+
+
+def load_grouping_csv(data_root, dataset_name):
+
+    if os.path.exists(os.path.join(data_root, dataset_name, 'grouping.csv')):
+
+        groups = np.loadtxt(
+                os.path.join(data_root, dataset_name, 'grouping.csv'),
+                dtype=np.uint16, delimiter=',').flatten()
+
+        return [groups == i for i in range(1, groups.max() + 1)]
+
+    else:
+        return []
 
 
 if __name__ == '__main__':
