@@ -1228,9 +1228,10 @@ def callback(time, well_idx, data_root, env):
         [State('larva-signal', 'figure'),
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
          State('larva-dropdown', 'value')])
 def callback(well_idx, coef, time, weight, checks, size, sigma,
-        figure, data_root, env, larva):
+        figure, data_root, env, detect, larva):
     # Guard
     if env is None:
         return {'data': []}
@@ -1566,10 +1567,11 @@ def callback(detect):
          Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
 def callback(coef, well_idx, weight,
-        checks, size, sigma, data_root, env, larva, adult):
+        checks, size, sigma, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -2087,9 +2089,10 @@ def callback(detect):
          Input('gaussian-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
          State('larva-dropdown', 'value')])
 def callback(coef, well_idx, weight,
-        checks, size, sigma, data_root, env, larva):
+        checks, size, sigma, data_root, env, detect, larva):
     # Guard
     if env is None:
         return {'data': []}
