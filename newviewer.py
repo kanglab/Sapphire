@@ -2655,6 +2655,7 @@ def callback(coef, well_idx, weight,
                     pointpos=1.8,
                     marker={'size': 2},
                     line={'width': 2},
+                    text=[str(i) for i in np.where(whitelist)[0]],
                 )
             )
 
@@ -2667,11 +2668,13 @@ def callback(coef, well_idx, weight,
                     name='Group{}'.format(group_idx +1),
                     boxpoints='all',
                     pointpos=1.8,
-                    marker={'size': 2,'color':GROUP_COLORS[group_idx]},
-                    line={'width': 2,'color':GROUP_COLORS[group_idx]},
-
-                )  
-              )
+                    marker={'size': 2, 'color': GROUP_COLORS[group_idx]},
+                    line={'width': 2, 'color': GROUP_COLORS[group_idx]},
+                    text=[str(i)
+                        for i in np.where(
+                            np.logical_and(whitelist, group_table))[0]],
+                )
+            )
 
     return {
             'data': data,
