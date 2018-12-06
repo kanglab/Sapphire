@@ -3431,5 +3431,33 @@ def detect_event(signals, thresholds, signal_type, detect):
     return auto_evals
 
 
+def load_blacklist(data_root, dataset_name, white=False):
+    
+    # Load a blacklist
+    if os.path.exists(os.path.join(data_root, dataset_name, 'blacklist.csv')):
+        blacklist = np.loadtxt(
+                os.path.join(data_root, dataset_name, 'blacklist.csv'),
+                dtype=np.uint16, delimiter=',').flatten() == 1
+
+        exist = True
+
+    else:
+        # Load a mask params
+        with open(os.path.join(
+                data_root, dataset_name, 'mask_params.json')) as f:
+            params = json.load(f)
+
+        blacklist = np.zeros(
+                (params['n-rows']*params['n-plates'], params['n-clms'])
+                ).flatten() == 1
+
+        exist = False
+
+    if white:
+        return np.logical_not(blacklist), exist
+    else:
+        return blacklist, exist
+
+
 if __name__ == '__main__':
     app.run_server(debug=True)
