@@ -2554,7 +2554,9 @@ def callback(coef, well_idx, weight,
 
             survival_ratio[well_idx, :event_time] = 1
 
-        survival_ratio = 100 * survival_ratio.sum(axis=0) / len(survival_ratio)
+        survival_ratio =  \
+                100 * survival_ratio[whitelist].sum(axis=0) /  \
+                len(survival_ratio[whitelist])
 
         data_list = [
             {
@@ -2577,7 +2579,8 @@ def callback(coef, well_idx, weight,
                 survival_ratio[well_idx, :event_time] = in_group
 
             survival_ratio =  \
-                    100 * survival_ratio.sum(axis=0) / group_table.sum()
+                    100 * survival_ratio[whitelist].sum(axis=0) /  \
+                    group_table[whitelist].sum()
 
             survival_ratios.append(survival_ratio)
     
