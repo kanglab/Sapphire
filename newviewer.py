@@ -664,7 +664,7 @@ def callback(larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
         larva_summary = int(larva_summary['points'][0]['text'])
 
     if adult_summary is None:
-        adult_sumamry = 0
+        adult_summary = 0
     else:
         adult_summary = int(adult_summary['points'][0]['text'])
 
@@ -812,7 +812,7 @@ def callback(larva_signal, adult_signal, buff):
         larva_signal = larva_signal['points'][0]['x']
 
     if adult_signal is None:
-        adult_sumamry = 0
+        adult_signal = 0
     else:
         adult_signal = adult_signal['points'][0]['x']
 
