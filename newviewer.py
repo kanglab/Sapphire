@@ -2392,10 +2392,6 @@ def callback(coef, well_idx, weight,
     pupars[pupars == larva_diffs.shape[1]] = 0
     eclos = (adult_diffs > adult_thresh).argmax(axis=1)
 
-    manual_evals = np.loadtxt(
-            os.path.join(data_root, env, 'original', 'pupariation.csv'),
-            dtype=np.int16, delimiter=',').flatten()
-
     return {
             'data': [
                 {
