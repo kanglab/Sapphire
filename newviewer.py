@@ -1358,8 +1358,8 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                     'yaxis': {
                         'title': 'Diff. of Larva ROI',
                         'tickfont': {'size': 15},
-                        'overlaying':'y',
-                        'range':[0, larva_diffs.max()],
+                        'overlaying': 'y',
+                        'range': [-0.1*larva_diffs.max(), larva_diffs.max()],
 
                     },
                 'showlegend': False,
@@ -1516,7 +1516,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                         'title':'Diff. of Adult ROI',
                         'tickfont': {'size': 15},
                         'side': 'left',
-                        'range': [0, adult_diffs.max()],
+                        'range': [-0.1*adult_diffs.max(), adult_diffs.max()],
                     },
                 'showlegend': False,
                 'hovermode': 'closest',
@@ -2575,7 +2575,7 @@ def callback(coef, well_idx, weight,
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'Time Step',
-                    'range': [0, len(survival_ratio)],
+                    'range': [0, 1.1 * len(survival_ratio)],
                     'tickfont': {'size': 15},
                 },
                 'yaxis': {
@@ -2671,6 +2671,7 @@ def callback(coef, well_idx, weight,
                     marker={'size': 2},
                     line={'width': 2},
                     text=[str(i) for i in np.where(whitelist)[0]],
+                    boxmean='sd',
                 )
             )
 
@@ -2688,6 +2689,7 @@ def callback(coef, well_idx, weight,
                     text=[str(i)
                         for i in np.where(
                             np.logical_and(whitelist, group_table))[0]],
+                    boxmean='sd',
                 )
             )
 
