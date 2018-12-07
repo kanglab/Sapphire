@@ -37,6 +37,8 @@ DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
 
+THRESH_FUNC = my_threshold.n_times_mean
+THRESH_FUNC = my_threshold.n_times_nonzero_mean
 
 
 app = dash.Dash('Sapphire')
@@ -267,7 +269,7 @@ app.layout = html.Div([
                                 id='larva-thresh',
                                 value=2,
                                 min=-5,
-                                max=10,
+                                max=20,
                                 step=.1,
                                 updatemode='mouseup',
                                 vertical=True,
@@ -296,7 +298,7 @@ app.layout = html.Div([
                                 id='adult-thresh',
                                 value=2,
                                 min=-5,
-                                max=10,
+                                max=20,
                                 step=.1,
                                 updatemode='mouseup',
                                 vertical=True,
@@ -1295,7 +1297,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
             weight=len(weight) != 0)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+    threshold = THRESH_FUNC(larva_diffs, coef=coef)
 
     auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
@@ -1467,7 +1469,7 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks, size, sigma
                 weight=len(weight) != 0)
 
         # Compute thresholds
-        threshold = my_threshold.entire_stats(larva_diffs, coef=larva_coef)
+        threshold = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
         auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
@@ -1479,7 +1481,7 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks, size, sigma
         pass
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(adult_diffs, coef=adult_coef)
+    threshold = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
@@ -1658,7 +1660,7 @@ def callback(coef, well_idx, weight,
             weight=len(weight) != 0)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+    threshold = THRESH_FUNC(larva_diffs, coef=coef)
 
     auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
@@ -1890,7 +1892,7 @@ def callback(coef, well_idx, weight,
             weight=len(weight) != 0)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+    threshold = THRESH_FUNC(adult_diffs, coef=coef)
 
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
@@ -2105,7 +2107,7 @@ def callback(coef, well_idx, weight,
             weight=len(weight) != 0)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+    threshold = THRESH_FUNC(larva_diffs, coef=coef)
 
     auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
@@ -2282,7 +2284,7 @@ def callback(coef, well_idx, weight,
             weight=len(weight) != 0)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+    threshold = THRESH_FUNC(adult_diffs, coef=coef)
 
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
@@ -2454,8 +2456,8 @@ def callback(larva_coef, adult_coef, well_idx, weight,
             weight=len(weight) != 0)
 
     # Compute thresholds
-    larva_thresh = my_threshold.entire_stats(larva_diffs, coef=larva_coef)
-    adult_thresh = my_threshold.entire_stats(adult_diffs, coef=adult_coef)
+    larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
+    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
     # Evaluate event timing
     # Compute event times from signals
@@ -2580,7 +2582,7 @@ def callback(coef, well_idx, weight,
             weight=len(weight) != 0)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+    threshold = THRESH_FUNC(adult_diffs, coef=coef)
 
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
@@ -2728,7 +2730,7 @@ def callback(coef, well_idx, weight,
             weight=len(weight) != 0)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+    threshold = THRESH_FUNC(adult_diffs, coef=coef)
 
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
@@ -3024,7 +3026,7 @@ def callback(tab_name, data_root, env,
             weight=len(weight) != 0)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+    threshold = THRESH_FUNC(larva_diffs, coef=coef)
 
     auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
@@ -3255,7 +3257,7 @@ def callback(tab_name, data_root, env,
             weight=len(weight) != 0)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+    threshold = THRESH_FUNC(adult_diffs, coef=coef)
 
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
