@@ -261,40 +261,65 @@ app.layout = html.Div([
                 ),
 
                 html.Div([
-                    dcc.Slider(
-                        id='threshold-slider1',
-                        value=2,
-                        min=-5,
-                        max=10,
-                        step=.1,
-                        updatemode='mouseup',
-                        vertical=True,
-                    )],
-                    style={
-                        'display': 'inline-block',
-                        'height': '300px',
-                        'width': '10px',
-                        'padding-bottom': '50px',
-                        'margin-left': '30px',
+                    html.Div(id='larva-signal-div', children=[
+                        html.Div([
+                            dcc.Slider(
+                                id='larva-thresh',
+                                value=2,
+                                min=-5,
+                                max=10,
+                                step=.1,
+                                updatemode='mouseup',
+                                vertical=True,
+                            )],
+                            style={
+                                'display': 'inline-block',
+                                'height': '170px',
+                                'width': '10px',
+                                'padding-bottom': '60px',
+                                'margin': '0px 5px',
+                            },
+                        ),
+                        dcc.Graph(
+                            id='larva-signal',
+                            style={
+                                'display': 'inline-block',
+                                'height': '280px',
+                                'width': '700px',
+                            },
+                        ),
+                    ], style={'width': '750px'}),
 
-                    },
-                ),
-                html.Div([
-                    dcc.Graph(
-                        id='larva-signal',
-                        style={
-                            'height': '280px',
-                        },
-                    ),
-                    dcc.Graph(
-                        id='adult-signal',
-                        style={
-                            'height': '280px',
-                        },
-                    ),
-                ], style={
-                    'display': 'inline-block',
-                }),
+                    html.Div(id='adult-signal-div', children=[
+                        html.Div([
+                            dcc.Slider(
+                                id='adult-thresh',
+                                value=2,
+                                min=-5,
+                                max=10,
+                                step=.1,
+                                updatemode='mouseup',
+                                vertical=True,
+                            )],
+                            style={
+                                'display': 'inline-block',
+                                'height': '170px',
+                                'width': '10px',
+                                'padding-bottom': '60px',
+                                'margin': '0px 5px',
+                            },
+                        ),
+                        dcc.Graph(
+                            id='adult-signal',
+                            style={
+                                'display': 'inline-block',
+                                'height': '280px',
+                                'width': '700px',
+                            },
+                        ),
+                    ], style={'width': '750px'}),
+
+                ], style={'display': 'inline-block'}),
             ],
             ),
             html.Div([
@@ -1233,7 +1258,7 @@ def callback(time, well_idx, data_root, env):
 @app.callback(
         Output('larva-signal', 'figure'),
         [Input('well-selector', 'value'),
-         Input('threshold-slider1', 'value'),
+         Input('larva-thresh', 'value'),
          Input('time-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -1370,12 +1395,14 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
 
 
 @app.callback(
-        Output('larva-signal', 'style'),
+        Output('larva-signal-div', 'style'),
         [Input('detect-target', 'value')])
 def callback(detect):
 
     if detect == 'pupa-and-eclo':
-        return {'height': '280px'}
+        return {
+                'width': '750px',
+            }
 
     elif detect == 'death':
         return {'display': 'none'}
@@ -1390,7 +1417,7 @@ def callback(detect):
 @app.callback(
         Output('adult-signal', 'figure'),
         [Input('well-selector', 'value'),
-         Input('threshold-slider1', 'value'),
+         Input('adult-thresh', 'value'),
          Input('time-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -1543,27 +1570,12 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         }
 
 
-@app.callback(
-        Output('adult-signal', 'style'),
-        [Input('detect-target', 'value')])
-def callback(detect):
-
-    if detect == 'pupa-and-eclo':
-        return {'height': '280px'}
-
-    elif detect == 'death':
-        return {'height': '400px'}
-
-    else:
-        return {}
-
-
 # ==========================================
 #  Update the figure in the larva-summary.
 # ==========================================
 @app.callback(
         Output('larva-summary', 'figure'),
-        [Input('threshold-slider1', 'value'),
+        [Input('larva-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -1789,7 +1801,7 @@ def callback(detect):
 # ==========================================
 @app.callback(
         Output('adult-summary', 'figure'),
-        [Input('threshold-slider1', 'value'),
+        [Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2022,7 +2034,7 @@ def callback(detect):
 # =======================================
 @app.callback(
         Output('larva-hist', 'figure'),
-        [Input('threshold-slider1', 'value'),
+        [Input('larva-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2188,7 +2200,7 @@ def callback(detect):
 # =======================================
 @app.callback(
         Output('adult-hist', 'figure'),
-        [Input('threshold-slider1', 'value'),
+        [Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2367,7 +2379,8 @@ def callback(detect):
 # ==============================================
 @app.callback(
         Output('pupa-vs-eclo', 'figure'),
-        [Input('threshold-slider1', 'value'),
+        [Input('larva-thresh', 'value'),
+         Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2378,7 +2391,7 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(coef, well_idx, weight,
+def callback(larva_coef, adult_coef, well_idx, weight,
         checks, size, sigma, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
@@ -2416,8 +2429,8 @@ def callback(coef, well_idx, weight,
             weight=len(weight) != 0)
 
     # Compute thresholds
-    larva_thresh = my_threshold.entire_stats(larva_diffs, coef=coef)
-    adult_thresh = my_threshold.entire_stats(adult_diffs, coef=coef)
+    larva_thresh = my_threshold.entire_stats(larva_diffs, coef=larva_coef)
+    adult_thresh = my_threshold.entire_stats(adult_diffs, coef=adult_coef)
 
     # Evaluate event timing
     # Compute event times from signals
@@ -2503,7 +2516,7 @@ def callback(detect):
 # ===========================================
 @app.callback(
         Output('survival-curve', 'figure'),
-        [Input('threshold-slider1', 'value'),
+        [Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2651,7 +2664,7 @@ def callback(detect):
 # ===========================================
 @app.callback(
         Output('box-plot', 'figure'),
-        [Input('threshold-slider1', 'value'),
+        [Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2949,7 +2962,7 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('threshold-slider1', 'value'),
+         State('larva-thresh', 'value'),
          State('weight-check', 'values'),
          State('gaussian-size', 'value'),
          State('gaussian-sigma', 'value'),
@@ -3182,7 +3195,7 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('adult-dropdown', 'value'),
-         State('threshold-slider1', 'value'),
+         State('adult-thresh', 'value'),
          State('weight-check', 'values'),
          State('gaussian-size', 'value'),
          State('gaussian-sigma', 'value'),
@@ -3311,11 +3324,11 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight):
     if weight:
         if detect == 'pupa-and-eclo' and signal_type == 'larva':
             signals = signals *  \
-                    10 * (np.arange(len(signals.T)) / len(signals.T))[::-1]
+                    (np.arange(len(signals.T)) / len(signals.T))[::-1]
 
         elif detect == 'pupa-and-eclo' and signal_type == 'adult':
             signals = signals *  \
-                    10 * (np.arange(len(signals.T)) / len(signals.T))
+                    (np.arange(len(signals.T)) / len(signals.T))
 
         elif detect == 'death' and signal_type == 'larva':
             # Never evaluated
@@ -3323,7 +3336,7 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight):
 
         elif detect == 'death' and signal_type == 'adult':
             signals = signals *  \
-                    10 * (np.arange(len(signals.T)) / len(signals.T))[::-1]
+                    (np.arange(len(signals.T)) / len(signals.T))[::-1]
 
     else:
         pass
