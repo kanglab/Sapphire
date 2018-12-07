@@ -1570,25 +1570,6 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         }
 
 
-@app.callback(
-        Output('adult-signal-div', 'style'),
-        [Input('detect-target', 'value')])
-def callback(detect):
-
-    if detect == 'pupa-and-eclo':
-        return {
-                'width': '750px',
-            }
-
-    elif detect == 'death':
-        return {
-                'width': '750px',
-            }
-
-    else:
-        return {}
-
-
 # ==========================================
 #  Update the figure in the larva-summary.
 # ==========================================
