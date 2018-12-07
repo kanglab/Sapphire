@@ -289,15 +289,37 @@ app.layout = html.Div([
                             },
                         ),
                     ], style={'width': '750px'}),
-                    dcc.Graph(
-                        id='adult-signal',
-                        style={
-                            'height': '280px',
-                        },
-                    ),
-                ], style={
-                    'display': 'inline-block',
-                }),
+
+                    html.Div(id='adult-signal-div', children=[
+                        html.Div([
+                            dcc.Slider(
+                                id='threshold-slider2',
+                                value=2,
+                                min=-5,
+                                max=10,
+                                step=.1,
+                                updatemode='mouseup',
+                                vertical=True,
+                            )],
+                            style={
+                                'display': 'inline-block',
+                                'height': '170px',
+                                'width': '10px',
+                                'padding-bottom': '60px',
+                                'margin': '0px 5px',
+                            },
+                        ),
+                        dcc.Graph(
+                            id='adult-signal',
+                            style={
+                                'display': 'inline-block',
+                                'height': '280px',
+                                'width': '700px',
+                            },
+                        ),
+                    ], style={'width': '750px'}),
+
+                ], style={'display': 'inline-block'}),
             ],
             ),
             html.Div([
@@ -1549,15 +1571,19 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
 
 
 @app.callback(
-        Output('adult-signal', 'style'),
+        Output('adult-signal-div', 'style'),
         [Input('detect-target', 'value')])
 def callback(detect):
 
     if detect == 'pupa-and-eclo':
-        return {'height': '280px'}
+        return {
+                'width': '750px',
+            }
 
     elif detect == 'death':
-        return {'height': '400px'}
+        return {
+                'width': '750px',
+            }
 
     else:
         return {}
