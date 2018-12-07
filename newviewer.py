@@ -261,31 +261,34 @@ app.layout = html.Div([
                 ),
 
                 html.Div([
-                    dcc.Slider(
-                        id='threshold-slider1',
-                        value=2,
-                        min=-5,
-                        max=10,
-                        step=.1,
-                        updatemode='mouseup',
-                        vertical=True,
-                    )],
-                    style={
-                        'display': 'inline-block',
-                        'height': '300px',
-                        'width': '10px',
-                        'padding-bottom': '50px',
-                        'margin-left': '30px',
-
-                    },
-                ),
-                html.Div([
-                    dcc.Graph(
-                        id='larva-signal',
-                        style={
-                            'height': '280px',
-                        },
-                    ),
+                    html.Div(id='larva-signal-div', children=[
+                        html.Div([
+                            dcc.Slider(
+                                id='threshold-slider1',
+                                value=2,
+                                min=-5,
+                                max=10,
+                                step=.1,
+                                updatemode='mouseup',
+                                vertical=True,
+                            )],
+                            style={
+                                'display': 'inline-block',
+                                'height': '170px',
+                                'width': '10px',
+                                'padding-bottom': '60px',
+                                'margin': '0px 5px',
+                            },
+                        ),
+                        dcc.Graph(
+                            id='larva-signal',
+                            style={
+                                'display': 'inline-block',
+                                'height': '280px',
+                                'width': '700px',
+                            },
+                        ),
+                    ], style={'width': '750px'}),
                     dcc.Graph(
                         id='adult-signal',
                         style={
@@ -1370,12 +1373,14 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
 
 
 @app.callback(
-        Output('larva-signal', 'style'),
+        Output('larva-signal-div', 'style'),
         [Input('detect-target', 'value')])
 def callback(detect):
 
     if detect == 'pupa-and-eclo':
-        return {'height': '280px'}
+        return {
+                'width': '750px',
+            }
 
     elif detect == 'death':
         return {'display': 'none'}
