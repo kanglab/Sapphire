@@ -1417,6 +1417,7 @@ def callback(detect):
 @app.callback(
         Output('adult-signal', 'figure'),
         [Input('well-selector', 'value'),
+         Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('time-selector', 'value'),
          Input('weight-check', 'values'),
@@ -1427,9 +1428,10 @@ def callback(detect):
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
+         State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(well_idx, coef, time, weight, checks, size, sigma,
-        figure, data_root, env, detect, adult):
+def callback(well_idx, larva_coef, adult_coef, time, weight, checks, size, sigma,
+        figure, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -1453,8 +1455,31 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
             smooth=len(checks) != 0,
             weight=len(weight) != 0)
 
+    # Remove signal until pupariation timing
+    if detect == 'pupa-and-eclo' and larva is not None:
+        # Load the data
+        larva_diffs = np.load(os.path.join(
+                data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+
+        larva_diffs = seasoning(
+                larva_diffs, 'larva', detect, size, sigma,
+                smooth=len(checks) != 0,
+                weight=len(weight) != 0)
+
+        # Compute thresholds
+        threshold = my_threshold.entire_stats(larva_diffs, coef=larva_coef)
+
+        auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
+
+        for i, event_timing in enumerate(auto_evals):
+
+            adult_diffs[i, :event_timing] = -5
+
+    else:
+        pass
+
     # Compute thresholds
-    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+    threshold = my_threshold.entire_stats(adult_diffs, coef=adult_coef)
 
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
@@ -1546,7 +1571,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                                 'Threshold: {:.1f}'.format(
                                         threshold[well_idx, 0]) +  \
                                  '={:.1f}'.format(adult_diffs.mean()) +  \
-                                 '{:+.1f}'.format(coef) +  \
+                                 '{:+.1f}'.format(adult_coef) +  \
                                  '*{:.1f}'.format(adult_diffs.std()),
                             'showarrow': False,
                             'xanchor': 'left',
