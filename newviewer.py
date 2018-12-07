@@ -3324,11 +3324,11 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight):
     if weight:
         if detect == 'pupa-and-eclo' and signal_type == 'larva':
             signals = signals *  \
-                    10 * (np.arange(len(signals.T)) / len(signals.T))[::-1]
+                    (np.arange(len(signals.T)) / len(signals.T))[::-1]
 
         elif detect == 'pupa-and-eclo' and signal_type == 'adult':
             signals = signals *  \
-                    10 * (np.arange(len(signals.T)) / len(signals.T))
+                    (np.arange(len(signals.T)) / len(signals.T))
 
         elif detect == 'death' and signal_type == 'larva':
             # Never evaluated
@@ -3336,7 +3336,7 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight):
 
         elif detect == 'death' and signal_type == 'adult':
             signals = signals *  \
-                    10 * (np.arange(len(signals.T)) / len(signals.T))[::-1]
+                    (np.arange(len(signals.T)) / len(signals.T))[::-1]
 
     else:
         pass
