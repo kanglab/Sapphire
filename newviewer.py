@@ -264,7 +264,7 @@ app.layout = html.Div([
                     html.Div(id='larva-signal-div', children=[
                         html.Div([
                             dcc.Slider(
-                                id='threshold-slider1',
+                                id='larva-thresh',
                                 value=2,
                                 min=-5,
                                 max=10,
@@ -293,7 +293,7 @@ app.layout = html.Div([
                     html.Div(id='adult-signal-div', children=[
                         html.Div([
                             dcc.Slider(
-                                id='threshold-slider2',
+                                id='adult-thresh',
                                 value=2,
                                 min=-5,
                                 max=10,
@@ -1258,7 +1258,7 @@ def callback(time, well_idx, data_root, env):
 @app.callback(
         Output('larva-signal', 'figure'),
         [Input('well-selector', 'value'),
-         Input('threshold-slider1', 'value'),
+         Input('larva-thresh', 'value'),
          Input('time-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -1417,7 +1417,7 @@ def callback(detect):
 @app.callback(
         Output('adult-signal', 'figure'),
         [Input('well-selector', 'value'),
-         Input('threshold-slider2', 'value'),
+         Input('adult-thresh', 'value'),
          Input('time-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -1575,7 +1575,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
 # ==========================================
 @app.callback(
         Output('larva-summary', 'figure'),
-        [Input('threshold-slider1', 'value'),
+        [Input('larva-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -1801,7 +1801,7 @@ def callback(detect):
 # ==========================================
 @app.callback(
         Output('adult-summary', 'figure'),
-        [Input('threshold-slider2', 'value'),
+        [Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2034,7 +2034,7 @@ def callback(detect):
 # =======================================
 @app.callback(
         Output('larva-hist', 'figure'),
-        [Input('threshold-slider1', 'value'),
+        [Input('larva-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2200,7 +2200,7 @@ def callback(detect):
 # =======================================
 @app.callback(
         Output('adult-hist', 'figure'),
-        [Input('threshold-slider2', 'value'),
+        [Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2379,8 +2379,8 @@ def callback(detect):
 # ==============================================
 @app.callback(
         Output('pupa-vs-eclo', 'figure'),
-        [Input('threshold-slider1', 'value'),
-         Input('threshold-slider2', 'value'),
+        [Input('larva-thresh', 'value'),
+         Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2391,7 +2391,7 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(coef1, coef2, well_idx, weight,
+def callback(larva_coef, adult_coef, well_idx, weight,
         checks, size, sigma, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
@@ -2429,8 +2429,8 @@ def callback(coef1, coef2, well_idx, weight,
             weight=len(weight) != 0)
 
     # Compute thresholds
-    larva_thresh = my_threshold.entire_stats(larva_diffs, coef=coef1)
-    adult_thresh = my_threshold.entire_stats(adult_diffs, coef=coef2)
+    larva_thresh = my_threshold.entire_stats(larva_diffs, coef=larva_coef)
+    adult_thresh = my_threshold.entire_stats(adult_diffs, coef=adult_coef)
 
     # Evaluate event timing
     # Compute event times from signals
@@ -2516,7 +2516,7 @@ def callback(detect):
 # ===========================================
 @app.callback(
         Output('survival-curve', 'figure'),
-        [Input('threshold-slider2', 'value'),
+        [Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2664,7 +2664,7 @@ def callback(detect):
 # ===========================================
 @app.callback(
         Output('box-plot', 'figure'),
-        [Input('threshold-slider2', 'value'),
+        [Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2962,7 +2962,7 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('threshold-slider1', 'value'),
+         State('larva-thresh', 'value'),
          State('weight-check', 'values'),
          State('gaussian-size', 'value'),
          State('gaussian-sigma', 'value'),
@@ -3195,7 +3195,7 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('adult-dropdown', 'value'),
-         State('threshold-slider2', 'value'),
+         State('adult-thresh', 'value'),
          State('weight-check', 'values'),
          State('gaussian-size', 'value'),
          State('gaussian-sigma', 'value'),
