@@ -1417,7 +1417,7 @@ def callback(detect):
 @app.callback(
         Output('adult-signal', 'figure'),
         [Input('well-selector', 'value'),
-         Input('threshold-slider1', 'value'),
+         Input('threshold-slider2', 'value'),
          Input('time-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -1801,7 +1801,7 @@ def callback(detect):
 # ==========================================
 @app.callback(
         Output('adult-summary', 'figure'),
-        [Input('threshold-slider1', 'value'),
+        [Input('threshold-slider2', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2200,7 +2200,7 @@ def callback(detect):
 # =======================================
 @app.callback(
         Output('adult-hist', 'figure'),
-        [Input('threshold-slider1', 'value'),
+        [Input('threshold-slider2', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2380,6 +2380,7 @@ def callback(detect):
 @app.callback(
         Output('pupa-vs-eclo', 'figure'),
         [Input('threshold-slider1', 'value'),
+         Input('threshold-slider2', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2390,7 +2391,7 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(coef, well_idx, weight,
+def callback(coef1, coef2, well_idx, weight,
         checks, size, sigma, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
@@ -2428,8 +2429,8 @@ def callback(coef, well_idx, weight,
             weight=len(weight) != 0)
 
     # Compute thresholds
-    larva_thresh = my_threshold.entire_stats(larva_diffs, coef=coef)
-    adult_thresh = my_threshold.entire_stats(adult_diffs, coef=coef)
+    larva_thresh = my_threshold.entire_stats(larva_diffs, coef=coef1)
+    adult_thresh = my_threshold.entire_stats(adult_diffs, coef=coef2)
 
     # Evaluate event timing
     # Compute event times from signals
@@ -2515,7 +2516,7 @@ def callback(detect):
 # ===========================================
 @app.callback(
         Output('survival-curve', 'figure'),
-        [Input('threshold-slider1', 'value'),
+        [Input('threshold-slider2', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2663,7 +2664,7 @@ def callback(detect):
 # ===========================================
 @app.callback(
         Output('box-plot', 'figure'),
-        [Input('threshold-slider1', 'value'),
+        [Input('threshold-slider2', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -3194,7 +3195,7 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('adult-dropdown', 'value'),
-         State('threshold-slider1', 'value'),
+         State('threshold-slider2', 'value'),
          State('weight-check', 'values'),
          State('gaussian-size', 'value'),
          State('gaussian-sigma', 'value'),
