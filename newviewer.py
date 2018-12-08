@@ -39,6 +39,7 @@ THETA = 50
 
 THRESH_FUNC = my_threshold.n_times_mean
 THRESH_FUNC = my_threshold.n_times_nonzero_mean
+THRESH_FUNC = my_threshold.entire_stats
 
 
 app = dash.Dash('Sapphire')
@@ -2214,7 +2215,8 @@ def callback(detect):
 # =======================================
 @app.callback(
         Output('adult-hist', 'figure'),
-        [Input('adult-thresh', 'value'),
+        [Input('larva-thresh', 'value'),
+         Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2223,9 +2225,10 @@ def callback(detect):
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
+         State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(coef, well_idx, weight,
-        checks, size, sigma, data_root, env, detect, adult):
+def callback(larva_coef, adult_coef, well_idx, weight,
+        checks, size, sigma, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -2270,8 +2273,12 @@ def callback(coef, well_idx, weight,
             smooth=len(checks) != 0,
             weight=len(weight) != 0)
 
+    # Remove signal until pupariation timing
+    adult_diffs = trancate_signal(data_root, env, detect,
+            larva, larva_coef, adult_diffs, checks, size, sigma, weight)
+
     # Compute thresholds
-    threshold = THRESH_FUNC(adult_diffs, coef=coef)
+    threshold = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
@@ -2441,6 +2448,10 @@ def callback(larva_coef, adult_coef, well_idx, weight,
             adult_diffs, 'adult', detect, size, sigma,
             smooth=len(checks) != 0,
             weight=len(weight) != 0)
+
+    # Remove signal until pupariation timing
+    adult_diffs = trancate_signal(data_root, env, detect,
+            larva, larva_coef, adult_diffs, checks, size, sigma, weight)
 
     # Compute thresholds
     larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
