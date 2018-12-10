@@ -37,6 +37,9 @@ DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
 
+THRESH_FUNC = my_threshold.n_times_mean
+THRESH_FUNC = my_threshold.n_times_nonzero_mean
+THRESH_FUNC = my_threshold.entire_stats
 
 
 app = dash.Dash('Sapphire')
@@ -267,7 +270,7 @@ app.layout = html.Div([
                                 id='larva-thresh',
                                 value=2,
                                 min=-5,
-                                max=10,
+                                max=20,
                                 step=.1,
                                 updatemode='mouseup',
                                 vertical=True,
@@ -296,7 +299,7 @@ app.layout = html.Div([
                                 id='adult-thresh',
                                 value=2,
                                 min=-5,
-                                max=10,
+                                max=20,
                                 step=.1,
                                 updatemode='mouseup',
                                 vertical=True,
@@ -1292,10 +1295,11 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
             smooth=len(checks) != 0,
-            weight=len(weight) != 0)
+            weight=len(weight) != 0,
+            pupar_times=None)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+    threshold = THRESH_FUNC(larva_diffs, coef=coef)
 
     auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
@@ -1417,6 +1421,7 @@ def callback(detect):
 @app.callback(
         Output('adult-signal', 'figure'),
         [Input('well-selector', 'value'),
+         Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('time-selector', 'value'),
          Input('weight-check', 'values'),
@@ -1427,9 +1432,10 @@ def callback(detect):
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
+         State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(well_idx, coef, time, weight, checks, size, sigma,
-        figure, data_root, env, detect, adult):
+def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
+        size, sigma, figure, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -1444,6 +1450,28 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     manual_data = []
     common_data = []
 
+    # ----------------------------------------------------------
+    #  Detect pupariation timing for detecting eclosion timing
+    # ----------------------------------------------------------
+    # Load the data
+    larva_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+
+    larva_diffs = seasoning(
+            larva_diffs, 'larva', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0,
+            pupar_times=None)
+
+    # Compute thresholds
+    larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
+
+    pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
+
+
+    # ----------------------------------------
+    #  Detection of eclosion or death timing
+    # ----------------------------------------
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
@@ -1451,12 +1479,13 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, size, sigma,
             smooth=len(checks) != 0,
-            weight=len(weight) != 0)
+            weight=len(weight) != 0,
+            pupar_times=pupar_times)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
-    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
+    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
 
     # Load a manual evaluation of event timing
     if detect == 'pupa-and-eclo' and os.path.exists(
@@ -1509,7 +1538,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
             {
                 # Threshold (horizontal line)
                 'x': [0, len(adult_diffs[0, :])],
-                'y': [threshold[well_idx, 0], threshold[well_idx, 0]],
+                'y': [adult_thresh[well_idx, 0], adult_thresh[well_idx, 0]],
                 'mode': 'lines',
                 'name': 'Threshold',
                 'line': {'width': 2, 'color': '#4169e1'},
@@ -1544,9 +1573,9 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                             'y': 1.0 * adult_diffs.max(),
                             'text':
                                 'Threshold: {:.1f}'.format(
-                                        threshold[well_idx, 0]) +  \
+                                        adult_thresh[well_idx, 0]) +  \
                                  '={:.1f}'.format(adult_diffs.mean()) +  \
-                                 '{:+.1f}'.format(coef) +  \
+                                 '{:+.1f}'.format(adult_coef) +  \
                                  '*{:.1f}'.format(adult_diffs.std()),
                             'showarrow': False,
                             'xanchor': 'left',
@@ -1630,10 +1659,11 @@ def callback(coef, well_idx, weight,
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
             smooth=len(checks) != 0,
-            weight=len(weight) != 0)
+            weight=len(weight) != 0,
+            pupar_times=None)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+    threshold = THRESH_FUNC(larva_diffs, coef=coef)
 
     auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
@@ -1801,7 +1831,8 @@ def callback(detect):
 # ==========================================
 @app.callback(
         Output('adult-summary', 'figure'),
-        [Input('adult-thresh', 'value'),
+        [Input('larva-thresh', 'value'),
+         Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -1810,9 +1841,10 @@ def callback(detect):
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
+         State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(coef, well_idx, weight,
-        checks, size, sigma, data_root, env, detect, adult):
+def callback(larva_coef, adult_coef, well_idx, weight,
+        checks, size, sigma, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -1855,6 +1887,29 @@ def callback(coef, well_idx, weight,
     # Load a group table
     group_tables = load_grouping_csv(data_root, env)
 
+
+    # ----------------------------------------------------------
+    #  Detect pupariation timing for detecting eclosion timing
+    # ----------------------------------------------------------
+    # Load the data
+    larva_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+
+    larva_diffs = seasoning(
+            larva_diffs, 'larva', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0,
+            pupar_times=None)
+
+    # Compute thresholds
+    larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
+
+    pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
+
+
+    # ----------------------------------------
+    #  Detection of eclosion or death timing
+    # ----------------------------------------
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
@@ -1862,12 +1917,13 @@ def callback(coef, well_idx, weight,
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, size, sigma,
             smooth=len(checks) != 0,
-            weight=len(weight) != 0)
+            weight=len(weight) != 0,
+            pupar_times=pupar_times)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
-    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
+    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals[targets] - manual_evals[targets]
@@ -2077,10 +2133,11 @@ def callback(coef, well_idx, weight,
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
             smooth=len(checks) != 0,
-            weight=len(weight) != 0)
+            weight=len(weight) != 0,
+            pupar_times=None)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+    threshold = THRESH_FUNC(larva_diffs, coef=coef)
 
     auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
@@ -2200,7 +2257,8 @@ def callback(detect):
 # =======================================
 @app.callback(
         Output('adult-hist', 'figure'),
-        [Input('adult-thresh', 'value'),
+        [Input('larva-thresh', 'value'),
+         Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2209,9 +2267,10 @@ def callback(detect):
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
+         State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(coef, well_idx, weight,
-        checks, size, sigma, data_root, env, detect, adult):
+def callback(larva_coef, adult_coef, well_idx, weight,
+        checks, size, sigma, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -2247,6 +2306,29 @@ def callback(coef, well_idx, weight,
     exceptions = np.logical_or(blacklist, manual_evals == 0)
     targets = np.logical_not(exceptions)
 
+
+    # ----------------------------------------------------------
+    #  Detect pupariation timing for detecting eclosion timing
+    # ----------------------------------------------------------
+    # Load the data
+    larva_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+
+    larva_diffs = seasoning(
+            larva_diffs, 'larva', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0,
+            pupar_times=None)
+
+    # Compute thresholds
+    larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
+
+    pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
+
+
+    # ----------------------------------------
+    #  Detection of eclosion or death timing
+    # ----------------------------------------
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
@@ -2254,12 +2336,13 @@ def callback(coef, well_idx, weight,
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, size, sigma,
             smooth=len(checks) != 0,
-            weight=len(weight) != 0)
+            weight=len(weight) != 0,
+            pupar_times=pupar_times)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
-    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
+    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
@@ -2416,21 +2499,15 @@ def callback(larva_coef, adult_coef, well_idx, weight,
     # Load the data
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
-    adult_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
 
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
             smooth=len(checks) != 0,
-            weight=len(weight) != 0)
-    adult_diffs = seasoning(
-            adult_diffs, 'adult', detect, size, sigma,
-            smooth=len(checks) != 0,
-            weight=len(weight) != 0)
+            weight=len(weight) != 0,
+            pupar_times=None)
 
     # Compute thresholds
-    larva_thresh = my_threshold.entire_stats(larva_diffs, coef=larva_coef)
-    adult_thresh = my_threshold.entire_stats(adult_diffs, coef=adult_coef)
+    larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
     # Evaluate event timing
     # Compute event times from signals
@@ -2438,6 +2515,18 @@ def callback(larva_coef, adult_coef, well_idx, weight,
     pupars = (larva_diffs.shape[1]
             - (np.fliplr(larva_diffs) > larva_thresh).argmax(axis=1))
     pupars[pupars == larva_diffs.shape[1]] = 0
+
+    adult_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
+
+    adult_diffs = seasoning(
+            adult_diffs, 'adult', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0,
+            pupar_times=pupars)
+
+    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
+
     eclos = (adult_diffs > adult_thresh).argmax(axis=1)
 
     return {
@@ -2552,10 +2641,11 @@ def callback(coef, well_idx, weight,
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, size, sigma,
             smooth=len(checks) != 0,
-            weight=len(weight) != 0)
+            weight=len(weight) != 0,
+            pupar_times=None)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+    threshold = THRESH_FUNC(adult_diffs, coef=coef)
 
     auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
 
@@ -2664,7 +2754,8 @@ def callback(detect):
 # ===========================================
 @app.callback(
         Output('box-plot', 'figure'),
-        [Input('adult-thresh', 'value'),
+        [Input('larva-thresh', 'value'),
+         Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2673,9 +2764,10 @@ def callback(detect):
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
+         State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(coef, well_idx, weight,
-        checks, size, sigma, data_root, env, detect, adult):
+def callback(larva_coef, adult_coef, well_idx, weight,
+        checks, size, sigma, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -2693,6 +2785,29 @@ def callback(coef, well_idx, weight,
     # Load a group table
     group_tables = load_grouping_csv(data_root, env)
 
+
+    # ----------------------------------------------------------
+    #  Detect pupariation timing for detecting eclosion timing
+    # ----------------------------------------------------------
+    # Load the data
+    larva_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+
+    larva_diffs = seasoning(
+            larva_diffs, 'larva', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0,
+            pupar_times=None)
+
+    # Compute thresholds
+    larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
+
+    pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
+
+
+    # ----------------------------------------
+    #  Detection of eclosion or death timing
+    # ----------------------------------------
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
@@ -2700,12 +2815,13 @@ def callback(coef, well_idx, weight,
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, size, sigma,
             smooth=len(checks) != 0,
-            weight=len(weight) != 0)
+            weight=len(weight) != 0,
+            pupar_times=pupar_times)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
-    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
+    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
 
     # Make data to be drawn
     if group_tables == []:
@@ -2996,10 +3112,11 @@ def callback(tab_name, data_root, env,
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
             smooth=len(checks) != 0,
-            weight=len(weight) != 0)
+            weight=len(weight) != 0,
+            pupar_times=None)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+    threshold = THRESH_FUNC(larva_diffs, coef=coef)
 
     auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
 
@@ -3194,14 +3311,16 @@ def callback(detect):
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
+         State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value'),
+         State('larva-thresh', 'value'),
          State('adult-thresh', 'value'),
          State('weight-check', 'values'),
          State('gaussian-size', 'value'),
          State('gaussian-sigma', 'value'),
          State('filter-check', 'values')])
-def callback(tab_name, data_root, env,
-        detect, adult, coef, weight, size, sigma, checks):
+def callback(tab_name, data_root, env, detect,
+        larva, adult, larva_coef, adult_coef, weight, size, sigma, checks):
     # Guard
     if data_root is None:
         return 'Not available.'
@@ -3221,18 +3340,43 @@ def callback(tab_name, data_root, env,
     with open(os.path.join(data_root, env, 'mask_params.json')) as f:
         params = json.load(f)
 
+
+    # ----------------------------------------------------------
+    #  Detect pupariation timing for detecting eclosion timing
+    # ----------------------------------------------------------
+    # Load the data
+    larva_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+
+    larva_diffs = seasoning(
+            larva_diffs, 'larva', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0,
+            pupar_times=None)
+
+    # Compute thresholds
+    larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
+
+    pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
+
+
+    # ----------------------------------------
+    #  Detection of eclosion or death timing
+    # ----------------------------------------
+    # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
 
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, size, sigma,
             smooth=len(checks) != 0,
-            weight=len(weight) != 0)
+            weight=len(weight) != 0,
+            pupar_times=pupar_times)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(adult_diffs, coef=coef)
+    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
-    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
+    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
 
     auto_evals = auto_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
@@ -3242,10 +3386,10 @@ def callback(tab_name, data_root, env,
             + 'Dataset,{}\n'.format(env)  \
             + 'Morphology,adult\n'  \
             + 'Inference Data,{}\n'.format(adult)  \
-            + 'Threshold Value,{}\n'.format(threshold[0, 0])  \
+            + 'Threshold Value,{}\n'.format(adult_thresh[0, 0])  \
             + '(Threshold Value = mean + coef * std)\n'  \
             + 'Mean (mean),{}\n'.format(adult_diffs.mean())  \
-            + 'Coefficient (coef),{}\n'.format(coef)  \
+            + 'Coefficient (coef),{}\n'.format(adult_coef)  \
             + 'Standard Deviation (std),{}\n'.format(adult_diffs.std())  \
             + 'Smoothing Window Size,{}\n'.format(size)  \
             + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma)  \
@@ -3314,21 +3458,44 @@ def callback(detect):
 # ====================
 #  Utility functions
 # ====================
-def seasoning(signals, signal_type, detect, size, sigma, smooth, weight):
+def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
+        pupar_times):
 
     # Smooth the signals
     if smooth:
         signals = my_filter(signals, size=size, sigma=sigma)
 
+    else:
+        pass
+
     # Apply weight to the signals
     if weight:
         if detect == 'pupa-and-eclo' and signal_type == 'larva':
+            # Ramp filter
             signals = signals *  \
                     (np.arange(len(signals.T)) / len(signals.T))[::-1]
 
         elif detect == 'pupa-and-eclo' and signal_type == 'adult':
-            signals = signals *  \
-                    (np.arange(len(signals.T)) / len(signals.T))
+            if pupar_times is not None:
+                mask = -np.ones_like(signals, dtype=float)
+
+                for i, event_timing in enumerate(pupar_times):
+                    '''
+                    # Step filter
+                    mask[i, event_timing:] = 1
+                    '''
+                    # Ramp filter
+                    lin_weight = np.linspace(
+                            0, 1, len(signals.T) - event_timing)
+
+                    mask[i, event_timing:] = lin_weight
+
+                signals = signals * mask
+
+            else:
+                # Ramp filter
+                signals = signals *  \
+                        (np.arange(len(signals.T)) / len(signals.T))
 
         elif detect == 'death' and signal_type == 'larva':
             # Never evaluated
@@ -3402,7 +3569,6 @@ def load_blacklist(data_root, dataset_name, white=False):
 def load_grouping_csv(data_root, dataset_name):
 
     if os.path.exists(os.path.join(data_root, dataset_name, 'grouping.csv')):
-
         groups = np.loadtxt(
                 os.path.join(data_root, dataset_name, 'grouping.csv'),
                 dtype=np.int16, delimiter=',').flatten()
