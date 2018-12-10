@@ -1434,8 +1434,8 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(well_idx, larva_coef, adult_coef, time, weight, checks, size, sigma,
-        figure, data_root, env, detect, larva, adult):
+def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
+        size, sigma, figure, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -3464,51 +3464,38 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
     # Smooth the signals
     if smooth:
         signals = my_filter(signals, size=size, sigma=sigma)
+
     else:
         pass
 
     # Apply weight to the signals
     if weight:
         if detect == 'pupa-and-eclo' and signal_type == 'larva':
-            # Step filter
-            mask = -np.ones(len(signals.T))
-            mask[:int(len(signals.T) / 2)] = 1
-            signals = signals * mask
-            '''
             # Ramp filter
             signals = signals *  \
                     (np.arange(len(signals.T)) / len(signals.T))[::-1]
-            '''
 
         elif detect == 'pupa-and-eclo' and signal_type == 'adult':
-            if pupar_times is None:
+            if pupar_times is not None:
                 mask = -np.ones_like(signals, dtype=float)
 
                 for i, event_timing in enumerate(pupar_times):
-
+                    '''
                     # Step filter
                     mask[i, event_timing:] = 1
-
                     '''
                     # Ramp filter
                     lin_weight = np.linspace(
                             0, 1, len(signals.T) - event_timing)
 
                     mask[i, event_timing:] = lin_weight
-                    '''
 
                 signals = signals * mask
 
             else:
-                # Step filter
-                mask = -np.ones(len(signals.T))
-                mask[int(len(signals.T) / 2):] = 1
-                signals = signals * mask
-                '''
                 # Ramp filter
                 signals = signals *  \
                         (np.arange(len(signals.T)) / len(signals.T))
-                '''
 
         elif detect == 'death' and signal_type == 'larva':
             # Never evaluated
@@ -3582,7 +3569,6 @@ def load_blacklist(data_root, dataset_name, white=False):
 def load_grouping_csv(data_root, dataset_name):
 
     if os.path.exists(os.path.join(data_root, dataset_name, 'grouping.csv')):
-
         groups = np.loadtxt(
                 os.path.join(data_root, dataset_name, 'grouping.csv'),
                 dtype=np.int16, delimiter=',').flatten()
