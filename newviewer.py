@@ -3464,33 +3464,51 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
     # Smooth the signals
     if smooth:
         signals = my_filter(signals, size=size, sigma=sigma)
+    else:
+        pass
 
     # Apply weight to the signals
     if weight:
         if detect == 'pupa-and-eclo' and signal_type == 'larva':
+            # Step filter
+            mask = -np.ones(len(signals.T))
+            mask[:int(len(signals.T) / 2)] = 1
+            signals = signals * mask
+            '''
+            # Ramp filter
             signals = signals *  \
                     (np.arange(len(signals.T)) / len(signals.T))[::-1]
+            '''
 
         elif detect == 'pupa-and-eclo' and signal_type == 'adult':
-            if pupar_times is not None:
+            if pupar_times is None:
                 mask = -np.ones_like(signals, dtype=float)
 
                 for i, event_timing in enumerate(pupar_times):
 
+                    # Step filter
+                    mask[i, event_timing:] = 1
+
+                    '''
+                    # Ramp filter
                     lin_weight = np.linspace(
                             0, 1, len(signals.T) - event_timing)
 
                     mask[i, event_timing:] = lin_weight
+                    '''
 
                 signals = signals * mask
 
             else:
-                pass
-
-            '''
-            signals = signals *  \
-                    (np.arange(len(signals.T)) / len(signals.T))
-            '''
+                # Step filter
+                mask = -np.ones(len(signals.T))
+                mask[int(len(signals.T) / 2):] = 1
+                signals = signals * mask
+                '''
+                # Ramp filter
+                signals = signals *  \
+                        (np.arange(len(signals.T)) / len(signals.T))
+                '''
 
         elif detect == 'death' and signal_type == 'larva':
             # Never evaluated
