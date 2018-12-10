@@ -315,6 +315,17 @@ app.layout = html.Div([
                     },
                 ),
                 dcc.Graph(
+                    id='box-plot1',
+                    style={
+                        'display': 'inline-block',
+                        'height': '250px',
+                        'width': '20%',
+                    },
+                ),
+            ]),
+            html.Br(),
+            html.Div([
+                dcc.Graph(
                     id='adult-summary',
                     style={
                         'display': 'inline-block',
@@ -331,6 +342,14 @@ app.layout = html.Div([
                     },
                 ),
                 dcc.Graph(
+                    id='box-plot',
+                    style={
+                        'display': 'inline-block',
+                        'height': '250px',
+                        'width': '20%',
+                    },
+                ),
+                dcc.Graph(
                     id='pupa-vs-eclo',
                     style={
                         'display': 'inline-block',
@@ -340,14 +359,6 @@ app.layout = html.Div([
                 ),
                 dcc.Graph(
                     id='survival-curve',
-                    style={
-                        'display': 'inline-block',
-                        'height': '250px',
-                        'width': '20%',
-                    },
-                ),
-                dcc.Graph(
-                    id='box-plot',
                     style={
                         'display': 'inline-block',
                         'height': '250px',
@@ -1334,7 +1345,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         ]
 
     return {
-            'data': larva_data + manual_data + common_data,
+            'data': manual_data + larva_data + common_data,
             'layout': {
                     'annotations': [
                         {
@@ -1509,7 +1520,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         ]
 
     return {
-            'data': adult_data + manual_data + common_data,
+            'data': manual_data + adult_data + common_data,
             'layout': {
                     'annotations': [
                         {
@@ -1717,7 +1728,7 @@ def callback(coef, well_idx, weight,
                     ],
                     'mode': 'lines',
                     'fill': 'tonexty',
-                    'line': {'width': .1, 'color': '#43d86b'},
+                    'line': {'width': .1, 'color': '#c0c0c0'},
                     'name': 'Upper bound',
                 },
                 {
@@ -1948,7 +1959,7 @@ def callback(coef, well_idx, weight,
                     ],
                     'mode': 'lines',
                     'fill': 'tonexty',
-                    'line': {'width': .1, 'color': '#43d86b'},
+                    'line': {'width': .1, 'color': '#c0c0c0'},
                     'name': 'Upper bound',
                 },
                 {
@@ -2093,7 +2104,7 @@ def callback(coef, well_idx, weight,
                     'y': [ns.max(), ns.max()],
                     'mode': 'lines',
                     'fill': 'tozeroy',
-                    'line': {'width': 0, 'color': '#43d86b'},
+                    'line': {'width': 0, 'color': '#c0c0c0'},
                 },
                 {
                     'x': list(bins[1:]),
@@ -2208,7 +2219,9 @@ def callback(coef, well_idx, weight,
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')):
         return {'data': []}
-    
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+        return {'data': []}
     # Load a blacklist
     blacklist, _ = load_blacklist(data_root, env)
 
@@ -2270,7 +2283,7 @@ def callback(coef, well_idx, weight,
                     'y': [ns.max(), ns.max()],
                     'mode': 'lines',
                     'fill': 'tozeroy',
-                    'line': {'width': 0, 'color': '#43d86b'},
+                    'line': {'width': 0, 'color': '#c0c0c0'},
                 },
                 {
                     'x': list(bins[1:]),
@@ -2650,6 +2663,126 @@ def callback(detect):
 #  Update the figure in the boxplot.
 # ===========================================
 @app.callback(
+        Output('box-plot1', 'figure'),
+        [Input('threshold-slider1', 'value'),
+         Input('well-selector', 'value'),
+         Input('weight-check', 'values'),
+         Input('filter-check', 'values'),
+         Input('gaussian-size', 'value'),
+         Input('gaussian-sigma', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
+         State('larva-dropdown', 'value')])
+def callback(coef, well_idx, weight,
+        checks, size, sigma, data_root, env, detect, larva):
+    # Guard
+    if env is None:
+        return {'data': []}
+    if larva is None:
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')):
+        return {'data': []}
+    if detect == 'death':
+        return {'data': []}
+
+    # Load a whitelist
+    whitelist, _ = load_blacklist(data_root, env, white=True)
+
+    # Load a group table
+    group_tables = load_grouping_csv(data_root, env)
+
+    # Load the data
+    larva_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+
+    larva_diffs = seasoning(
+            larva_diffs, 'larva', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0)
+
+    # Compute thresholds
+    threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+
+    auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
+
+    # Make data to be drawn
+    if group_tables == []:
+        data = []
+        data.append(
+                go.Box(
+                    x=list(auto_evals[whitelist]),
+                    name='Group1',
+                    boxpoints='all',
+                    pointpos=1.8,
+                    marker={'size': 2},
+                    line={'width': 2},
+                    text=[str(i) for i in np.where(whitelist)[0]],
+                    boxmean='sd',
+                )
+            )
+
+    else :
+        data =[]
+        for group_idx, group_table in enumerate(group_tables):
+            data.append(
+                go.Box(
+                    x=list(auto_evals[np.logical_and(whitelist, group_table)]),
+                    name='Group{}'.format(group_idx +1),
+                    boxpoints='all',
+                    pointpos=1.8,
+                    marker={'size': 2, 'color': GROUP_COLORS[group_idx]},
+                    line={'width': 2, 'color': GROUP_COLORS[group_idx]},
+                    text=[str(i)
+                        for i in np.where(
+                            np.logical_and(whitelist, group_table))[0]],
+                    boxmean='sd',
+                )
+            )
+
+    return {
+            'data': data,
+            'layout': {
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'Time Step',
+                    'tickfont': {'size': 15},
+                    'range': [0, 1.1 * len(larva_diffs.T)],
+                },
+                'yaxis': {
+                    'tickfont': {'size': 15},
+                },
+                'showlegend': False,
+                'hovermode': 'closest',
+                'margin': go.layout.Margin(l=70, r=0, b=50, t=0, pad=0),
+            },
+        }
+
+
+@app.callback(
+        Output('box-plot1', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'pupa-and-eclo':
+        return {
+                'display': 'inline-block',
+                'height': '250px',
+                'width': '20%',
+            }
+    elif detect == 'death':
+        return {'display': 'none',
+            }
+
+    else:
+        return {}
+
+
+# ===========================================
+#  Update the figure in the boxplot.
+# ===========================================
+@app.callback(
         Output('box-plot', 'figure'),
         [Input('threshold-slider1', 'value'),
          Input('well-selector', 'value'),
@@ -2670,8 +2803,6 @@ def callback(coef, well_idx, weight,
         return {'data': []}
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')):
-        return {'data': []}
-    if detect == 'pupa-and-eclo':
         return {'data': []}
 
     # Load a whitelist
@@ -2754,7 +2885,9 @@ def callback(detect):
 
     if detect == 'pupa-and-eclo':
         return {
-                'display': 'none',
+                'display': 'inline-block',
+                'height': '250px',
+                'width': '20%',
             }
 
     elif detect == 'death':
