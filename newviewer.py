@@ -3229,6 +3229,9 @@ def callback(tab_name, data_root, env, detect, adult):
         return 'Not available.'
     if detect is None:
         return 'Not available.'
+    if not os.path.exists(os.path.join(
+            data_root, env, 'original', 'death.csv')):
+        return 'Not available.'
     if tab_name != 'tab-2':
         return
 
