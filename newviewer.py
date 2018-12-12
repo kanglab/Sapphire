@@ -343,7 +343,7 @@ app.layout = html.Div([
                     },
                 ),
                 dcc.Graph(
-                    id='box-plot1',
+                    id='larva-boxplot',
                     style={
                         'display': 'inline-block',
                         'height': '250px',
@@ -370,7 +370,7 @@ app.layout = html.Div([
                     },
                 ),
                 dcc.Graph(
-                    id='box-plot',
+                    id='adult-boxplot',
                     style={
                         'display': 'inline-block',
                         'height': '250px',
@@ -455,7 +455,7 @@ app.layout = html.Div([
                 'larva-summary': 0,
                 'adult-summary': 0,
                 'pupa-vs-eclo': 0,
-                'box-plot': 0,
+                'adult-boxplot': 0,
             }
         )
     ),
@@ -687,7 +687,7 @@ def callback(_, buff, larva_data, adult_data, changed_data, well_idx):
         [Input('larva-summary', 'clickData'),
          Input('adult-summary', 'clickData'),
          Input('pupa-vs-eclo', 'clickData'),
-         Input('box-plot', 'clickData')],
+         Input('adult-boxplot', 'clickData')],
         [State('well-buff', 'children')])
 def callback(larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
     # Guard
@@ -728,8 +728,8 @@ def callback(larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
     if pupa_vs_eclo != buff['pupa-vs-eclo']:
         return '{"changed": "pupa-vs-eclo"}'
 
-    if box_plot != buff['box-plot']:
-        return '{"changed": "box-plot"}'
+    if box_plot != buff['adult-boxplot']:
+        return '{"changed": "adult-boxplot"}'
 
     return '{"changed": "nobody"}'
 
@@ -740,7 +740,7 @@ def callback(larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
         [State('larva-summary', 'clickData'),
          State('adult-summary', 'clickData'),
          State('pupa-vs-eclo', 'clickData'),
-         State('box-plot', 'clickData'),
+         State('adult-boxplot', 'clickData'),
          State('well-buff', 'children')])
 def callback(changed_data,
         larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
@@ -762,8 +762,8 @@ def callback(changed_data,
     elif changed_data == 'pupa-vs-eclo':
         buff['pupa-vs-eclo'] = int(pupa_vs_eclo['points'][0]['text'])
 
-    elif changed_data == 'box-plot':
-        buff['box-plot'] = int(box_plot['points'][0]['text'])
+    elif changed_data == 'adult-boxplot':
+        buff['adult-boxplot'] = int(box_plot['points'][0]['text'])
 
     else:
         # Never evaluated
@@ -2779,7 +2779,7 @@ def callback(detect):
 #  Update the figure in the boxplot.
 # ===========================================
 @app.callback(
-        Output('box-plot1', 'figure'),
+        Output('larva-boxplot', 'figure'),
         [Input('larva-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
@@ -2878,7 +2878,7 @@ def callback(coef, well_idx, weight,
 
 
 @app.callback(
-        Output('box-plot1', 'style'),
+        Output('larva-boxplot', 'style'),
         [Input('detect-target', 'value')])
 def callback(detect):
 
@@ -2900,7 +2900,7 @@ def callback(detect):
 #  Update the figure in the boxplot.
 # ===========================================
 @app.callback(
-        Output('box-plot', 'figure'),
+        Output('adult-boxplot', 'figure'),
         [Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
@@ -3026,7 +3026,7 @@ def callback(larva_coef, adult_coef, well_idx, weight,
 
 
 @app.callback(
-        Output('box-plot', 'style'),
+        Output('adult-boxplot', 'style'),
         [Input('detect-target', 'value')])
 def callback(detect):
 
