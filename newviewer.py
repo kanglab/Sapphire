@@ -3364,20 +3364,23 @@ def callback(tab_name, data_root, env, detect,
     # ----------------------------------------------------------
     #  Detect pupariation timing for detecting eclosion timing
     # ----------------------------------------------------------
-    # Load the data
-    larva_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+    if larva is None:
+        pupar_times = None
 
-    larva_diffs = seasoning(
-            larva_diffs, 'larva', detect, size, sigma,
-            smooth=len(checks) != 0,
-            weight=len(weight) != 0,
-            pupar_times=None)
+    else:
+        larva_diffs = np.load(os.path.join(
+                data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
 
-    # Compute thresholds
-    larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
+        larva_diffs = seasoning(
+                larva_diffs, 'larva', detect, size, sigma,
+                smooth=len(checks) != 0,
+                weight=len(weight) != 0,
+                pupar_times=None)
 
-    pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
+        # Compute thresholds
+        larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
+
+        pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
 
 
     # ----------------------------------------
