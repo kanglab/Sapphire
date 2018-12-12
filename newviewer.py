@@ -2780,7 +2780,7 @@ def callback(detect):
 # ===========================================
 @app.callback(
         Output('box-plot1', 'figure'),
-        [Input('threshold-slider1', 'value'),
+        [Input('larva-thresh', 'value'),
          Input('well-selector', 'value'),
          Input('weight-check', 'values'),
          Input('filter-check', 'values'),
@@ -2816,7 +2816,8 @@ def callback(coef, well_idx, weight,
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
             smooth=len(checks) != 0,
-            weight=len(weight) != 0)
+            weight=len(weight) != 0,
+            pupar_times=None)
 
     # Compute thresholds
     threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
