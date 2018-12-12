@@ -35,6 +35,7 @@ GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#89c3eb',
 
 DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
+DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaUniv/'
 THETA = 50
 
 THRESH_FUNC = my_threshold.n_times_mean
@@ -77,6 +78,11 @@ app.layout = html.Div([
                     dcc.RadioItems(
                         id='detect-target',
                         options=[
+                            {
+                                'label': 'Pupariation',
+                                'value': 'pupariation',
+                                'disabled': True,
+                            },
                             {
                                 'label': 'Pupariation&Eclosion',
                                 'value': 'pupa-and-eclo',
@@ -508,10 +514,15 @@ def callback(env, data_root):
     with open(os.path.join(data_root, env, 'config.json')) as f:
         config = json.load(f)
 
-    if config['detect'] == 'pupa&eclo':
+    if config['detect'] == 'pupariation':
+        return 'pupariation'
+
+    elif config['detect'] == 'pupa&eclo':
         return 'pupa-and-eclo'
+
     elif config['detect'] == 'death':
         return 'death'
+
     else:
         return
 
@@ -528,12 +539,13 @@ def callback(detect, data_root, env):
     if env is None:
         return
 
-    if detect == 'pupa-and-eclo':
+    if detect == 'pupariation':
+        return False
 
+    elif detect == 'pupa-and-eclo':
         return False
 
     elif detect == 'death':
-
         return True
 
 
@@ -545,19 +557,15 @@ def callback(detect, data_root, env):
 def callback(detect, data_root, env):
     if env is None:
         return []
-
-    if detect == 'pupa-and-eclo':
-
-        results = [os.path.basename(i)
-                for i in sorted(glob.glob(os.path.join(
-                    data_root, env, 'inference', 'larva', '*')))
-                if os.path.isdir(i)]
-
-        return [{'label': i, 'value': i} for i in results]
-
-    elif detect == 'death':
-
+    if detect == 'death':
         return []
+
+    results = [os.path.basename(i)
+            for i in sorted(glob.glob(os.path.join(
+                data_root, env, 'inference', 'larva', '*')))
+            if os.path.isdir(i)]
+
+    return [{'label': i, 'value': i} for i in results]
 
 
 @app.callback(
@@ -566,9 +574,6 @@ def callback(detect, data_root, env):
         [State('data-root', 'children'),
          State('env-dropdown', 'value')])
 def callback(_, data_root, env):
-    if env is None:
-        return None
-
     return None
 
 
@@ -576,12 +581,33 @@ def callback(_, data_root, env):
 #  Initialize adult-dropdown.
 # ======================================================
 @app.callback(
+        Output('adult-dropdown', 'disabled'),
+        [Input('detect-target', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(detect, data_root, env):
+    if env is None:
+        return
+
+    if detect == 'pupariation':
+        return True
+
+    elif detect == 'pupa-and-eclo':
+        return False
+
+    elif detect == 'death':
+        return False
+
+
+@app.callback(
         Output('adult-dropdown', 'options'),
         [Input('detect-target', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value')])
 def callback(detect, data_root, env):
     if env is None:
+        return []
+    if detect == 'pupariation':
         return []
 
     results = [os.path.basename(i)
@@ -598,9 +624,6 @@ def callback(detect, data_root, env):
         [State('data-root', 'children'),
          State('env-dropdown', 'value')])
 def callback(_, data_root, env):
-    if env is None:
-        return None
-
     return None
 
 
@@ -948,7 +971,6 @@ def callback(well_idx, data_root, env):
         [State('data-root', 'children'),
          State('env-dropdown', 'value')])
 def callback(time, well_idx, data_root, env):
-
     # Exception handling
     if env is None:
         return
@@ -1016,44 +1038,32 @@ def callback(time, well_idx, data_root, env):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
+def callback(time, well_idx, data_root, env, detect, larva, adult):
     # Guard
-    if env is None or adult_data is None:
+    if env is None:
         return
 
-    data = []
-
-    if detect == 'pupa-and-eclo':
+    if detect == 'pupariation':
+        # Guard
+        if larva is None:
+            return
 
         # Load a npz file storing prob images
         # and get a prob image
         larva_probs = np.load(os.path.join(
-                data_root, env, 'inference', 'larva', larva_data, 'probs',
-                '{:03d}.npz'.format(well_idx)))['arr_0'].astype(np.int32)
-        adult_probs = np.load(os.path.join(
-                data_root, env, 'inference', 'adult', adult_data, 'probs',
+                data_root, env, 'inference', 'larva', larva, 'probs',
                 '{:03d}.npz'.format(well_idx)))['arr_0'].astype(np.int32)
 
         larva_prob_img1 = PIL.Image.fromarray(
                 larva_probs[time] / 100 * 255).convert('L')
         larva_prob_img2 = PIL.Image.fromarray(
                 larva_probs[time+1] / 100 * 255).convert('L')
-        adult_prob_img1 = PIL.Image.fromarray(
-                adult_probs[time] / 100 * 255).convert('L')
-        adult_prob_img2 = PIL.Image.fromarray(
-                adult_probs[time+1] / 100 * 255).convert('L')
 
         larva_label_img1 = PIL.Image.fromarray(
                 ((larva_probs[time] > THETA) * 255).astype(np.uint8)
                 ).convert('L')
         larva_label_img2 = PIL.Image.fromarray(
                 ((larva_probs[time+1] > THETA) * 255).astype(np.uint8)
-                ).convert('L')
-        adult_label_img1 = PIL.Image.fromarray(
-                ((adult_probs[time] > THETA) * 255).astype(np.uint8)
-                ).convert('L')
-        adult_label_img2 = PIL.Image.fromarray(
-                ((adult_probs[time+1] > THETA) * 255).astype(np.uint8)
                 ).convert('L')
 
         # Buffer the well image as byte stream
@@ -1066,16 +1076,7 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
         larva_label_img1.save(larva_label_buf1, format='JPEG')
         larva_label_img2.save(larva_label_buf2, format='JPEG')
 
-        adult_prob_buf1 = io.BytesIO()
-        adult_prob_buf2 = io.BytesIO()
-        adult_label_buf1 = io.BytesIO()
-        adult_label_buf2 = io.BytesIO()
-        adult_prob_img1.save(adult_prob_buf1, format='JPEG')
-        adult_prob_img2.save(adult_prob_buf2, format='JPEG')
-        adult_label_img1.save(adult_label_buf1, format='JPEG')
-        adult_label_img2.save(adult_label_buf2, format='JPEG')
-
-        data = data + [
+        data = [
             html.Div('Larva'),
             html.Div([
                 html.Img(
@@ -1129,37 +1130,217 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                     },
                 ),
             ]),
+        ]
+
+    elif detect == 'pupa-and-eclo':
+        data = []
+
+        if larva is None:
+            pass
+
+        else:
+            # Load a npz file storing prob images
+            # and get a prob image
+            larva_probs = np.load(os.path.join(
+                    data_root, env, 'inference', 'larva', larva, 'probs',
+                    '{:03d}.npz'.format(well_idx)))['arr_0'].astype(np.int32)
+
+            larva_prob_img1 = PIL.Image.fromarray(
+                    larva_probs[time] / 100 * 255).convert('L')
+            larva_prob_img2 = PIL.Image.fromarray(
+                    larva_probs[time+1] / 100 * 255).convert('L')
+
+            larva_label_img1 = PIL.Image.fromarray(
+                    ((larva_probs[time] > THETA) * 255).astype(np.uint8)
+                    ).convert('L')
+            larva_label_img2 = PIL.Image.fromarray(
+                    ((larva_probs[time+1] > THETA) * 255).astype(np.uint8)
+                    ).convert('L')
+
+            # Buffer the well image as byte stream
+            larva_prob_buf1 = io.BytesIO()
+            larva_prob_buf2 = io.BytesIO()
+            larva_label_buf1 = io.BytesIO()
+            larva_label_buf2 = io.BytesIO()
+            larva_prob_img1.save(larva_prob_buf1, format='JPEG')
+            larva_prob_img2.save(larva_prob_buf2, format='JPEG')
+            larva_label_img1.save(larva_label_buf1, format='JPEG')
+            larva_label_img2.save(larva_label_buf2, format='JPEG')
+
+            data = data + [
+                html.Div('Larva'),
+                html.Div([
+                    html.Img(
+                        src='data:image/jpeg;base64,{}'.format(
+                                base64.b64encode(
+                                    larva_label_buf1.getvalue()).decode('utf-8')),
+                        style={
+                            'background': '#555555',
+                            'height': '65px',
+                            'width': '65px',
+                            'padding': '5px',
+                            'display': 'inline-block',
+                        },
+                    ),
+                    html.Img(
+                        src='data:image/jpeg;base64,{}'.format(
+                                base64.b64encode(
+                                    larva_label_buf2.getvalue()).decode('utf-8')),
+                        style={
+                            'background': '#555555',
+                            'height': '65px',
+                            'width': '65px',
+                            'padding': '5px',
+                            'display': 'inline-block',
+                        },
+                    ),
+                ]),
+                html.Div([
+                    html.Img(
+                        src='data:image/jpeg;base64,{}'.format(
+                                base64.b64encode(
+                                    larva_prob_buf1.getvalue()).decode('utf-8')),
+                        style={
+                            'background': '#555555',
+                            'height': '65px',
+                            'width': '65px',
+                            'padding': '5px',
+                            'display': 'inline-block',
+                        },
+                    ),
+                    html.Img(
+                        src='data:image/jpeg;base64,{}'.format(
+                                base64.b64encode(
+                                    larva_prob_buf2.getvalue()).decode('utf-8')),
+                        style={
+                            'background': '#555555',
+                            'height': '65px',
+                            'width': '65px',
+                            'padding': '5px',
+                            'display': 'inline-block',
+                        },
+                    ),
+                ]),
             ]
 
-    # Load a npz file storing prob images
-    # and get a prob image
-    adult_probs = np.load(os.path.join(
-            data_root, env, 'inference', 'adult', adult_data, 'probs',
-            '{:03d}.npz'.format(well_idx)))['arr_0'].astype(np.int32)
+        if adult is None:
+            pass
 
-    adult_prob_img1 = PIL.Image.fromarray(
-            adult_probs[time] / 100 * 255).convert('L')
-    adult_prob_img2 = PIL.Image.fromarray(
-            adult_probs[time+1] / 100 * 255).convert('L')
+        else:
+            adult_probs = np.load(os.path.join(
+                    data_root, env, 'inference', 'adult', adult, 'probs',
+                    '{:03d}.npz'.format(well_idx)))['arr_0'].astype(np.int32)
 
-    adult_label_img1 = PIL.Image.fromarray(
-            ((adult_probs[time] > THETA) * 255).astype(np.uint8)
-            ).convert('L')
-    adult_label_img2 = PIL.Image.fromarray(
-            ((adult_probs[time+1] > THETA) * 255).astype(np.uint8)
-            ).convert('L')
+            adult_prob_img1 = PIL.Image.fromarray(
+                    adult_probs[time] / 100 * 255).convert('L')
+            adult_prob_img2 = PIL.Image.fromarray(
+                    adult_probs[time+1] / 100 * 255).convert('L')
 
-    # Buffer the well image as byte stream
-    adult_prob_buf1 = io.BytesIO()
-    adult_prob_buf2 = io.BytesIO()
-    adult_label_buf1 = io.BytesIO()
-    adult_label_buf2 = io.BytesIO()
-    adult_prob_img1.save(adult_prob_buf1, format='JPEG')
-    adult_prob_img2.save(adult_prob_buf2, format='JPEG')
-    adult_label_img1.save(adult_label_buf1, format='JPEG')
-    adult_label_img2.save(adult_label_buf2, format='JPEG')
+            adult_label_img1 = PIL.Image.fromarray(
+                    ((adult_probs[time] > THETA) * 255).astype(np.uint8)
+                    ).convert('L')
+            adult_label_img2 = PIL.Image.fromarray(
+                    ((adult_probs[time+1] > THETA) * 255).astype(np.uint8)
+                    ).convert('L')
 
-    return data + [
+            adult_prob_buf1 = io.BytesIO()
+            adult_prob_buf2 = io.BytesIO()
+            adult_label_buf1 = io.BytesIO()
+            adult_label_buf2 = io.BytesIO()
+            adult_prob_img1.save(adult_prob_buf1, format='JPEG')
+            adult_prob_img2.save(adult_prob_buf2, format='JPEG')
+            adult_label_img1.save(adult_label_buf1, format='JPEG')
+            adult_label_img2.save(adult_label_buf2, format='JPEG')
+
+            data = data + [
+                html.Div('Adult'),
+                html.Div([
+                    html.Img(
+                        src='data:image/jpeg;base64,{}'.format(
+                                base64.b64encode(
+                                    adult_label_buf1.getvalue()).decode('utf-8')),
+                        style={
+                            'background': '#555555',
+                            'height': '65px',
+                            'width': '65px',
+                            'padding': '5px',
+                            'display': 'inline-block',
+                        },
+                    ),
+                    html.Img(
+                        src='data:image/jpeg;base64,{}'.format(
+                                base64.b64encode(
+                                    adult_label_buf2.getvalue()).decode('utf-8')),
+                        style={
+                            'background': '#555555',
+                            'height': '65px',
+                            'width': '65px',
+                            'padding': '5px',
+                            'display': 'inline-block',
+                        },
+                    ),
+                ]),
+                html.Div([
+                    html.Img(
+                        src='data:image/jpeg;base64,{}'.format(
+                                base64.b64encode(
+                                    adult_prob_buf1.getvalue()).decode('utf-8')),
+                        style={
+                            'background': '#555555',
+                            'height': '65px',
+                            'width': '65px',
+                            'padding': '5px',
+                            'display': 'inline-block',
+                        },
+                    ),
+                    html.Img(
+                        src='data:image/jpeg;base64,{}'.format(
+                                base64.b64encode(
+                                    adult_prob_buf2.getvalue()).decode('utf-8')),
+                        style={
+                            'background': '#555555',
+                            'height': '65px',
+                            'width': '65px',
+                            'padding': '5px',
+                            'display': 'inline-block',
+                        },
+                    ),
+                ]),
+                html.Div('Image at "t"',
+                        style={'display': 'inline-block', 'margin-right': '25px'}),
+                html.Div('"t+1"', style={'display': 'inline-block'}),
+            ]
+
+    elif detect == 'death':
+        # Load a npz file storing prob images
+        # and get a prob image
+        adult_probs = np.load(os.path.join(
+                data_root, env, 'inference', 'adult', adult, 'probs',
+                '{:03d}.npz'.format(well_idx)))['arr_0'].astype(np.int32)
+
+        adult_prob_img1 = PIL.Image.fromarray(
+                adult_probs[time] / 100 * 255).convert('L')
+        adult_prob_img2 = PIL.Image.fromarray(
+                adult_probs[time+1] / 100 * 255).convert('L')
+
+        adult_label_img1 = PIL.Image.fromarray(
+                ((adult_probs[time] > THETA) * 255).astype(np.uint8)
+                ).convert('L')
+        adult_label_img2 = PIL.Image.fromarray(
+                ((adult_probs[time+1] > THETA) * 255).astype(np.uint8)
+                ).convert('L')
+
+        # Buffer the well image as byte stream
+        adult_prob_buf1 = io.BytesIO()
+        adult_prob_buf2 = io.BytesIO()
+        adult_label_buf1 = io.BytesIO()
+        adult_label_buf2 = io.BytesIO()
+        adult_prob_img1.save(adult_prob_buf1, format='JPEG')
+        adult_prob_img2.save(adult_prob_buf2, format='JPEG')
+        adult_label_img1.save(adult_label_buf1, format='JPEG')
+        adult_label_img2.save(adult_label_buf2, format='JPEG')
+
+        data = [
             html.Div('Adult'),
             html.Div([
                 html.Img(
@@ -1217,6 +1398,8 @@ def callback(time, well_idx, data_root, env, detect, larva_data, adult_data):
                     style={'display': 'inline-block', 'margin-right': '25px'}),
             html.Div('"t+1"', style={'display': 'inline-block'}),
         ]
+
+    return data
 
 
 # ===========================
@@ -1403,7 +1586,12 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupa-and-eclo':
+    if detect == 'pupariation':
+        return {
+                'width': '750px',
+            }
+
+    elif detect == 'pupa-and-eclo':
         return {
                 'width': '750px',
             }
@@ -1602,6 +1790,28 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
                 'margin': go.layout.Margin(l=70, r=70, b=50, t=50, pad=0),
             },
         }
+
+
+@app.callback(
+        Output('adult-signal-div', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'pupariation':
+        return {'display': 'none'}
+        
+    elif detect == 'pupa-and-eclo':
+        return {
+                'width': '750px',
+            }
+        
+    elif detect == 'death':
+        return {
+                'width': '750px',
+            }
+
+    else:
+        return {}
 
 
 # ==========================================
@@ -1815,7 +2025,14 @@ def callback(coef, well_idx, weight,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupa-and-eclo':
+    if detect == 'pupariation':
+        return {
+                'display': 'inline-block',
+                'height': '250px',
+                'width': '20%',
+            }
+
+    elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
                 'height': '250px',
@@ -2076,7 +2293,10 @@ def callback(larva_coef, adult_coef, well_idx, weight,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupa-and-eclo':
+    if detect == 'pupariation':
+        return {'display': 'none'}
+
+    elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
                 'height': '250px',
@@ -2245,7 +2465,14 @@ def callback(coef, well_idx, weight,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupa-and-eclo':
+    if detect == 'pupariation':
+        return {
+                'display': 'inline-block',
+                'height': '250px',
+                'width': '20%',
+            }
+
+    elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
                 'height': '250px',
@@ -2452,6 +2679,9 @@ def callback(larva_coef, adult_coef, well_idx, weight,
         [Input('detect-target', 'value')])
 def callback(detect):
 
+    if detect == 'pupariation':
+        return {'display': 'none'}
+
     if detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
@@ -2597,7 +2827,10 @@ def callback(larva_coef, adult_coef, well_idx, weight,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupa-and-eclo':
+    if detect == 'pupariation':
+        return {'display': 'none'}
+
+    elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
                 'height': '250px',
@@ -2605,9 +2838,7 @@ def callback(detect):
             }
 
     elif detect == 'death':
-        return {
-                'display': 'none',
-            }
+        return {'display': 'none'}
 
     else:
         return {}
@@ -2637,6 +2868,8 @@ def callback(coef, well_idx, weight,
         return {'data': []}
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+        return {'data': []}
+    if detect == 'pupariation':
         return {'data': []}
     if detect == 'pupa-and-eclo':
         return {'data': []}
@@ -2746,10 +2979,11 @@ def callback(coef, well_idx, weight,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupa-and-eclo':
-        return {
-                'display': 'none',
-            }
+    if detect == 'pupariation':
+        return {'display': 'none'}
+
+    elif detect == 'pupa-and-eclo':
+        return {'display': 'none'}
 
     elif detect == 'death':
         return {
@@ -2788,6 +3022,8 @@ def callback(larva_coef, adult_coef, well_idx, weight,
         return {'data': []}
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+        return {'data': []}
+    if detect == 'pupariation':
         return {'data': []}
     if detect == 'pupa-and-eclo':
         return {'data': []}
@@ -2898,10 +3134,11 @@ def callback(larva_coef, adult_coef, well_idx, weight,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupa-and-eclo':
-        return {
-                'display': 'none',
-            }
+    if detect == 'pupariation':
+        return {'display': 'none'}
+
+    elif detect == 'pupa-and-eclo':
+        return {'display': 'none'}
 
     elif detect == 'death':
         return {
@@ -3072,7 +3309,15 @@ def callback(tab_name, data_root, env, detect, larva):
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupa-and-eclo':
+    if detect == 'pupariation':
+        return {
+                'display': 'inline-block',
+                'vertical-align': 'top',
+                'margin': '10px',
+                'width': '400px',
+            }
+
+    elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
                 'vertical-align': 'top',
@@ -3081,9 +3326,7 @@ def callback(detect):
             }
 
     elif detect == 'death':
-        return {
-                'display': 'none',
-            }
+        return {'display': 'none'}
 
     else:
         return {}
@@ -3198,7 +3441,15 @@ def callback(tab_name, data_root, env,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupa-and-eclo':
+    if detect == 'pupariation':
+        return {
+                'display': 'inline-block',
+                'vertical-align': 'top',
+                'margin': '10px',
+                'width': '400px',
+            }
+
+    elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
                 'vertical-align': 'top',
@@ -3207,9 +3458,7 @@ def callback(detect):
             }
 
     elif detect == 'death':
-        return {
-                'display': 'none',
-            }
+        return {'display': 'none'}
 
     else:
         return {}
@@ -3311,7 +3560,10 @@ def callback(tab_name, data_root, env, detect, adult):
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupa-and-eclo':
+    if detect == 'pupariation':
+        return {'display': 'none'}
+
+    elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
                 'vertical-align': 'top',
@@ -3467,7 +3719,10 @@ def callback(tab_name, data_root, env, detect,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupa-and-eclo':
+    if detect == 'pupariation':
+        return {'display': 'none'}
+
+    elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
                 'vertical-align': 'top',
@@ -3502,7 +3757,16 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
 
     # Apply weight to the signals
     if weight:
-        if detect == 'pupa-and-eclo' and signal_type == 'larva':
+        if detect == 'pupariation' and signal_type == 'larva':
+            # Ramp filter
+            signals = signals *  \
+                    (np.arange(len(signals.T)) / len(signals.T))[::-1]
+
+        elif detect == 'pupariation' and signal_type == 'adult':
+            # Never evaluated
+            pass
+
+        elif detect == 'pupa-and-eclo' and signal_type == 'larva':
             # Ramp filter
             signals = signals *  \
                     (np.arange(len(signals.T)) / len(signals.T))[::-1]
@@ -3545,7 +3809,19 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
 
 def detect_event(signals, thresholds, signal_type, detect):
 
-    if detect == 'pupa-and-eclo' and signal_type == 'larva':
+    if detect == 'pupariation' and signal_type == 'larva':
+        # Detect the falling of the signal
+        # Scan the signal from the right hand side.
+        auto_evals = (signals.shape[1]
+                - (np.fliplr(signals) > thresholds).argmax(axis=1))
+        # If the signal was not more than the threshold.
+        auto_evals[auto_evals == signals.shape[1]] = 0
+
+    elif detect == 'pupariation' and signal_type == 'adult':
+        # Never evaluated
+        pass
+
+    elif detect == 'pupa-and-eclo' and signal_type == 'larva':
         # Detect the falling of the signal
         # Scan the signal from the right hand side.
         auto_evals = (signals.shape[1]
