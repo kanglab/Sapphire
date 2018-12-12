@@ -3009,6 +3009,10 @@ def callback(tab_name, data_root, env, detect, larva):
         params = json.load(f)
 
     if detect == 'pupa-and-eclo':
+        if not os.path.exists(os.path.join(
+                data_root, env, 'original', 'pupariation.csv')):
+            return 'Not available.'
+
         # Load a manual data
         larva_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'pupariation.csv'),
@@ -3229,9 +3233,6 @@ def callback(tab_name, data_root, env, detect, adult):
         return 'Not available.'
     if detect is None:
         return 'Not available.'
-    if not os.path.exists(os.path.join(
-            data_root, env, 'original', 'death.csv')):
-        return 'Not available.'
     if tab_name != 'tab-2':
         return
 
@@ -3240,12 +3241,20 @@ def callback(tab_name, data_root, env, detect, adult):
         params = json.load(f)
 
     if detect == 'pupa-and-eclo':
+        if not os.path.exists(os.path.join(
+                data_root, env, 'original', 'eclosion.csv')):
+            return 'Not available.'
+
         # Load a manual data
         adult_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
                 dtype=np.int16, delimiter=',').flatten()
 
     elif detect == 'death':
+        if not os.path.exists(os.path.join(
+                data_root, env, 'original', 'death.csv')):
+            return 'Not available.'
+
         # Load a manual data
         adult_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
