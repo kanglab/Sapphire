@@ -461,6 +461,7 @@ app.layout = html.Div([
                 'larva-summary': 0,
                 'adult-summary': 0,
                 'pupa-vs-eclo': 0,
+                'larva-boxplot': 0,
                 'adult-boxplot': 0,
             }
         )
@@ -710,14 +711,17 @@ def callback(_, buff, larva_data, adult_data, changed_data, well_idx):
         [Input('larva-summary', 'clickData'),
          Input('adult-summary', 'clickData'),
          Input('pupa-vs-eclo', 'clickData'),
+         Input('larva-boxplot', 'clickData'),
          Input('adult-boxplot', 'clickData')],
         [State('well-buff', 'children')])
-def callback(larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
+def callback(larva_summary, adult_summary,
+        pupa_vs_eclo, larva_boxplot, adult_boxplot, buff):
     # Guard
     if larva_summary is None and  \
        adult_summary is None and  \
        pupa_vs_eclo is None and  \
-       box_plot is None:
+       larva_boxplot is None and  \
+       adult_boxplot is None:
         return '{"changed": "nobody"}'
 
     if larva_summary is None:
@@ -735,10 +739,15 @@ def callback(larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
     else:
         pupa_vs_eclo = int(pupa_vs_eclo['points'][0]['text'])
 
-    if box_plot is None:
-        box_plot = 0
+    if larva_boxplot is None:
+        larva_boxplot = 0
     else:
-        box_plot = int(box_plot['points'][0]['text'])
+        larva_boxplot = int(larva_boxplot['points'][0]['text'])
+
+    if adult_boxplot is None:
+        adult_boxplot = 0
+    else:
+        adult_boxplot = int(adult_boxplot['points'][0]['text'])
 
     buff = json.loads(buff)
 
@@ -751,7 +760,10 @@ def callback(larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
     if pupa_vs_eclo != buff['pupa-vs-eclo']:
         return '{"changed": "pupa-vs-eclo"}'
 
-    if box_plot != buff['adult-boxplot']:
+    if larva_boxplot != buff['larva-boxplot']:
+        return '{"changed": "larva-boxplot"}'
+
+    if adult_boxplot != buff['adult-boxplot']:
         return '{"changed": "adult-boxplot"}'
 
     return '{"changed": "nobody"}'
@@ -763,10 +775,11 @@ def callback(larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
         [State('larva-summary', 'clickData'),
          State('adult-summary', 'clickData'),
          State('pupa-vs-eclo', 'clickData'),
+         State('larva-boxplot', 'clickData'),
          State('adult-boxplot', 'clickData'),
          State('well-buff', 'children')])
-def callback(changed_data,
-        larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
+def callback(changed_data, larva_summary, adult_summary,
+        pupa_vs_eclo, larva_boxplot, adult_boxplot, buff):
 
     buff = json.loads(buff)
     changed_data = json.loads(changed_data)['changed']
@@ -785,8 +798,11 @@ def callback(changed_data,
     elif changed_data == 'pupa-vs-eclo':
         buff['pupa-vs-eclo'] = int(pupa_vs_eclo['points'][0]['text'])
 
+    elif changed_data == 'larva-boxplot':
+        buff['larva-boxplot'] = int(larva_boxplot['points'][0]['text'])
+
     elif changed_data == 'adult-boxplot':
-        buff['adult-boxplot'] = int(box_plot['points'][0]['text'])
+        buff['adult-boxplot'] = int(adult_boxplot['points'][0]['text'])
 
     else:
         # Never evaluated
