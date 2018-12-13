@@ -349,6 +349,17 @@ app.layout = html.Div([
                     },
                 ),
                 dcc.Graph(
+                    id='larva-boxplot',
+                    style={
+                        'display': 'inline-block',
+                        'height': '250px',
+                        'width': '20%',
+                    },
+                ),
+            ]),
+            html.Br(),
+            html.Div([
+                dcc.Graph(
                     id='adult-summary',
                     style={
                         'display': 'inline-block',
@@ -365,6 +376,14 @@ app.layout = html.Div([
                     },
                 ),
                 dcc.Graph(
+                    id='adult-boxplot',
+                    style={
+                        'display': 'inline-block',
+                        'height': '250px',
+                        'width': '20%',
+                    },
+                ),
+                dcc.Graph(
                     id='pupa-vs-eclo',
                     style={
                         'display': 'inline-block',
@@ -374,14 +393,6 @@ app.layout = html.Div([
                 ),
                 dcc.Graph(
                     id='survival-curve',
-                    style={
-                        'display': 'inline-block',
-                        'height': '250px',
-                        'width': '20%',
-                    },
-                ),
-                dcc.Graph(
-                    id='box-plot',
                     style={
                         'display': 'inline-block',
                         'height': '250px',
@@ -450,7 +461,8 @@ app.layout = html.Div([
                 'larva-summary': 0,
                 'adult-summary': 0,
                 'pupa-vs-eclo': 0,
-                'box-plot': 0,
+                'larva-boxplot': 0,
+                'adult-boxplot': 0,
             }
         )
     ),
@@ -699,14 +711,17 @@ def callback(_, buff, larva_data, adult_data, changed_data, well_idx):
         [Input('larva-summary', 'clickData'),
          Input('adult-summary', 'clickData'),
          Input('pupa-vs-eclo', 'clickData'),
-         Input('box-plot', 'clickData')],
+         Input('larva-boxplot', 'clickData'),
+         Input('adult-boxplot', 'clickData')],
         [State('well-buff', 'children')])
-def callback(larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
+def callback(larva_summary, adult_summary,
+        pupa_vs_eclo, larva_boxplot, adult_boxplot, buff):
     # Guard
     if larva_summary is None and  \
        adult_summary is None and  \
        pupa_vs_eclo is None and  \
-       box_plot is None:
+       larva_boxplot is None and  \
+       adult_boxplot is None:
         return '{"changed": "nobody"}'
 
     if larva_summary is None:
@@ -724,10 +739,15 @@ def callback(larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
     else:
         pupa_vs_eclo = int(pupa_vs_eclo['points'][0]['text'])
 
-    if box_plot is None:
-        box_plot = 0
+    if larva_boxplot is None:
+        larva_boxplot = 0
     else:
-        box_plot = int(box_plot['points'][0]['text'])
+        larva_boxplot = int(larva_boxplot['points'][0]['text'])
+
+    if adult_boxplot is None:
+        adult_boxplot = 0
+    else:
+        adult_boxplot = int(adult_boxplot['points'][0]['text'])
 
     buff = json.loads(buff)
 
@@ -740,8 +760,11 @@ def callback(larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
     if pupa_vs_eclo != buff['pupa-vs-eclo']:
         return '{"changed": "pupa-vs-eclo"}'
 
-    if box_plot != buff['box-plot']:
-        return '{"changed": "box-plot"}'
+    if larva_boxplot != buff['larva-boxplot']:
+        return '{"changed": "larva-boxplot"}'
+
+    if adult_boxplot != buff['adult-boxplot']:
+        return '{"changed": "adult-boxplot"}'
 
     return '{"changed": "nobody"}'
 
@@ -752,10 +775,11 @@ def callback(larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
         [State('larva-summary', 'clickData'),
          State('adult-summary', 'clickData'),
          State('pupa-vs-eclo', 'clickData'),
-         State('box-plot', 'clickData'),
+         State('larva-boxplot', 'clickData'),
+         State('adult-boxplot', 'clickData'),
          State('well-buff', 'children')])
-def callback(changed_data,
-        larva_summary, adult_summary, pupa_vs_eclo, box_plot, buff):
+def callback(changed_data, larva_summary, adult_summary,
+        pupa_vs_eclo, larva_boxplot, adult_boxplot, buff):
 
     buff = json.loads(buff)
     changed_data = json.loads(changed_data)['changed']
@@ -774,8 +798,11 @@ def callback(changed_data,
     elif changed_data == 'pupa-vs-eclo':
         buff['pupa-vs-eclo'] = int(pupa_vs_eclo['points'][0]['text'])
 
-    elif changed_data == 'box-plot':
-        buff['box-plot'] = int(box_plot['points'][0]['text'])
+    elif changed_data == 'larva-boxplot':
+        buff['larva-boxplot'] = int(larva_boxplot['points'][0]['text'])
+
+    elif changed_data == 'adult-boxplot':
+        buff['adult-boxplot'] = int(adult_boxplot['points'][0]['text'])
 
     else:
         # Never evaluated
@@ -1546,7 +1573,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         ]
 
     return {
-            'data': larva_data + manual_data + common_data,
+            'data': manual_data + larva_data + common_data,
             'layout': {
                     'annotations': [
                         {
@@ -1758,7 +1785,7 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
         ]
 
     return {
-            'data': adult_data + manual_data + common_data,
+            'data': manual_data + adult_data + common_data,
             'layout': {
                     'annotations': [
                         {
@@ -1974,7 +2001,7 @@ def callback(coef, well_idx, weight,
                     ],
                     'mode': 'lines',
                     'fill': 'tonexty',
-                    'line': {'width': .1, 'color': '#43d86b'},
+                    'line': {'width': .1, 'color': '#c0c0c0'},
                     'name': 'Upper bound',
                 },
                 {
@@ -2242,7 +2269,7 @@ def callback(larva_coef, adult_coef, well_idx, weight,
                     ],
                     'mode': 'lines',
                     'fill': 'tonexty',
-                    'line': {'width': .1, 'color': '#43d86b'},
+                    'line': {'width': .1, 'color': '#c0c0c0'},
                     'name': 'Upper bound',
                 },
                 {
@@ -2391,7 +2418,7 @@ def callback(coef, well_idx, weight,
                     'y': [ns.max(), ns.max()],
                     'mode': 'lines',
                     'fill': 'tozeroy',
-                    'line': {'width': 0, 'color': '#43d86b'},
+                    'line': {'width': 0, 'color': '#c0c0c0'},
                 },
                 {
                     'x': list(bins[1:]),
@@ -2515,7 +2542,9 @@ def callback(larva_coef, adult_coef, well_idx, weight,
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')):
         return {'data': []}
-    
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+        return {'data': []}
     # Load a blacklist
     blacklist, _ = load_blacklist(data_root, env)
 
@@ -2605,7 +2634,7 @@ def callback(larva_coef, adult_coef, well_idx, weight,
                     'y': [ns.max(), ns.max()],
                     'mode': 'lines',
                     'fill': 'tozeroy',
-                    'line': {'width': 0, 'color': '#43d86b'},
+                    'line': {'width': 0, 'color': '#c0c0c0'},
                 },
                 {
                     'x': list(bins[1:]),
@@ -3000,7 +3029,136 @@ def callback(detect):
 #  Update the figure in the boxplot.
 # ===========================================
 @app.callback(
-        Output('box-plot', 'figure'),
+        Output('larva-boxplot', 'figure'),
+        [Input('larva-thresh', 'value'),
+         Input('well-selector', 'value'),
+         Input('weight-check', 'values'),
+         Input('filter-check', 'values'),
+         Input('gaussian-size', 'value'),
+         Input('gaussian-sigma', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('detect-target', 'value'),
+         State('larva-dropdown', 'value')])
+def callback(coef, well_idx, weight,
+        checks, size, sigma, data_root, env, detect, larva):
+    # Guard
+    if env is None:
+        return {'data': []}
+    if larva is None:
+        return {'data': []}
+    if not os.path.exists(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')):
+        return {'data': []}
+    if detect == 'death':
+        return {'data': []}
+
+    # Load a whitelist
+    whitelist, _ = load_blacklist(data_root, env, white=True)
+
+    # Load a group table
+    group_tables = load_grouping_csv(data_root, env)
+
+    # Load the data
+    larva_diffs = np.load(os.path.join(
+            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+
+    larva_diffs = seasoning(
+            larva_diffs, 'larva', detect, size, sigma,
+            smooth=len(checks) != 0,
+            weight=len(weight) != 0,
+            pupar_times=None)
+
+    # Compute thresholds
+    threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+
+    auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
+
+    # Make data to be drawn
+    if group_tables == []:
+        data = []
+        data.append(
+                go.Box(
+                    x=list(auto_evals[whitelist]),
+                    name='Group1',
+                    boxpoints='all',
+                    pointpos=1.8,
+                    marker={'size': 2},
+                    line={'width': 2},
+                    text=[str(i) for i in np.where(whitelist)[0]],
+                    boxmean='sd',
+                )
+            )
+
+    else :
+        data =[]
+        for group_idx, group_table in enumerate(group_tables):
+            data.append(
+                go.Box(
+                    x=list(auto_evals[np.logical_and(whitelist, group_table)]),
+                    name='Group{}'.format(group_idx +1),
+                    boxpoints='all',
+                    pointpos=1.8,
+                    marker={'size': 2, 'color': GROUP_COLORS[group_idx]},
+                    line={'width': 2, 'color': GROUP_COLORS[group_idx]},
+                    text=[str(i)
+                        for i in np.where(
+                            np.logical_and(whitelist, group_table))[0]],
+                    boxmean='sd',
+                )
+            )
+
+    return {
+            'data': data,
+            'layout': {
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'Time Step',
+                    'tickfont': {'size': 15},
+                    'range': [0, 1.1 * len(larva_diffs.T)],
+                },
+                'yaxis': {
+                    'tickfont': {'size': 15},
+                },
+                'showlegend': False,
+                'hovermode': 'closest',
+                'margin': go.layout.Margin(l=70, r=0, b=50, t=0, pad=0),
+            },
+        }
+
+
+@app.callback(
+        Output('larva-boxplot', 'style'),
+        [Input('detect-target', 'value')])
+def callback(detect):
+
+    if detect == 'pupariation':
+        return {
+                'display': 'inline-block',
+                'height': '250px',
+                'width': '20%',
+            }
+
+    elif detect == 'pupa-and-eclo':
+        return {
+                'display': 'inline-block',
+                'height': '250px',
+                'width': '20%',
+            }
+
+    elif detect == 'death':
+        return {'display': 'none',
+            }
+
+    else:
+        return {}
+
+
+# ===========================================
+#  Update the figure in the boxplot.
+# ===========================================
+@app.callback(
+        Output('adult-boxplot', 'figure'),
         [Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
@@ -3024,8 +3182,6 @@ def callback(larva_coef, adult_coef, well_idx, weight,
             data_root, env, 'inference', 'adult', adult, 'signals.npy')):
         return {'data': []}
     if detect == 'pupariation':
-        return {'data': []}
-    if detect == 'pupa-and-eclo':
         return {'data': []}
 
     # Load a whitelist
@@ -3130,7 +3286,7 @@ def callback(larva_coef, adult_coef, well_idx, weight,
 
 
 @app.callback(
-        Output('box-plot', 'style'),
+        Output('adult-boxplot', 'style'),
         [Input('detect-target', 'value')])
 def callback(detect):
 
@@ -3138,7 +3294,11 @@ def callback(detect):
         return {'display': 'none'}
 
     elif detect == 'pupa-and-eclo':
-        return {'display': 'none'}
+        return {
+                'display': 'inline-block',
+                'height': '250px',
+                'width': '20%',
+            }
 
     elif detect == 'death':
         return {
