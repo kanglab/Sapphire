@@ -34,8 +34,8 @@ GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#89c3eb',
 
 
 DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
-DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaUniv/'
+DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
 
 THRESH_FUNC = my_threshold.n_times_mean
@@ -3159,8 +3159,6 @@ def callback(larva_coef, adult_coef, well_idx, weight,
         return {'data': []}
     if detect == 'pupariation':
         return {'data': []}
-    if detect == 'pupa-and-eclo':
-        return {'data': []}
 
     # Load a whitelist
     whitelist, _ = load_blacklist(data_root, env, white=True)
@@ -3272,7 +3270,11 @@ def callback(detect):
         return {'display': 'none'}
 
     elif detect == 'pupa-and-eclo':
-        return {'display': 'none'}
+        return {
+                'display': 'inline-block',
+                'height': '250px',
+                'width': '20%',
+            }
 
     elif detect == 'death':
         return {
