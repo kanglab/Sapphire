@@ -34,9 +34,7 @@ GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#89c3eb',
 
 
 DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
-DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
-DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaUniv/'
-DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/OkayamaUniv/'
+DATA_ROOT = '/mnt/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
 
 THRESH_FUNC = my_threshold.n_times_mean
@@ -1613,7 +1611,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                     },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=70, r=70, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=70, r=0, b=50, t=50, pad=0),
             },
         }
 
@@ -1824,7 +1822,7 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
                     },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=70, r=70, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=70, r=0, b=50, t=50, pad=0),
             },
         }
 
