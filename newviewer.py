@@ -307,7 +307,7 @@ app.layout = html.Div([
                                 'width': '700px',
                             },
                         ),
-                    ], style={'width': '750px'}),
+                    ], style={'width': '740px'}),
 
                     html.Div(id='adult-signal-div', children=[
                         html.Div([
@@ -336,7 +336,7 @@ app.layout = html.Div([
                                 'width': '700px',
                             },
                         ),
-                    ], style={'width': '750px'}),
+                    ], style={'width': '740px'}),
 
                 ], style={'display': 'inline-block'}),
             ],
@@ -1625,12 +1625,12 @@ def callback(detect):
 
     if detect == 'pupariation':
         return {
-                'width': '750px',
+                'width': '740px',
             }
 
     elif detect == 'pupa-and-eclo':
         return {
-                'width': '750px',
+                'width': '740px',
             }
 
     elif detect == 'death':
@@ -1839,12 +1839,12 @@ def callback(detect):
         
     elif detect == 'pupa-and-eclo':
         return {
-                'width': '750px',
+                'width': '740px',
             }
         
     elif detect == 'death':
         return {
-                'width': '750px',
+                'width': '740px',
             }
 
     else:
