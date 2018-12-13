@@ -34,8 +34,8 @@ GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#89c3eb',
 
 
 DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
-DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaUniv/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
+DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaUniv/'
 THETA = 50
 
 THRESH_FUNC = my_threshold.n_times_mean
@@ -3132,12 +3132,20 @@ def callback(coef, well_idx, weight,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupa-and-eclo':
+    if detect == 'pupariation':
         return {
                 'display': 'inline-block',
                 'height': '250px',
                 'width': '20%',
             }
+
+    elif detect == 'pupa-and-eclo':
+        return {
+                'display': 'inline-block',
+                'height': '250px',
+                'width': '20%',
+            }
+
     elif detect == 'death':
         return {'display': 'none',
             }
