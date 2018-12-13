@@ -36,6 +36,7 @@ GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#89c3eb',
 DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaUniv/'
+DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/OkayamaUniv/'
 THETA = 50
 
 THRESH_FUNC = my_threshold.n_times_mean
@@ -55,7 +56,16 @@ cache.init_app(
 #  Definition of the viewer page
 # ================================
 app.layout = html.Div([
-    html.Header([html.H1('Sapphire', style={'margin': '10px'})]),
+    html.Header([
+        html.H1(
+            'Sapphire',
+            style={'display': 'inline-block', 'margin': '10px'},
+        ),
+        html.Div(
+            os.path.basename(os.path.dirname(DATA_ROOT)),
+            style={'display': 'inline-block', 'margin': '10px'},
+        ),
+    ]),
     dcc.Tabs(id='tabs', value='tab-1', children=[
         dcc.Tab(id='tab-1', label='Tab 1', value='tab-1', children=[
             html.Div([
