@@ -1586,7 +1586,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         ]
 
     return {
-            'data': manual_data + larva_data + common_data,
+            'data': larva_data + manual_data + common_data,
             'layout': {
                     'annotations': [
                         {
@@ -1798,7 +1798,7 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
         ]
 
     return {
-            'data': manual_data + adult_data + common_data,
+            'data': adult_data + manual_data + common_data,
             'layout': {
                     'annotations': [
                         {
