@@ -35,6 +35,7 @@ GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#89c3eb',
 
 DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '/mnt/sdb/Research/Drosophila/data/TsukubaRIKEN/'
+DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
 
 THRESH_FUNC = my_threshold.n_times_mean
@@ -1347,6 +1348,10 @@ def callback(time, well_idx, data_root, env, detect, larva, adult):
             ]
 
     elif detect == 'death':
+        # Guard
+        if adult is None:
+            return
+
         # Load a npz file storing prob images
         # and get a prob image
         adult_probs = np.load(os.path.join(
@@ -1581,7 +1586,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
         ]
 
     return {
-            'data': manual_data + larva_data + common_data,
+            'data': larva_data + manual_data + common_data,
             'layout': {
                     'annotations': [
                         {
@@ -1793,7 +1798,7 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
         ]
 
     return {
-            'data': manual_data + adult_data + common_data,
+            'data': adult_data + manual_data + common_data,
             'layout': {
                     'annotations': [
                         {
