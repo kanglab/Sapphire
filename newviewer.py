@@ -29,13 +29,15 @@ from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 
                                         
-GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#89c3eb',
-                '#84a2d4', '#3e62ad', '#0000ff', '#7f00ff', '#56256e']
+GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#008000',
+                '#89c3eb', '#84a2d4', '#3e62ad', '#0000ff', '#7f00ff',
+                '#56256e', '#000000']
 
 
 DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '/mnt/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
+DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaUniv/'
 THETA = 50
 
 THRESH_FUNC = my_threshold.n_times_mean
