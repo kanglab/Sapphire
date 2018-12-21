@@ -1679,9 +1679,10 @@ def well_coordinates(params):
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
-         State('larva-dropdown', 'value')])
+         State('larva-dropdown', 'value'),
+         State('hidden-timestamp', 'data')])
 def callback(well_idx, coef, time, weight, checks, size, sigma,
-        figure, data_root, env, detect, larva):
+        figure, data_root, env, detect, larva, timestamps):
     # Guard
     if env is None:
         return {'data': []}
@@ -1802,7 +1803,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                 'showlegend': False,
                 'hovermode': 'closest',
                 'margin': go.layout.Margin(l=70, r=0, b=50, t=50, pad=0),
-                'shapes': day_and_night(data_root, env),
+                'shapes': day_and_night(timestamps),
             },
         }
 
@@ -1847,9 +1848,10 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('adult-dropdown', 'value')])
+         State('adult-dropdown', 'value'),
+         State('hidden-timestamp', 'data')])
 def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
-        size, sigma, figure, data_root, env, detect, larva, adult):
+        size, sigma, figure, data_root, env, detect, larva, adult, timestamps):
     # Guard
     if env is None:
         return {'data': []}
@@ -2014,7 +2016,7 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
                 'showlegend': False,
                 'hovermode': 'closest',
                 'margin': go.layout.Margin(l=70, r=0, b=50, t=50, pad=0),
-                'shapes': day_and_night(data_root, env),
+                'shapes': day_and_night(timestamps),
             },
         }
 
@@ -4252,16 +4254,10 @@ def load_grouping_csv(data_root, dataset_name):
         return []
 
 
-def day_and_night(data_root, env):
-    orgimg_paths = sorted(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg')))
-
-    timestamps = [
-            datetime.datetime.fromtimestamp(
-                os.stat(orgimg_path).st_mtime).strftime('%Y-%m-%d %H:%M:%S')
-            for orgimg_path in tqdm.tqdm(orgimg_paths)]
-
-    timestamps = pd.DataFrame(list(range(len(timestamps))), index=timestamps)
+def day_and_night(timestamps):
+    timestamps = pd.DataFrame(
+            list(range(len(timestamps['Create time']))),
+            index=timestamps['Create time'])
     timestamps.index = pd.to_datetime(timestamps.index)
 
     dates = timestamps.index.map(lambda t: t.date()).unique()
