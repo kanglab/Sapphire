@@ -258,6 +258,7 @@ app.layout = html.Div([
                         'margin-top': '55px',
                         'vertical-align': 'top',
                     },
+                    config={'displayModeBar': False},
                 ),
                 # html.Div([
                 #         html.Img(
