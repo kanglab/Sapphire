@@ -250,17 +250,8 @@ app.layout = html.Div([
                     },
                 ),
 
-                html.Div([
-                        html.Img(
-                            id='current-well',
-                            style={
-                                'background': '#555555',
-                                'height': 'auto',
-                                'width': '200px',
-                                'padding': '5px',
-                            },
-                        ),
-                    ],
+                dcc.Graph(
+                    id='current-well',
                     style={
                         'display': 'inline-block',
                         'margin-left': '5px',
@@ -268,6 +259,24 @@ app.layout = html.Div([
                         'vertical-align': 'top',
                     },
                 ),
+                # html.Div([
+                #         html.Img(
+                #             id='current-well',
+                #             style={
+                #                 'background': '#555555',
+                #                 'height': 'auto',
+                #                 'width': '200px',
+                #                 'padding': '5px',
+                #             },
+                #         ),
+                #     ],
+                #     style={
+                #         'display': 'inline-block',
+                #         'margin-left': '5px',
+                #         'margin-top': '55px',
+                #         'vertical-align': 'top',
+                #     },
+                # ),
 
                 html.Div([
                     'Data root :',
@@ -1448,7 +1457,7 @@ def callback(time, well_idx, data_root, env, detect, larva, adult):
 #  Update the current-well.
 # ===========================
 @app.callback(
-        Output('current-well', 'src'),
+        Output('current-well', 'figure'),
         [Input('time-selector', 'value'),
          Input('well-selector', 'value')],
         [State('data-root', 'children'),
@@ -1456,7 +1465,7 @@ def callback(time, well_idx, data_root, env, detect, larva, adult):
 def callback(time, well_idx, data_root, env):
     # Guard
     if env is None:
-        return ''
+        return {'data': []}
 
     # Load the mask
     mask = np.load(os.path.join(data_root, env, 'mask.npy'))
@@ -1476,8 +1485,41 @@ def callback(time, well_idx, data_root, env):
     buf = io.BytesIO()
     org_img.save(buf, format='JPEG')
 
-    return 'data:image/jpeg;base64,{}'.format(
+    data_uri = 'data:image/jpeg;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
+    imghash = data_uri.split(',')[1]
+    img = PIL.Image.open(io.BytesIO(base64.b64decode(imghash)))
+    height = np.array(img).shape[0]
+    width = np.array(img).shape[1]
+
+    return {
+            'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
+            'layout': {
+                'width': 200,
+                'height': 400,
+                'margin': go.layout.Margin(l=0, b=0, t=0, r=0),
+                'xaxis': {
+                    'range': (0, width),
+                    'scaleanchor': 'y',
+                    'scaleratio': 1,
+                },
+                'yaxis': {
+                    'range': (0, height),
+                },
+                'images': [{
+                    'xref': 'x',
+                    'yref': 'y',
+                    'x': 0,
+                    'y': 0,
+                    'yanchor': 'bottom',
+                    'sizing': 'stretch',
+                    'sizex': width,
+                    'sizey': height,
+                    'source': data_uri,
+                }],
+                'dragmode': 'select',
+            }
+        }
 
 
 # =========================================
