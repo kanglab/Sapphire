@@ -1467,6 +1467,14 @@ def callback(time, well_idx, data_root, env):
     if env is None:
         return {'data': []}
 
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+
+    n_wells = params['n-rows'] * params['n-plates'] * params['n-clms']
+
+    xs, ys, well_idxs = well_coordinates(params)
+
     # Load the mask
     mask = np.load(os.path.join(data_root, env, 'mask.npy'))
 
@@ -1493,7 +1501,15 @@ def callback(time, well_idx, data_root, env):
     width = np.array(img).shape[1]
 
     return {
-            'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
+            'data': [
+                {
+                    'x': xs,
+                    'y': ys,
+                    'text': [str(i) for i in well_idxs],
+                    'mode': 'markers',
+                    'marker': {'size': 4, 'color': '#ffffff'},
+                },
+            ],
             'layout': {
                 'width': 200,
                 'height': 400,
@@ -1515,11 +1531,54 @@ def callback(time, well_idx, data_root, env):
                     'sizing': 'stretch',
                     'sizex': width,
                     'sizey': height,
+                    'layer': 'below',
                     'source': data_uri,
                 }],
-                'dragmode': 'select',
+                'dragmode': 'zoom',
+                'hovermode': 'closest',
             }
         }
+
+
+def well_coordinates(params):
+
+    n_rows = params['n-rows']
+    n_clms = params['n-clms']
+    n_plates = params['n-plates']
+    row_gap = params['row-gap']
+    clm_gap = params['clm-gap']
+    plate_gap = params['plate-gap']
+    x = params['x']
+    y = params['y']
+    well_w = params['well-w']
+    well_h = params['well-h']
+    angle = np.deg2rad(params['angle'])
+
+    well_idxs = np.flipud(
+            np.arange(n_rows * n_clms * n_plates, dtype=int).reshape(
+                n_rows*n_plates, n_clms)).reshape(n_rows * n_clms * n_plates)
+
+    xs = []
+    ys = []
+    count = 0
+    for n in range(n_plates):
+        for idx_r in range(n_rows):
+            for idx_c in range(n_clms):
+                c1 = x + round(idx_c*(well_w + clm_gap))
+                r1 = y + round(idx_r*(well_h + row_gap))  \
+                       + n*(n_rows*well_h + plate_gap)  \
+                       + round(row_gap*(n - 1))
+                c1, r1 = np.dot(
+                        np.array(
+                            [[np.cos(angle), -np.sin(angle)],
+                             [np.sin(angle),  np.cos(angle)]]),
+                        np.array([c1-x, r1-y])) + np.array([x, y])
+                c1, r1 = np.round([c1, r1]).astype(int)
+                xs.append(c1 + well_w / 2)
+                ys.append(r1 + well_h / 2)
+                count += 1
+
+    return xs, ys, well_idxs
 
 
 # =========================================
