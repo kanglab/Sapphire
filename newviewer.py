@@ -1538,7 +1538,7 @@ def callback(time, well_idx, data_root, env):
                     ],
                     'name': 'Group{}'.format(group_id),
                     'mode': 'lines',
-                    'line': {'width': 2, 'color': GROUP_COLORS[group_id - 1]},
+                    'line': {'width': 3, 'color': GROUP_COLORS[group_id - 1]},
                 }
                 for group_id in np.unique(groups)
             ]
