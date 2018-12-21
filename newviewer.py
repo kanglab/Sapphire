@@ -36,8 +36,8 @@ GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#008000',
 
 DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '/mnt/sdb/Research/Drosophila/data/TsukubaRIKEN/'
-DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaUniv/'
+DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
 
 THRESH_FUNC = my_threshold.n_times_mean
@@ -479,6 +479,7 @@ app.layout = html.Div([
     html.Div(id='well-buff', style={'display': 'none'}, children=json.dumps(
             {
                 'nobody': 0,
+                'current-well': 0,
                 'larva-summary': 0,
                 'adult-summary': 0,
                 'pupa-vs-eclo': 0,
@@ -729,21 +730,28 @@ def callback(_, buff, larva_data, adult_data, changed_data, well_idx):
 
 @app.callback(
         Output('changed-well', 'children'),
-        [Input('larva-summary', 'clickData'),
+        [Input('current-well', 'clickData'),
+         Input('larva-summary', 'clickData'),
          Input('adult-summary', 'clickData'),
          Input('pupa-vs-eclo', 'clickData'),
          Input('larva-boxplot', 'clickData'),
          Input('adult-boxplot', 'clickData')],
         [State('well-buff', 'children')])
-def callback(larva_summary, adult_summary,
+def callback(current_well, larva_summary, adult_summary,
         pupa_vs_eclo, larva_boxplot, adult_boxplot, buff):
     # Guard
-    if larva_summary is None and  \
+    if current_well is None and  \
+       larva_summary is None and  \
        adult_summary is None and  \
        pupa_vs_eclo is None and  \
        larva_boxplot is None and  \
        adult_boxplot is None:
         return '{"changed": "nobody"}'
+
+    if current_well is None:
+        current_well = 0
+    else:
+        current_well = int(current_well['points'][0]['text'])
 
     if larva_summary is None:
         larva_summary = 0
@@ -772,6 +780,9 @@ def callback(larva_summary, adult_summary,
 
     buff = json.loads(buff)
 
+    if current_well != buff['current-well']:
+        return '{"changed": "current-well"}'
+
     if larva_summary != buff['larva-summary']:
         return '{"changed": "larva-summary"}'
 
@@ -793,13 +804,14 @@ def callback(larva_summary, adult_summary,
 @app.callback(
         Output('well-buff', 'children'),
         [Input('changed-well', 'children')],
-        [State('larva-summary', 'clickData'),
+        [State('current-well', 'clickData'),
+         State('larva-summary', 'clickData'),
          State('adult-summary', 'clickData'),
          State('pupa-vs-eclo', 'clickData'),
          State('larva-boxplot', 'clickData'),
          State('adult-boxplot', 'clickData'),
          State('well-buff', 'children')])
-def callback(changed_data, larva_summary, adult_summary,
+def callback(changed_data, current_well, larva_summary, adult_summary,
         pupa_vs_eclo, larva_boxplot, adult_boxplot, buff):
 
     buff = json.loads(buff)
@@ -809,6 +821,9 @@ def callback(changed_data, larva_summary, adult_summary,
 
     if changed_data == 'nobody':
         pass
+
+    elif changed_data == 'current-well':
+        buff['current-well'] = int(current_well['points'][0]['text'])
 
     elif changed_data == 'larva-summary':
         buff['larva-summary'] = int(larva_summary['points'][0]['text'])
