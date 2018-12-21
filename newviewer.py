@@ -36,8 +36,8 @@ GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#008000',
 
 DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '/mnt/sdb/Research/Drosophila/data/TsukubaRIKEN/'
-DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaUniv/'
+DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
 
 THRESH_FUNC = my_threshold.n_times_mean
@@ -250,24 +250,34 @@ app.layout = html.Div([
                     },
                 ),
 
-                html.Div([
-                        html.Img(
-                            id='current-well',
-                            style={
-                                'background': '#555555',
-                                'height': 'auto',
-                                'width': '200px',
-                                'padding': '5px',
-                            },
-                        ),
-                    ],
+                dcc.Graph(
+                    id='current-well',
                     style={
                         'display': 'inline-block',
                         'margin-left': '5px',
                         'margin-top': '55px',
                         'vertical-align': 'top',
                     },
+                    config={'displayModeBar': False},
                 ),
+                # html.Div([
+                #         html.Img(
+                #             id='current-well',
+                #             style={
+                #                 'background': '#555555',
+                #                 'height': 'auto',
+                #                 'width': '200px',
+                #                 'padding': '5px',
+                #             },
+                #         ),
+                #     ],
+                #     style={
+                #         'display': 'inline-block',
+                #         'margin-left': '5px',
+                #         'margin-top': '55px',
+                #         'vertical-align': 'top',
+                #     },
+                # ),
 
                 html.Div([
                     'Data root :',
@@ -469,6 +479,7 @@ app.layout = html.Div([
     html.Div(id='well-buff', style={'display': 'none'}, children=json.dumps(
             {
                 'nobody': 0,
+                'current-well': 0,
                 'larva-summary': 0,
                 'adult-summary': 0,
                 'pupa-vs-eclo': 0,
@@ -719,21 +730,28 @@ def callback(_, buff, larva_data, adult_data, changed_data, well_idx):
 
 @app.callback(
         Output('changed-well', 'children'),
-        [Input('larva-summary', 'clickData'),
+        [Input('current-well', 'clickData'),
+         Input('larva-summary', 'clickData'),
          Input('adult-summary', 'clickData'),
          Input('pupa-vs-eclo', 'clickData'),
          Input('larva-boxplot', 'clickData'),
          Input('adult-boxplot', 'clickData')],
         [State('well-buff', 'children')])
-def callback(larva_summary, adult_summary,
+def callback(current_well, larva_summary, adult_summary,
         pupa_vs_eclo, larva_boxplot, adult_boxplot, buff):
     # Guard
-    if larva_summary is None and  \
+    if current_well is None and  \
+       larva_summary is None and  \
        adult_summary is None and  \
        pupa_vs_eclo is None and  \
        larva_boxplot is None and  \
        adult_boxplot is None:
         return '{"changed": "nobody"}'
+
+    if current_well is None:
+        current_well = 0
+    else:
+        current_well = int(current_well['points'][0]['text'])
 
     if larva_summary is None:
         larva_summary = 0
@@ -762,6 +780,9 @@ def callback(larva_summary, adult_summary,
 
     buff = json.loads(buff)
 
+    if current_well != buff['current-well']:
+        return '{"changed": "current-well"}'
+
     if larva_summary != buff['larva-summary']:
         return '{"changed": "larva-summary"}'
 
@@ -783,13 +804,14 @@ def callback(larva_summary, adult_summary,
 @app.callback(
         Output('well-buff', 'children'),
         [Input('changed-well', 'children')],
-        [State('larva-summary', 'clickData'),
+        [State('current-well', 'clickData'),
+         State('larva-summary', 'clickData'),
          State('adult-summary', 'clickData'),
          State('pupa-vs-eclo', 'clickData'),
          State('larva-boxplot', 'clickData'),
          State('adult-boxplot', 'clickData'),
          State('well-buff', 'children')])
-def callback(changed_data, larva_summary, adult_summary,
+def callback(changed_data, current_well, larva_summary, adult_summary,
         pupa_vs_eclo, larva_boxplot, adult_boxplot, buff):
 
     buff = json.loads(buff)
@@ -799,6 +821,9 @@ def callback(changed_data, larva_summary, adult_summary,
 
     if changed_data == 'nobody':
         pass
+
+    elif changed_data == 'current-well':
+        buff['current-well'] = int(current_well['points'][0]['text'])
 
     elif changed_data == 'larva-summary':
         buff['larva-summary'] = int(larva_summary['points'][0]['text'])
@@ -1448,7 +1473,7 @@ def callback(time, well_idx, data_root, env, detect, larva, adult):
 #  Update the current-well.
 # ===========================
 @app.callback(
-        Output('current-well', 'src'),
+        Output('current-well', 'figure'),
         [Input('time-selector', 'value'),
          Input('well-selector', 'value')],
         [State('data-root', 'children'),
@@ -1456,28 +1481,185 @@ def callback(time, well_idx, data_root, env, detect, larva, adult):
 def callback(time, well_idx, data_root, env):
     # Guard
     if env is None:
-        return ''
+        return {'data': []}
 
-    # Load the mask
-    mask = np.load(os.path.join(data_root, env, 'mask.npy'))
+    # Load a mask params
+    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
+        params = json.load(f)
+
+    n_wells = params['n-rows'] * params['n-plates'] * params['n-clms']
+
+    xs, ys = well_coordinates(params)
 
     # Load an original image
     orgimg_paths = sorted(glob.glob(
             os.path.join(data_root, env, 'original', '*.jpg')))
-    org_img = np.array(
-            PIL.Image.open(orgimg_paths[time]).convert('RGB'), dtype=np.uint8)
-
-    r, c = np.where(mask == well_idx)
-    org_img[r.min():r.max(), c.min():c.max(), [0, ]] = 255
-    org_img[r.min():r.max(), c.min():c.max(), [1, 2]] = 0
-    org_img = PIL.Image.fromarray(org_img).convert('RGB')
+    org_img = PIL.Image.open(orgimg_paths[time]).convert('L')
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
     org_img.save(buf, format='JPEG')
-
-    return 'data:image/jpeg;base64,{}'.format(
+    data_uri = 'data:image/jpeg;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
+
+    height, width = np.array(org_img).shape
+
+    # A coordinate of selected well
+    selected_x = xs[well_idx:well_idx+1]
+    selected_y = ys[well_idx:well_idx+1]
+
+    # Bounding boxes of groups
+    if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
+        mask = np.load(os.path.join(data_root, env, 'mask.npy'))
+        mask = np.flipud(mask)
+
+        groups = np.loadtxt(
+                os.path.join(data_root, env, 'grouping.csv'),
+                dtype=np.int16, delimiter=',').flatten()
+
+        for well_idx, group_id in enumerate(groups):
+            mask[mask==well_idx] = group_id
+
+        bounding_boxes = [
+                {
+                    'x': [
+                        np.where(mask == group_id)[1].min(),
+                        np.where(mask == group_id)[1].max(),
+                        np.where(mask == group_id)[1].max(),
+                        np.where(mask == group_id)[1].min(),
+                        np.where(mask == group_id)[1].min(),
+                    ],
+                    'y': [
+                        np.where(mask == group_id)[0].min(),
+                        np.where(mask == group_id)[0].min(),
+                        np.where(mask == group_id)[0].max(),
+                        np.where(mask == group_id)[0].max(),
+                        np.where(mask == group_id)[0].min(),
+                    ],
+                    'name': 'Group{}'.format(group_id),
+                    'mode': 'lines',
+                    'line': {'width': 3, 'color': GROUP_COLORS[group_id - 1]},
+                }
+                for group_id in np.unique(groups)
+            ]
+
+        well_points = [
+                {
+                    'x': xs[groups == group_id],
+                    'y': ys[groups == group_id],
+                    'text': np.where(groups == group_id)[0].astype(str),
+                    'mode': 'markers',
+                    'marker': {
+                        'size': 4,
+                        'color': GROUP_COLORS[group_id - 1],
+                        'opacity': 0.0,
+                    },
+                    'name': 'Group{}'.format(group_id),
+                }
+                for group_id in np.unique(groups)
+            ]
+
+    else:
+        bounding_boxes = []
+
+        well_points = [
+                {
+                    'x': xs,
+                    'y': ys,
+                    'text': [str(i) for i in range(n_wells)],
+                    'mode': 'markers',
+                    'marker': {
+                        'size': 4,
+                        'color': '#ffffff',
+                        'opacity': 0.0,
+                    },
+                    'name': '',
+                },
+            ]
+
+    return {
+            'data': bounding_boxes + well_points + [
+                {
+                    'x': selected_x,
+                    'y': selected_y,
+                    'text': str(well_idx),
+                    'mode': 'markers',
+                    'marker': {'size': 10, 'color': '#ff0000', 'opacity': 0.5},
+                    'name': 'Selected well',
+                },
+            ],
+            'layout': {
+                'width': 200,
+                'height': 400,
+                'margin': go.layout.Margin(l=0, b=0, t=0, r=0),
+                'xaxis': {
+                    'range': (0, width),
+                    'scaleanchor': 'y',
+                    'scaleratio': 1,
+                    'showgrid': False,
+                },
+                'yaxis': {
+                    'range': (0, height),
+                    'showgrid': False,
+                },
+                'images': [{
+                    'xref': 'x',
+                    'yref': 'y',
+                    'x': 0,
+                    'y': 0,
+                    'yanchor': 'bottom',
+                    'sizing': 'stretch',
+                    'sizex': width,
+                    'sizey': height,
+                    'layer': 'below',
+                    'source': data_uri,
+                }],
+                'dragmode': 'zoom',
+                'hovermode': 'closest',
+                'showlegend': False,
+            }
+        }
+
+
+def well_coordinates(params):
+
+    n_rows = params['n-rows']
+    n_clms = params['n-clms']
+    n_plates = params['n-plates']
+    row_gap = params['row-gap']
+    clm_gap = params['clm-gap']
+    plate_gap = params['plate-gap']
+    x = params['x']
+    y = params['y']
+    well_w = params['well-w']
+    well_h = params['well-h']
+    angle = np.deg2rad(params['angle'])
+
+    well_idxs = np.flipud(
+            np.arange(n_rows * n_clms * n_plates, dtype=int).reshape(
+                n_rows*n_plates, n_clms)).reshape(n_rows * n_clms * n_plates)
+
+    xs = []
+    ys = []
+    count = 0
+    for n in range(n_plates):
+        for idx_r in range(n_rows):
+            for idx_c in range(n_clms):
+                c1 = x + round(idx_c*(well_w + clm_gap))
+                r1 = y + round(idx_r*(well_h + row_gap))  \
+                       + n*(n_rows*well_h + plate_gap)  \
+                       + round(row_gap*(n - 1))
+                c1, r1 = np.dot(
+                        np.array(
+                            [[np.cos(angle), -np.sin(angle)],
+                             [np.sin(angle),  np.cos(angle)]]),
+                        np.array([c1-x, r1-y])) + np.array([x, y])
+                c1, r1 = np.round([c1, r1]).astype(int)
+                xs.append(c1 + well_w / 2)
+                ys.append(r1 + well_h / 2)
+                count += 1
+
+    return np.array(xs)[well_idxs], np.array(ys)[well_idxs]
 
 
 # =========================================
