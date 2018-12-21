@@ -12,7 +12,6 @@ import os
 import glob
 import dash
 import json
-import tqdm
 import base64
 import zipfile
 import datetime
@@ -3531,11 +3530,17 @@ def callback(env, data_root):
 
     return {
             'Image name': [os.path.basename(path) for path in orgimg_paths],
-            'Create time': [
-                    datetime.datetime.fromtimestamp(
-                        os.stat(path).st_mtime).strftime(
-                            '%Y-%m-%d %H:%M:%S') for path in orgimg_paths],
+            'Create time': [get_create_time(path) for path in orgimg_paths],
         }
+
+
+def get_create_time(path):
+    DateTimeDigitized = PIL.Image.open(path)._getexif()[36868]
+    # '2016:02:05 17:20:53' -> '2016-02-05 17:20:53'
+    DateTimeDigitized = DateTimeDigitized[:4] + '-' + DateTimeDigitized[5:]
+    DateTimeDigitized = DateTimeDigitized[:7] + '-' + DateTimeDigitized[8:]
+
+    return DateTimeDigitized
 
 
 # ======================================================
