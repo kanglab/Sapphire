@@ -1489,7 +1489,7 @@ def callback(time, well_idx, data_root, env):
 
     n_wells = params['n-rows'] * params['n-plates'] * params['n-clms']
 
-    xs, ys, well_idxs = well_coordinates(params)
+    xs, ys = well_coordinates(params)
 
     # Load an original image
     orgimg_paths = sorted(glob.glob(
@@ -1505,11 +1505,10 @@ def callback(time, well_idx, data_root, env):
     height, width = np.array(org_img).shape
 
     # A coordinate of selected well
-    i = np.where(well_idxs == well_idx)[0][0]
-    selected_x = xs[i:i+1]
-    selected_y = ys[i:i+1]
+    selected_x = xs[well_idx:well_idx+1]
+    selected_y = ys[well_idx:well_idx+1]
 
-    # Load a mask and group table
+    # Bounding boxes of groups
     if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
         mask = np.load(os.path.join(data_root, env, 'mask.npy'))
 
@@ -1543,11 +1542,42 @@ def callback(time, well_idx, data_root, env):
                 for group_id in np.unique(groups)
             ]
 
+        well_points = [
+                {
+                    'x': xs[groups == group_id],
+                    'y': ys[groups == group_id],
+                    'text': np.where(groups == group_id)[0].astype(str),
+                    'mode': 'markers',
+                    'marker': {
+                        'size': 4,
+                        'color': GROUP_COLORS[group_id - 1],
+                        'opacity': 0.0,
+                    },
+                    'name': 'Group{}'.format(group_id),
+                }
+                for group_id in np.unique(groups)
+            ]
+
     else:
         bounding_boxes = []
 
+        well_points = [
+                {
+                    'x': xs,
+                    'y': ys,
+                    'text': [str(i) for i in range(n_wells)],
+                    'mode': 'markers',
+                    'marker': {
+                        'size': 4,
+                        'color': '#ffffff',
+                        'opacity': 0.0,
+                    },
+                    'name': '',
+                },
+            ]
+
     return {
-            'data': bounding_boxes + [
+            'data': bounding_boxes + well_points + [
                 {
                     'x': selected_x,
                     'y': selected_y,
@@ -1555,14 +1585,6 @@ def callback(time, well_idx, data_root, env):
                     'mode': 'markers',
                     'marker': {'size': 10, 'color': '#ff0000', 'opacity': 0.5},
                     'name': 'Selected well',
-                },
-                {
-                    'x': xs,
-                    'y': ys,
-                    'text': [str(i) for i in well_idxs],
-                    'mode': 'markers',
-                    'marker': {'size': 4, 'color': '#ffffff', 'opacity': 0.0},
-                    'name': '',
                 },
             ],
             'layout': {
@@ -1636,7 +1658,7 @@ def well_coordinates(params):
                 ys.append(r1 + well_h / 2)
                 count += 1
 
-    return xs, ys, well_idxs
+    return np.array(xs)[well_idxs], np.array(ys)[well_idxs]
 
 
 # =========================================
