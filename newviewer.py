@@ -473,7 +473,7 @@ app.layout = html.Div([
         ], style={'width': '100%'}),
     ], style={'width': '100%'}),
 
-    html.Div(id='hidden-timestamp', style={'display': 'none'}),
+    dcc.Store(id='hidden-timestamp'),
 
     html.Div('{"changed": "nobody"}',
             id='changed-well', style={'display': 'none'}),
@@ -3515,7 +3515,7 @@ def callback(detect):
 #  Store image file names and their timestamps as json in a hidden div.
 # =======================================================================
 @app.callback(
-        Output('hidden-timestamp', 'children'),
+        Output('hidden-timestamp', 'data'),
         [Input('env-dropdown', 'value')],
         [State('data-root', 'children')])
 def callback(env, data_root):
@@ -3527,12 +3527,13 @@ def callback(env, data_root):
     orgimg_paths = sorted(glob.glob(
             os.path.join(data_root, env, 'original', '*.jpg')))
 
-    return pd.DataFrame([[
-            os.path.basename(orgimg_path),
-            datetime.datetime.fromtimestamp(os.stat(orgimg_path).st_mtime)  \
-                    .strftime('%Y-%m-%d %H:%M:%S')]
-            for orgimg_path in orgimg_paths],
-            columns=['frame', 'create time']).T.to_json()
+    return {
+            'Image name': [os.path.basename(path) for path in orgimg_paths],
+            'Create time': [
+                    datetime.datetime.fromtimestamp(
+                        os.stat(path).st_mtime).strftime(
+                            '%Y-%m-%d %H:%M:%S') for path in orgimg_paths],
+        }
 
 
 # ======================================================
@@ -3543,7 +3544,7 @@ def callback(env, data_root):
         [Input('tabs', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('hidden-timestamp', 'children')])
+         State('hidden-timestamp', 'data')])
 def callback(tab_name, data_root, env, timestamps):
     # Guard
     if data_root is None:
@@ -3555,16 +3556,20 @@ def callback(tab_name, data_root, env, timestamps):
     if tab_name != 'tab-2':
         return
 
-    data = list(json.loads(timestamps).values())
-    time_to_csv = 'data:text/csv;charset=utf-8,'  \
-            + pd.DataFrame(data).to_csv(index=False)
+    df = pd.DataFrame([timestamps['Image name'], timestamps['Create time']],
+            index=['Image name', 'Create time']).T
+
+    data = [
+            {'Image name': image_name, 'Create time': create_time}
+            for image_name, create_time in zip(
+                    timestamps['Image name'], timestamps['Create time'])]
 
     return [
             html.H4('Timestamp'),
             dash_table.DataTable(
                 columns=[
-                    {'id': 'frame', 'name': 'frame'},
-                    {'id': 'create time', 'name': 'create time'}],
+                    {'id': 'Image name', 'name': 'Image name'},
+                    {'id': 'Create time', 'name': 'Create time'}],
                 data=data,
                 n_fixed_rows=1,
                 style_table={'width': '100%'},
@@ -3574,7 +3579,7 @@ def callback(tab_name, data_root, env, timestamps):
                 'Download the Data',
                 id='download-link',
                 download='Timestamp({}).csv'.format(env[0:20]),
-                href=time_to_csv,
+                href='data:text/csv;charset=utf-8,' + df.to_csv(index=False),
                 target='_blank',
             ),
         ]
