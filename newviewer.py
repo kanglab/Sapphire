@@ -1981,37 +1981,77 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
             },
         ]
 
+
+    # ----------------------------------------
+    #  Day and night
+    # ----------------------------------------
+    orgimg_paths = sorted(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg')))
+
+    timestamps = [
+            datetime.datetime.fromtimestamp(
+                os.stat(orgimg_path).st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+            for orgimg_path in orgimg_paths]
+
+    timestamps = pd.DataFrame(list(range(len(timestamps))), index=timestamps)
+    timestamps.index = pd.to_datetime(timestamps.index)
+
+    dates = timestamps.index.map(lambda t: t.date()).unique()
+
+    shapes = []
+    for date in dates:
+        morning = pd.to_datetime(date.strftime('%x ') + '7:00')
+        night = pd.to_datetime(date.strftime('%x ') + '19:00')
+        morning_idx = timestamps.loc[morning:night].iloc[0, 0]
+        night_idx = timestamps.loc[morning:night].iloc[-1, 0]
+
+        shapes.append(
+            {
+                'type': 'rect',
+                'xref': 'x',
+                'yref': 'paper',
+                'x0': morning_idx,
+                'y0': 0,
+                'x1': night_idx,
+                'y1': 1,
+                'fillcolor': '#990000',
+                'opacity': 0.1,
+                'line': {'width': 0},
+            }
+        )
+
     return {
             'data': adult_data + manual_data + common_data,
             'layout': {
-                    'annotations': [
-                        {
-                            'x': 0.01 * len(adult_diffs.T),
-                            'y': 1.0 * adult_diffs.max(),
-                            'text':
-                                'Threshold: {:.1f}'.format(
-                                        adult_thresh[well_idx, 0]) +  \
-                                 '={:.1f}'.format(adult_diffs.mean()) +  \
-                                 '{:+.1f}'.format(adult_coef) +  \
-                                 '*{:.1f}'.format(adult_diffs.std()),
-                            'showarrow': False,
-                            'xanchor': 'left',
-                        },
-                    ],
-                    'font': {'size': 15},
-                    'xaxis': {
-                        'title': 'Time Step',
-                        'tickfont': {'size': 15},
+                'annotations': [
+                    {
+                        'x': 0.01 * len(adult_diffs.T),
+                        'y': 1.0 * adult_diffs.max(),
+                        'text':
+                            'Threshold: {:.1f}'.format(
+                                    adult_thresh[well_idx, 0]) +  \
+                             '={:.1f}'.format(adult_diffs.mean()) +  \
+                             '{:+.1f}'.format(adult_coef) +  \
+                             '*{:.1f}'.format(adult_diffs.std()),
+                        'showarrow': False,
+                        'xanchor': 'left',
                     },
-                    'yaxis': {
-                        'title':'Diff. of Adult ROI',
-                        'tickfont': {'size': 15},
-                        'side': 'left',
-                        'range': [-0.1*adult_diffs.max(), adult_diffs.max()],
-                    },
+                ],
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'Time Step',
+                    'tickfont': {'size': 15},
+                },
+                'yaxis': {
+                    'title':'Diff. of Adult ROI',
+                    'tickfont': {'size': 15},
+                    'side': 'left',
+                    'range': [-0.1*adult_diffs.max(), adult_diffs.max()],
+                },
                 'showlegend': False,
                 'hovermode': 'closest',
                 'margin': go.layout.Margin(l=70, r=0, b=50, t=50, pad=0),
+                'shapes': shapes,
             },
         }
 
