@@ -4286,6 +4286,7 @@ def day_and_night(timestamps):
                 'fillcolor': '#990000',
                 'opacity': 0.1,
                 'line': {'width': 0},
+                'layer': 'below',
             }
         )
 
