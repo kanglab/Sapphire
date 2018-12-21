@@ -1523,7 +1523,7 @@ def callback(time, well_idx, data_root, env):
                     'y': ys,
                     'text': [str(i) for i in well_idxs],
                     'mode': 'markers',
-                    'marker': {'size': 4, 'color': '#ffffff'},
+                    'marker': {'size': 4, 'color': '#ffffff', 'opacity': 0.0},
                 },
             ],
             'layout': {
@@ -1534,9 +1534,11 @@ def callback(time, well_idx, data_root, env):
                     'range': (0, width),
                     'scaleanchor': 'y',
                     'scaleratio': 1,
+                    'showgrid': False,
                 },
                 'yaxis': {
                     'range': (0, height),
+                    'showgrid': False,
                 },
                 'images': [{
                     'xref': 'x',
