@@ -472,7 +472,7 @@ app.layout = html.Div([
         ], style={'width': '100%'}),
     ], style={'width': '100%'}),
 
-    html.Div(id='hidden-timestamp', style={'display': 'none'}),
+    dcc.Store(id='hidden-timestamp'),
 
     html.Div('{"changed": "nobody"}',
             id='changed-well', style={'display': 'none'}),
@@ -1678,9 +1678,10 @@ def well_coordinates(params):
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
-         State('larva-dropdown', 'value')])
+         State('larva-dropdown', 'value'),
+         State('hidden-timestamp', 'data')])
 def callback(well_idx, coef, time, weight, checks, size, sigma,
-        figure, data_root, env, detect, larva):
+        figure, data_root, env, detect, larva, timestamps):
     # Guard
     if env is None:
         return {'data': []}
@@ -1801,6 +1802,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                 'showlegend': False,
                 'hovermode': 'closest',
                 'margin': go.layout.Margin(l=70, r=0, b=50, t=50, pad=0),
+                'shapes': day_and_night(timestamps),
             },
         }
 
@@ -1845,9 +1847,10 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('adult-dropdown', 'value')])
+         State('adult-dropdown', 'value'),
+         State('hidden-timestamp', 'data')])
 def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
-        size, sigma, figure, data_root, env, detect, larva, adult):
+        size, sigma, figure, data_root, env, detect, larva, adult, timestamps):
     # Guard
     if env is None:
         return {'data': []}
@@ -1984,34 +1987,35 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
     return {
             'data': adult_data + manual_data + common_data,
             'layout': {
-                    'annotations': [
-                        {
-                            'x': 0.01 * len(adult_diffs.T),
-                            'y': 1.0 * adult_diffs.max(),
-                            'text':
-                                'Threshold: {:.1f}'.format(
-                                        adult_thresh[well_idx, 0]) +  \
-                                 '={:.1f}'.format(adult_diffs.mean()) +  \
-                                 '{:+.1f}'.format(adult_coef) +  \
-                                 '*{:.1f}'.format(adult_diffs.std()),
-                            'showarrow': False,
-                            'xanchor': 'left',
-                        },
-                    ],
-                    'font': {'size': 15},
-                    'xaxis': {
-                        'title': 'Time Step',
-                        'tickfont': {'size': 15},
+                'annotations': [
+                    {
+                        'x': 0.01 * len(adult_diffs.T),
+                        'y': 1.0 * adult_diffs.max(),
+                        'text':
+                            'Threshold: {:.1f}'.format(
+                                    adult_thresh[well_idx, 0]) +  \
+                             '={:.1f}'.format(adult_diffs.mean()) +  \
+                             '{:+.1f}'.format(adult_coef) +  \
+                             '*{:.1f}'.format(adult_diffs.std()),
+                        'showarrow': False,
+                        'xanchor': 'left',
                     },
-                    'yaxis': {
-                        'title':'Diff. of Adult ROI',
-                        'tickfont': {'size': 15},
-                        'side': 'left',
-                        'range': [-0.1*adult_diffs.max(), adult_diffs.max()],
-                    },
+                ],
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'Time Step',
+                    'tickfont': {'size': 15},
+                },
+                'yaxis': {
+                    'title':'Diff. of Adult ROI',
+                    'tickfont': {'size': 15},
+                    'side': 'left',
+                    'range': [-0.1*adult_diffs.max(), adult_diffs.max()],
+                },
                 'showlegend': False,
                 'hovermode': 'closest',
                 'margin': go.layout.Margin(l=70, r=0, b=50, t=50, pad=0),
+                'shapes': day_and_night(timestamps),
             },
         }
 
@@ -3512,7 +3516,7 @@ def callback(detect):
 #  Store image file names and their timestamps as json in a hidden div.
 # =======================================================================
 @app.callback(
-        Output('hidden-timestamp', 'children'),
+        Output('hidden-timestamp', 'data'),
         [Input('env-dropdown', 'value')],
         [State('data-root', 'children')])
 def callback(env, data_root):
@@ -3524,12 +3528,19 @@ def callback(env, data_root):
     orgimg_paths = sorted(glob.glob(
             os.path.join(data_root, env, 'original', '*.jpg')))
 
-    return pd.DataFrame([[
-            os.path.basename(orgimg_path),
-            datetime.datetime.fromtimestamp(os.stat(orgimg_path).st_mtime)  \
-                    .strftime('%Y-%m-%d %H:%M:%S')]
-            for orgimg_path in orgimg_paths],
-            columns=['frame', 'create time']).T.to_json()
+    return {
+            'Image name': [os.path.basename(path) for path in orgimg_paths],
+            'Create time': [get_create_time(path) for path in orgimg_paths],
+        }
+
+
+def get_create_time(path):
+    DateTimeDigitized = PIL.Image.open(path)._getexif()[36868]
+    # '2016:02:05 17:20:53' -> '2016-02-05 17:20:53'
+    DateTimeDigitized = DateTimeDigitized[:4] + '-' + DateTimeDigitized[5:]
+    DateTimeDigitized = DateTimeDigitized[:7] + '-' + DateTimeDigitized[8:]
+
+    return DateTimeDigitized
 
 
 # ======================================================
@@ -3540,7 +3551,7 @@ def callback(env, data_root):
         [Input('tabs', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('hidden-timestamp', 'children')])
+         State('hidden-timestamp', 'data')])
 def callback(tab_name, data_root, env, timestamps):
     # Guard
     if data_root is None:
@@ -3552,16 +3563,20 @@ def callback(tab_name, data_root, env, timestamps):
     if tab_name != 'tab-2':
         return
 
-    data = list(json.loads(timestamps).values())
-    time_to_csv = 'data:text/csv;charset=utf-8,'  \
-            + pd.DataFrame(data).to_csv(index=False)
+    df = pd.DataFrame([timestamps['Image name'], timestamps['Create time']],
+            index=['Image name', 'Create time']).T
+
+    data = [
+            {'Image name': image_name, 'Create time': create_time}
+            for image_name, create_time in zip(
+                    timestamps['Image name'], timestamps['Create time'])]
 
     return [
             html.H4('Timestamp'),
             dash_table.DataTable(
                 columns=[
-                    {'id': 'frame', 'name': 'frame'},
-                    {'id': 'create time', 'name': 'create time'}],
+                    {'id': 'Image name', 'name': 'Image name'},
+                    {'id': 'Create time', 'name': 'Create time'}],
                 data=data,
                 n_fixed_rows=1,
                 style_table={'width': '100%'},
@@ -3571,7 +3586,7 @@ def callback(tab_name, data_root, env, timestamps):
                 'Download the Data',
                 id='download-link',
                 download='Timestamp({}).csv'.format(env[0:20]),
-                href=time_to_csv,
+                href='data:text/csv;charset=utf-8,' + df.to_csv(index=False),
                 target='_blank',
             ),
         ]
@@ -4242,6 +4257,40 @@ def load_grouping_csv(data_root, dataset_name):
 
     else:
         return []
+
+
+def day_and_night(timestamps):
+    timestamps = pd.DataFrame(
+            list(range(len(timestamps['Create time']))),
+            index=timestamps['Create time'])
+    timestamps.index = pd.to_datetime(timestamps.index)
+
+    dates = timestamps.index.map(lambda t: t.date()).unique()
+
+    shapes = []
+    for date in dates:
+        morning = pd.to_datetime(date.strftime('%x ') + '7:00')
+        night = pd.to_datetime(date.strftime('%x ') + '19:00')
+        morning_idx = timestamps.loc[morning:night].iloc[0, 0]
+        night_idx = timestamps.loc[morning:night].iloc[-1, 0]
+
+        shapes.append(
+            {
+                'type': 'rect',
+                'xref': 'x',
+                'yref': 'paper',
+                'x0': morning_idx,
+                'y0': 0,
+                'x1': night_idx,
+                'y1': 1,
+                'fillcolor': '#990000',
+                'opacity': 0.1,
+                'line': {'width': 0},
+                'layer': 'below',
+            }
+        )
+
+    return shapes
 
 
 if __name__ == '__main__':
