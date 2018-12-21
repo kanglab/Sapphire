@@ -1511,6 +1511,7 @@ def callback(time, well_idx, data_root, env):
     # Bounding boxes of groups
     if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
         mask = np.load(os.path.join(data_root, env, 'mask.npy'))
+        mask = np.flipud(mask)
 
         groups = np.loadtxt(
                 os.path.join(data_root, env, 'grouping.csv'),
