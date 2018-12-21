@@ -1509,8 +1509,45 @@ def callback(time, well_idx, data_root, env):
     selected_x = xs[i:i+1]
     selected_y = ys[i:i+1]
 
+    # Load a mask and group table
+    if os.path.exists(os.path.join(data_root, env, 'grouping.csv')):
+        mask = np.load(os.path.join(data_root, env, 'mask.npy'))
+
+        groups = np.loadtxt(
+                os.path.join(data_root, env, 'grouping.csv'),
+                dtype=np.int16, delimiter=',').flatten()
+
+        for well_idx, group_id in enumerate(groups):
+            mask[mask==well_idx] = group_id
+
+        bounding_boxes = [
+                {
+                    'x': [
+                        np.where(mask == group_id)[1].min(),
+                        np.where(mask == group_id)[1].max(),
+                        np.where(mask == group_id)[1].max(),
+                        np.where(mask == group_id)[1].min(),
+                        np.where(mask == group_id)[1].min(),
+                    ],
+                    'y': [
+                        np.where(mask == group_id)[0].min(),
+                        np.where(mask == group_id)[0].min(),
+                        np.where(mask == group_id)[0].max(),
+                        np.where(mask == group_id)[0].max(),
+                        np.where(mask == group_id)[0].min(),
+                    ],
+                    'name': 'Group{}'.format(group_id),
+                    'mode': 'lines',
+                    'line': {'width': 2, 'color': GROUP_COLORS[group_id - 1]},
+                }
+                for group_id in np.unique(groups)
+            ]
+
+    else:
+        bounding_boxes = []
+
     return {
-            'data': [
+            'data': bounding_boxes + [
                 {
                     'x': selected_x,
                     'y': selected_y,
