@@ -12,6 +12,7 @@ import os
 import glob
 import dash
 import json
+import tqdm
 import base64
 import zipfile
 import datetime
@@ -1801,6 +1802,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                 'showlegend': False,
                 'hovermode': 'closest',
                 'margin': go.layout.Margin(l=70, r=0, b=50, t=50, pad=0),
+                'shapes': day_and_night(data_root, env),
             },
         }
 
@@ -1981,45 +1983,6 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
             },
         ]
 
-
-    # ----------------------------------------
-    #  Day and night
-    # ----------------------------------------
-    orgimg_paths = sorted(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg')))
-
-    timestamps = [
-            datetime.datetime.fromtimestamp(
-                os.stat(orgimg_path).st_mtime).strftime('%Y-%m-%d %H:%M:%S')
-            for orgimg_path in orgimg_paths]
-
-    timestamps = pd.DataFrame(list(range(len(timestamps))), index=timestamps)
-    timestamps.index = pd.to_datetime(timestamps.index)
-
-    dates = timestamps.index.map(lambda t: t.date()).unique()
-
-    shapes = []
-    for date in dates:
-        morning = pd.to_datetime(date.strftime('%x ') + '7:00')
-        night = pd.to_datetime(date.strftime('%x ') + '19:00')
-        morning_idx = timestamps.loc[morning:night].iloc[0, 0]
-        night_idx = timestamps.loc[morning:night].iloc[-1, 0]
-
-        shapes.append(
-            {
-                'type': 'rect',
-                'xref': 'x',
-                'yref': 'paper',
-                'x0': morning_idx,
-                'y0': 0,
-                'x1': night_idx,
-                'y1': 1,
-                'fillcolor': '#990000',
-                'opacity': 0.1,
-                'line': {'width': 0},
-            }
-        )
-
     return {
             'data': adult_data + manual_data + common_data,
             'layout': {
@@ -2051,7 +2014,7 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
                 'showlegend': False,
                 'hovermode': 'closest',
                 'margin': go.layout.Margin(l=70, r=0, b=50, t=50, pad=0),
-                'shapes': shapes,
+                'shapes': day_and_night(data_root, env),
             },
         }
 
@@ -4282,6 +4245,45 @@ def load_grouping_csv(data_root, dataset_name):
 
     else:
         return []
+
+
+def day_and_night(data_root, env):
+    orgimg_paths = sorted(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg')))
+
+    timestamps = [
+            datetime.datetime.fromtimestamp(
+                os.stat(orgimg_path).st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+            for orgimg_path in tqdm.tqdm(orgimg_paths)]
+
+    timestamps = pd.DataFrame(list(range(len(timestamps))), index=timestamps)
+    timestamps.index = pd.to_datetime(timestamps.index)
+
+    dates = timestamps.index.map(lambda t: t.date()).unique()
+
+    shapes = []
+    for date in dates:
+        morning = pd.to_datetime(date.strftime('%x ') + '7:00')
+        night = pd.to_datetime(date.strftime('%x ') + '19:00')
+        morning_idx = timestamps.loc[morning:night].iloc[0, 0]
+        night_idx = timestamps.loc[morning:night].iloc[-1, 0]
+
+        shapes.append(
+            {
+                'type': 'rect',
+                'xref': 'x',
+                'yref': 'paper',
+                'x0': morning_idx,
+                'y0': 0,
+                'x1': night_idx,
+                'y1': 1,
+                'fillcolor': '#990000',
+                'opacity': 0.1,
+                'line': {'width': 0},
+            }
+        )
+
+    return shapes
 
 
 if __name__ == '__main__':
