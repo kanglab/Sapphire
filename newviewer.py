@@ -1491,39 +1491,41 @@ def callback(time, well_idx, data_root, env):
 
     xs, ys, well_idxs = well_coordinates(params)
 
-    # Load the mask
-    mask = np.load(os.path.join(data_root, env, 'mask.npy'))
-
     # Load an original image
     orgimg_paths = sorted(glob.glob(
             os.path.join(data_root, env, 'original', '*.jpg')))
-    org_img = np.array(
-            PIL.Image.open(orgimg_paths[time]).convert('RGB'), dtype=np.uint8)
-
-    r, c = np.where(mask == well_idx)
-    org_img[r.min():r.max(), c.min():c.max(), [0, ]] = 255
-    org_img[r.min():r.max(), c.min():c.max(), [1, 2]] = 0
-    org_img = PIL.Image.fromarray(org_img).convert('RGB')
+    org_img = PIL.Image.open(orgimg_paths[time]).convert('L')
 
     # Buffer the well image as byte stream
     buf = io.BytesIO()
     org_img.save(buf, format='JPEG')
-
     data_uri = 'data:image/jpeg;base64,{}'.format(
             base64.b64encode(buf.getvalue()).decode('utf-8'))
-    imghash = data_uri.split(',')[1]
-    img = PIL.Image.open(io.BytesIO(base64.b64decode(imghash)))
-    height = np.array(img).shape[0]
-    width = np.array(img).shape[1]
+
+    height, width = np.array(org_img).shape
+
+    # A coordinate of selected well
+    i = np.where(well_idxs == well_idx)[0][0]
+    selected_x = xs[i:i+1]
+    selected_y = ys[i:i+1]
 
     return {
             'data': [
+                {
+                    'x': selected_x,
+                    'y': selected_y,
+                    'text': str(well_idx),
+                    'mode': 'markers',
+                    'marker': {'size': 10, 'color': '#ff0000', 'opacity': 0.5},
+                    'name': 'Selected well',
+                },
                 {
                     'x': xs,
                     'y': ys,
                     'text': [str(i) for i in well_idxs],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#ffffff', 'opacity': 0.0},
+                    'name': '',
                 },
             ],
             'layout': {
@@ -1554,6 +1556,7 @@ def callback(time, well_idx, data_root, env):
                 }],
                 'dragmode': 'zoom',
                 'hovermode': 'closest',
+                'showlegend': False,
             }
         }
 
