@@ -37,6 +37,7 @@ GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#008000',
 DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '/mnt/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaUniv/'
+DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/OkayamaUniv/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
 
@@ -3617,7 +3618,7 @@ def callback(tab_name, data_root, env, detect, larva):
     with open(os.path.join(data_root, env, 'mask_params.json')) as f:
         params = json.load(f)
 
-    if detect == 'pupa-and-eclo':
+    if detect == 'pupariation' or detect == 'pupa-and-eclo':
         if not os.path.exists(os.path.join(
                 data_root, env, 'original', 'pupariation.csv')):
             return 'Not available.'
@@ -3853,6 +3854,8 @@ def callback(tab_name, data_root, env, detect, adult):
     if env is None:
         return 'Not available.'
     if detect is None:
+        return 'Not available.'
+    if detect == 'pupariation':
         return 'Not available.'
     if tab_name != 'tab-2':
         return
@@ -4271,6 +4274,10 @@ def day_and_night(timestamps):
     for date in dates:
         morning = pd.to_datetime(date.strftime('%x ') + '7:00')
         night = pd.to_datetime(date.strftime('%x ') + '19:00')
+
+        if len(timestamps.loc[morning:night]) == 0:
+            continue
+
         morning_idx = timestamps.loc[morning:night].iloc[0, 0]
         night_idx = timestamps.loc[morning:night].iloc[-1, 0]
 
