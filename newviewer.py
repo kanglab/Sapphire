@@ -36,8 +36,9 @@ GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#008000',
 
 DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '/mnt/sdb/Research/Drosophila/data/TsukubaRIKEN/'
-DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaUniv/'
+DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/OkayamaUniv/'
+DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 THETA = 50
 
 THRESH_FUNC = my_threshold.n_times_mean
@@ -4273,6 +4274,10 @@ def day_and_night(timestamps):
     for date in dates:
         morning = pd.to_datetime(date.strftime('%x ') + '7:00')
         night = pd.to_datetime(date.strftime('%x ') + '19:00')
+
+        if len(timestamps.loc[morning:night]) == 0:
+            continue
+
         morning_idx = timestamps.loc[morning:night].iloc[0, 0]
         night_idx = timestamps.loc[morning:night].iloc[-1, 0]
 
