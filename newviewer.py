@@ -4263,6 +4263,10 @@ def load_grouping_csv(data_root, dataset_name):
 
 
 def day_and_night(timestamps):
+    # Guard
+    if timestamps is None:
+        return []
+
     timestamps = pd.DataFrame(
             list(range(len(timestamps['Create time']))),
             index=timestamps['Create time'])
