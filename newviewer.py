@@ -2077,6 +2077,20 @@ def callback(coef, well_idx, weight,
     blacklist, _ = load_blacklist(data_root, env)
 
     # Load a manual evaluation of event timing
+    if not os.path.exists(os.path.join(
+                data_root, env, 'original', 'pupariation.csv')):
+            #return {'data': []}
+            non_manualdata = {'layout': {
+                        'annotations': [
+                        {
+                        'x': 5.0,
+                        'y': 2.0,
+                        'text': 'Not Available',
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },]}}
+            return non_manualdata
+
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', 'pupariation.csv'),
             dtype=np.int16, delimiter=',').flatten()
@@ -2600,6 +2614,21 @@ def callback(coef, well_idx, weight,
     blacklist, _ = load_blacklist(data_root, env)
 
     # Load a manual evaluation of event timing
+
+    if not os.path.exists(os.path.join(
+                data_root, env, 'original', 'pupariation.csv')):
+            #return {'data': []}
+            non_manualdata = {'layout': {
+                        'annotations': [
+                        {
+                        'x': 5.0,
+                        'y': 2.0,
+                        'text': 'Not Available',
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },]}}
+            return non_manualdata
+
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', 'pupariation.csv'),
             dtype=np.int16, delimiter=',').flatten()
