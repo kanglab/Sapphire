@@ -358,7 +358,7 @@ app.layout = html.Div([
                     id='larva-summary',
                     style={
                         'display': 'inline-block',
-                        'height': '250px',
+                        'height': '300px',
                         'width': '20%',
                     },
                 ),
@@ -366,7 +366,7 @@ app.layout = html.Div([
                     id='larva-hist',
                     style={
                         'display': 'inline-block',
-                        'height': '250px',
+                        'height': '300px',
                         'width': '20%',
                     },
                 ),
@@ -374,7 +374,7 @@ app.layout = html.Div([
                     id='larva-boxplot',
                     style={
                         'display': 'inline-block',
-                        'height': '250px',
+                        'height': '300px',
                         'width': '20%',
                     },
                 ),
@@ -385,7 +385,7 @@ app.layout = html.Div([
                     id='adult-summary',
                     style={
                         'display': 'inline-block',
-                        'height': '250px',
+                        'height': '300px',
                         'width': '20%',
                     },
                 ),
@@ -393,7 +393,7 @@ app.layout = html.Div([
                     id='adult-hist',
                     style={
                         'display': 'inline-block',
-                        'height': '250px',
+                        'height': '300px',
                         'width': '20%',
                     },
                 ),
@@ -401,7 +401,7 @@ app.layout = html.Div([
                     id='adult-boxplot',
                     style={
                         'display': 'inline-block',
-                        'height': '250px',
+                        'height': '300px',
                         'width': '20%',
                     },
                 ),
@@ -409,7 +409,7 @@ app.layout = html.Div([
                     id='pupa-vs-eclo',
                     style={
                         'display': 'inline-block',
-                        'height': '250px',
+                        'height': '300px',
                         'width': '20%',
                     },
                 ),
@@ -417,7 +417,7 @@ app.layout = html.Div([
                     id='survival-curve',
                     style={
                         'display': 'inline-block',
-                        'height': '250px',
+                        'height': '300px',
                         'width': '20%',
                     },
                 ),
@@ -2244,7 +2244,7 @@ def callback(coef, well_idx, weight,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=50, r=0, b=50, t=0, pad=0),
+                'margin': go.layout.Margin(l=50, r=0, b=40, t=70, pad=0),
             },
         }
 
@@ -2257,14 +2257,14 @@ def callback(detect):
     if detect == 'pupariation':
         return {
                 'display': 'inline-block',
-                'height': '250px',
+                'height': '300px',
                 'width': '20%',
             }
 
     elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '250px',
+                'height': '300px',
                 'width': '20%',
             }
 
@@ -2512,7 +2512,7 @@ def callback(larva_coef, adult_coef, well_idx, weight,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=50, r=0, b=50, t=0, pad=0),
+                'margin': go.layout.Margin(l=50, r=0, b=40, t=70, pad=0),
             },
         }
 
@@ -2528,14 +2528,14 @@ def callback(detect):
     elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '250px',
+                'height': '300px',
                 'width': '20%',
             }
 
     elif detect == 'death':
         return {
                 'display': 'inline-block',
-                'height': '250px',
+                'height': '300px',
                 'width': '20%',
             }
 
@@ -2684,7 +2684,7 @@ def callback(coef, well_idx, weight,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=50, r=0, b=50, t=0, pad=0),
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=70, pad=0),
             },
         }
 
@@ -2697,14 +2697,14 @@ def callback(detect):
     if detect == 'pupariation':
         return {
                 'display': 'inline-block',
-                'height': '250px',
+                'height': '300px',
                 'width': '20%',
             }
 
     elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '250px',
+                'height': '300px',
                 'width': '20%',
             }
 
@@ -2900,7 +2900,7 @@ def callback(larva_coef, adult_coef, well_idx, weight,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=50, r=0, b=50, t=0, pad=0),
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=70, pad=0),
             },
         }
 
@@ -2916,14 +2916,14 @@ def callback(detect):
     if detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '250px',
+                'height': '300px',
                 'width': '20%',
             }
 
     elif detect == 'death':
         return {
                 'display': 'inline-block',
-                'height': '250px',
+                'height': '300px',
                 'width': '20%',
             }
 
@@ -3048,7 +3048,7 @@ def callback(larva_coef, adult_coef, well_idx, weight,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=50, r=0, b=50, t=0, pad=0),
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=70, pad=0),
             },
         }
 
@@ -3064,7 +3064,7 @@ def callback(detect):
     elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '250px',
+                'height': '300px',
                 'width': '20%',
             }
 
@@ -3200,7 +3200,7 @@ def callback(coef, well_idx, weight,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=50, r=0, b=50, t=0, pad=0),
+                'margin': go.layout.Margin(l=50, r=0, b=50, t=70, pad=0),
             },
         }
 
@@ -3219,7 +3219,7 @@ def callback(detect):
     elif detect == 'death':
         return {
                 'display': 'inline-block',
-                'height': '250px',
+                'height': '300px',
                 'width': '20%',
             }
 
@@ -3324,7 +3324,7 @@ def callback(coef, well_idx, weight,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=70, r=0, b=50, t=0, pad=0),
+                'margin': go.layout.Margin(l=70, r=0, b=50, t=70, pad=0),
             },
         }
 
@@ -3337,14 +3337,14 @@ def callback(detect):
     if detect == 'pupariation':
         return {
                 'display': 'inline-block',
-                'height': '250px',
+                'height': '300px',
                 'width': '20%',
             }
 
     elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '250px',
+                'height': '300px',
                 'width': '20%',
             }
 
@@ -3482,7 +3482,7 @@ def callback(larva_coef, adult_coef, well_idx, weight,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=70, r=0, b=50, t=0, pad=0),
+                'margin': go.layout.Margin(l=70, r=0, b=50, t=70, pad=0),
             },
         }
 
@@ -3498,14 +3498,14 @@ def callback(detect):
     elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
-                'height': '250px',
+                'height': '300px',
                 'width': '20%',
             }
 
     elif detect == 'death':
         return {
                 'display': 'inline-block',
-                'height': '250px',
+                'height': '300px',
                 'width': '20%',
             }
 
