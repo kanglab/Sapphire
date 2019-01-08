@@ -2316,18 +2316,42 @@ def callback(larva_coef, adult_coef, well_idx, weight,
     if detect == 'pupa-and-eclo':
         if not os.path.exists(os.path.join(
                 data_root, env, 'original', 'eclosion.csv')):
-            return {'data': []}
+            #return {'data': []}
+            non_manualdata = {'layout': {
+                        'annotations': [
+                        {
+                        'x': 6.0,
+                        'y': 2.0,
+                        'text': 'Not Available',
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },]}}
+            return non_manualdata
 
-        manual_evals = np.loadtxt(
+        else:
+            manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
                 dtype=np.int16, delimiter=',').flatten()
+            
+
 
     elif detect == 'death':
         if not os.path.exists(os.path.join(
                 data_root, env, 'original', 'death.csv')):
-            return {'data': []}
+            #return {'data': []}
+            non_manualdata = {'layout': {
+                        'annotations': [
+                        {
+                        'x': 6.0,
+                        'y': 2.0,
+                        'text': 'Not Available',
+                        'showarrow': False,
+                        'xanchor': 'right',
+                    },]}}
+            return non_manualdata
 
-        manual_evals = np.loadtxt(
+        else:
+            manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
                 dtype=np.int16, delimiter=',').flatten()
 
