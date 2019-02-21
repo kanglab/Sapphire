@@ -327,32 +327,49 @@ app.layout = html.Div([
                         }),
                         html.Div([
                             html.Div([
-                                dcc.Slider(
-                                    id='larva-thresh',
+                                html.Div([
+                                    dcc.Slider(
+                                        id='larva-thresh',
+                                        value=2,
+                                        min=-5,
+                                        max=20,
+                                        step=.1,
+                                        updatemode='mouseup',
+                                        vertical=True,
+                                    ),
+                                ], style={
+                                    'height': '170px',
+                                    'width': '10px',
+                                    'margin': '20px 35px 10px',
+                                }),
+                                dcc.Input(
+                                    id='larva-thresh-selector',
+                                    type='number',
                                     value=2,
                                     min=-5,
                                     max=20,
-                                    step=.1,
-                                    updatemode='mouseup',
-                                    vertical=True,
-                                )],
-                                style={
-                                    'display': 'inline-block',
-                                    'height': '170px',
-                                    'width': '10px',
-                                    'padding-bottom': '60px',
-                                    'margin': '0px 5px',
-                                },
-                            ),
+                                    step=0.1,
+                                    style={
+                                        'width': '70px',
+                                        'margin': '0px 10px 10px',
+                                    },
+                                ),
+                            ], style={
+                                'display': 'table-cell',
+                                'vertical-align': 'top',
+                            }),
                             dcc.Graph(
                                 id='larva-signal',
                                 style={
                                     'display': 'inline-block',
                                     'height': '280px',
-                                    'width': '700px',
+                                    'width': '650px',
                                 },
                             ),
-                        ]),
+                        ], style={
+                            'display': 'table',
+                            'table-layout': 'fixed',
+                        }),
                     ], style={'width': '740px'}),
 
                     html.Div(id='adult-signal-div', children=[
@@ -1847,6 +1864,13 @@ def well_coordinates(params):
 #  Callbacks for threshold
 # ======================================================
 @app.callback(
+        Output('larva-thresh-selector', 'value'),
+        [Input('larva-thresh', 'value')])
+def callback(threshold):
+    return threshold
+
+
+@app.callback(
         Output('adult-thresh-selector', 'value'),
         [Input('adult-thresh', 'value')])
 def callback(threshold):
@@ -1905,7 +1929,7 @@ def callback(midpoint):
 @app.callback(
         Output('larva-signal', 'figure'),
         [Input('well-selector', 'value'),
-         Input('larva-thresh', 'value'),
+         Input('larva-thresh-selector', 'value'),
          Input('time-selector', 'value'),
          Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
@@ -2076,7 +2100,7 @@ def callback(detect):
 @app.callback(
         Output('adult-signal', 'figure'),
         [Input('well-selector', 'value'),
-         Input('larva-thresh', 'value'),
+         Input('larva-thresh-selector', 'value'),
          Input('adult-thresh-selector', 'value'),
          Input('time-selector', 'value'),
          Input('midpoint-selector', 'value'),
@@ -2302,7 +2326,7 @@ def callback(detect):
 # ==========================================
 @app.callback(
         Output('larva-summary', 'figure'),
-        [Input('larva-thresh', 'value'),
+        [Input('larva-thresh-selector', 'value'),
          Input('well-selector', 'value'),
          Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
@@ -2554,7 +2578,7 @@ def callback(detect):
 # ==========================================
 @app.callback(
         Output('adult-summary', 'figure'),
-        [Input('larva-thresh', 'value'),
+        [Input('larva-thresh-selector', 'value'),
          Input('adult-thresh-selector', 'value'),
          Input('well-selector', 'value'),
          Input('midpoint-selector', 'value'),
@@ -2857,7 +2881,7 @@ def callback(detect):
 # =======================================
 @app.callback(
         Output('larva-hist', 'figure'),
-        [Input('larva-thresh', 'value'),
+        [Input('larva-thresh-selector', 'value'),
          Input('well-selector', 'value'),
          Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
@@ -3050,7 +3074,7 @@ def callback(detect):
 # =======================================
 @app.callback(
         Output('adult-hist', 'figure'),
-        [Input('larva-thresh', 'value'),
+        [Input('larva-thresh-selector', 'value'),
          Input('adult-thresh-selector', 'value'),
          Input('well-selector', 'value'),
          Input('midpoint-selector', 'value'),
@@ -3297,7 +3321,7 @@ def callback(detect):
 # ==============================================
 @app.callback(
         Output('pupa-vs-eclo', 'figure'),
-        [Input('larva-thresh', 'value'),
+        [Input('larva-thresh-selector', 'value'),
          Input('adult-thresh-selector', 'value'),
          Input('well-selector', 'value'),
          Input('midpoint-selector', 'value'),
@@ -3610,7 +3634,7 @@ def callback(detect):
 # ===========================================
 @app.callback(
         Output('larva-boxplot', 'figure'),
-        [Input('larva-thresh', 'value'),
+        [Input('larva-thresh-selector', 'value'),
          Input('well-selector', 'value'),
          Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
@@ -3743,7 +3767,7 @@ def callback(detect):
 # ===========================================
 @app.callback(
         Output('adult-boxplot', 'figure'),
-        [Input('larva-thresh', 'value'),
+        [Input('larva-thresh-selector', 'value'),
          Input('adult-thresh-selector', 'value'),
          Input('well-selector', 'value'),
          Input('midpoint-selector', 'value'),
@@ -4110,7 +4134,7 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('larva-thresh', 'value'),
+         State('larva-thresh-selector', 'value'),
          State('midpoint-selector', 'value'),
          State('larva-weight-check', 'values'),
          State('larva-weight-style', 'value'),
@@ -4368,7 +4392,7 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value'),
-         State('larva-thresh', 'value'),
+         State('larva-thresh-selector', 'value'),
          State('adult-thresh-selector', 'value'),
          State('midpoint-selector', 'value'),
          State('larva-weight-check', 'values'),
