@@ -334,6 +334,17 @@ app.layout = html.Div([
                         ]),
                     ], style={'width': '740px'}),
 
+                    html.Div([
+                        dcc.Slider(
+                            id='midpoint-slider',
+                            min=0,
+                            step=1,
+                        ),
+                    ], style={
+                        'width': '80%',
+                        'margin-left': '130px',
+                    }),
+
                     html.Div(id='adult-signal-div', children=[
                         html.Div([
                             dcc.Checklist(
@@ -1747,6 +1758,35 @@ def well_coordinates(params):
                 count += 1
 
     return np.array(xs)[well_idxs], np.array(ys)[well_idxs]
+
+
+# ===================================================
+#  
+# ===================================================
+@app.callback(
+        Output('midpoint-slider', 'max'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None:
+        return 100
+
+    return len(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg'))) - 2
+
+
+# ======================================================
+# ======================================================
+@app.callback(
+        Output('midpoint-slider', 'value'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None:
+        return 50
+
+    return int(len(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg'))) / 2) - 1
 
 
 # =========================================
