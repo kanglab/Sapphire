@@ -461,10 +461,10 @@ app.layout = html.Div([
                             value=0,
                             min=0,
                             style={
-                                'width': '10%',
+                                'width': '70px',
                                 'display': 'inline-block',
                                 'vertical-align': 'middle',
-                                'margin': '0% 2%',
+                                'margin': '0px 25px 0px 100px',
                             },
                         ),
                         html.Div([
@@ -474,8 +474,7 @@ app.layout = html.Div([
                                 step=1,
                             ),
                         ], style={
-                            'width': '80%',
-                            'margin-left': '3%',
+                            'width': '545px',
                             'display': 'inline-block',
                         }),
                     ]),
@@ -1848,9 +1847,9 @@ def well_coordinates(params):
     return np.array(xs)[well_idxs], np.array(ys)[well_idxs]
 
 
-# ===================================================
-#  
-# ===================================================
+# ======================================================
+#  Callbacks for midpoint
+# ======================================================
 @app.callback(
         Output('midpoint-slider', 'max'),
         [Input('env-dropdown', 'value')],
@@ -1863,8 +1862,6 @@ def callback(env, data_root):
             os.path.join(data_root, env, 'original', '*.jpg'))) - 2
 
 
-# ======================================================
-# ======================================================
 @app.callback(
         Output('midpoint-slider', 'value'),
         [Input('env-dropdown', 'value')],
@@ -1877,15 +1874,34 @@ def callback(env, data_root):
             os.path.join(data_root, env, 'original', '*.jpg'))) / 2) - 1
 
 
+@app.callback(
+        Output('midpoint-selector', 'max'),
+        [Input('env-dropdown', 'value')],
+        [State('data-root', 'children')])
+def callback(env, data_root):
+    if env is None:
+        return 100
+
+    return len(glob.glob(
+            os.path.join(data_root, env, 'original', '*.jpg'))) - 2
+
+
+@app.callback(
+        Output('midpoint-selector', 'value'),
+        [Input('midpoint-slider', 'value')])
+def callback(midpoint):
+    return midpoint
+
+
 # =========================================
-#  Update the figure in the larva-signal.
+#  Update the figure in the larva-signal
 # =========================================
 @app.callback(
         Output('larva-signal', 'figure'),
         [Input('well-selector', 'value'),
          Input('larva-thresh', 'value'),
          Input('time-selector', 'value'),
-         Input('midpoint-slider', 'value'),
+         Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -2057,7 +2073,7 @@ def callback(detect):
          Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('time-selector', 'value'),
-         Input('midpoint-slider', 'value'),
+         Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -2282,7 +2298,7 @@ def callback(detect):
         Output('larva-summary', 'figure'),
         [Input('larva-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-slider', 'value'),
+         Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -2535,7 +2551,7 @@ def callback(detect):
         [Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-slider', 'value'),
+         Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -2837,7 +2853,7 @@ def callback(detect):
         Output('larva-hist', 'figure'),
         [Input('larva-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-slider', 'value'),
+         Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -3031,7 +3047,7 @@ def callback(detect):
         [Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-slider', 'value'),
+         Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -3278,7 +3294,7 @@ def callback(detect):
         [Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-slider', 'value'),
+         Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -3434,7 +3450,7 @@ def callback(detect):
         Output('survival-curve', 'figure'),
         [Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-slider', 'value'),
+         Input('midpoint-selector', 'value'),
          Input('adult-weight-check', 'values'),
          Input('adult-weight-style', 'value'),
          Input('adult-smoothing-check', 'values'),
@@ -3590,7 +3606,7 @@ def callback(detect):
         Output('larva-boxplot', 'figure'),
         [Input('larva-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-slider', 'value'),
+         Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -3724,7 +3740,7 @@ def callback(detect):
         [Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-slider', 'value'),
+         Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -4089,7 +4105,7 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('larva-thresh', 'value'),
-         State('midpoint-slider', 'value'),
+         State('midpoint-selector', 'value'),
          State('larva-weight-check', 'values'),
          State('larva-weight-style', 'value'),
          State('larva-window-size', 'value'),
@@ -4348,7 +4364,7 @@ def callback(detect):
          State('adult-dropdown', 'value'),
          State('larva-thresh', 'value'),
          State('adult-thresh', 'value'),
-         State('midpoint-slider', 'value'),
+         State('midpoint-selector', 'value'),
          State('larva-weight-check', 'values'),
          State('larva-weight-style', 'value'),
          State('larva-window-size', 'value'),
