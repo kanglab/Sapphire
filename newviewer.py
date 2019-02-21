@@ -287,7 +287,7 @@ app.layout = html.Div([
                         ]),
                         html.Div([
                             dcc.Checklist(
-                                id='filter-check',
+                                id='larva-smoothing-check',
                                 options=[
                                     {'label': 'Smoothing', 'value': True}],
                                 values=[],
@@ -298,7 +298,7 @@ app.layout = html.Div([
                             ),
                             'Size:',
                             dcc.Input(
-                                id='gaussian-size',
+                                id='larva-window-size',
                                 type='number',
                                 value=10,
                                 min=0,
@@ -310,7 +310,7 @@ app.layout = html.Div([
                             ),
                             'Sigma:',
                             dcc.Input(
-                                id='gaussian-sigma',
+                                id='larva-window-sigma',
                                 type='number',
                                 value=5,
                                 min=0,
@@ -322,7 +322,7 @@ app.layout = html.Div([
                                 },
                             ),
                             dcc.Checklist(
-                                id='weight-check',
+                                id='larva-weight-check',
                                 options=[
                                     {'label': 'Weight', 'value': True}],
                                 values=[],
@@ -985,11 +985,11 @@ def callback(changed_data, larva_signal, adult_signal, buff):
 
 
 # =====================================================
-#  Toggle validation or invalidation of gaussian-size
+#  Toggle validation or invalidation of larva-window-size
 # =====================================================
 @app.callback(
-        Output('gaussian-size', 'disabled'),
-        [Input('filter-check', 'values')])
+        Output('larva-window-size', 'disabled'),
+        [Input('larva-smoothing-check', 'values')])
 def callback(checks):
 
     if len(checks) == 0:
@@ -1000,11 +1000,11 @@ def callback(checks):
 
 
 # ======================================================
-#  Toggle validation or invalidation of gaussian-sigma
+#  Toggle validation or invalidation of larva-window-sigma
 # ======================================================
 @app.callback(
-        Output('gaussian-sigma', 'disabled'),
-        [Input('filter-check', 'values')])
+        Output('larva-window-sigma', 'disabled'),
+        [Input('larva-smoothing-check', 'values')])
 def callback(checks):
 
     if len(checks) == 0:
@@ -1684,10 +1684,10 @@ def well_coordinates(params):
         [Input('well-selector', 'value'),
          Input('larva-thresh', 'value'),
          Input('time-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('larva-weight-check', 'values'),
+         Input('larva-smoothing-check', 'values'),
+         Input('larva-window-size', 'value'),
+         Input('larva-window-sigma', 'value')],
         [State('larva-signal', 'figure'),
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
@@ -1852,10 +1852,10 @@ def callback(detect):
          Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('time-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('larva-weight-check', 'values'),
+         Input('larva-smoothing-check', 'values'),
+         Input('larva-window-size', 'value'),
+         Input('larva-window-sigma', 'value')],
         [State('adult-signal', 'figure'),
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
@@ -2063,10 +2063,10 @@ def callback(detect):
         Output('larva-summary', 'figure'),
         [Input('larva-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('larva-weight-check', 'values'),
+         Input('larva-smoothing-check', 'values'),
+         Input('larva-window-size', 'value'),
+         Input('larva-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -2312,10 +2312,10 @@ def callback(detect):
         [Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('larva-weight-check', 'values'),
+         Input('larva-smoothing-check', 'values'),
+         Input('larva-window-size', 'value'),
+         Input('larva-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -2601,10 +2601,10 @@ def callback(detect):
         Output('larva-hist', 'figure'),
         [Input('larva-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('larva-weight-check', 'values'),
+         Input('larva-smoothing-check', 'values'),
+         Input('larva-window-size', 'value'),
+         Input('larva-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -2791,10 +2791,10 @@ def callback(detect):
         [Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('larva-weight-check', 'values'),
+         Input('larva-smoothing-check', 'values'),
+         Input('larva-window-size', 'value'),
+         Input('larva-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -3025,10 +3025,10 @@ def callback(detect):
         [Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('larva-weight-check', 'values'),
+         Input('larva-smoothing-check', 'values'),
+         Input('larva-window-size', 'value'),
+         Input('larva-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -3168,10 +3168,10 @@ def callback(detect):
         Output('survival-curve', 'figure'),
         [Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('larva-weight-check', 'values'),
+         Input('larva-smoothing-check', 'values'),
+         Input('larva-window-size', 'value'),
+         Input('larva-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -3320,10 +3320,10 @@ def callback(detect):
         Output('larva-boxplot', 'figure'),
         [Input('larva-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('larva-weight-check', 'values'),
+         Input('larva-smoothing-check', 'values'),
+         Input('larva-window-size', 'value'),
+         Input('larva-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -3450,10 +3450,10 @@ def callback(detect):
         [Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('larva-weight-check', 'values'),
+         Input('larva-smoothing-check', 'values'),
+         Input('larva-window-size', 'value'),
+         Input('larva-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -3802,10 +3802,10 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('larva-thresh', 'value'),
-         State('weight-check', 'values'),
-         State('gaussian-size', 'value'),
-         State('gaussian-sigma', 'value'),
-         State('filter-check', 'values')])
+         State('larva-weight-check', 'values'),
+         State('larva-window-size', 'value'),
+         State('larva-window-sigma', 'value'),
+         State('larva-smoothing-check', 'values')])
 def callback(tab_name, data_root, env,
         detect, larva, coef, weight, size, sigma, checks):
     # Guard
@@ -4057,10 +4057,10 @@ def callback(detect):
          State('adult-dropdown', 'value'),
          State('larva-thresh', 'value'),
          State('adult-thresh', 'value'),
-         State('weight-check', 'values'),
-         State('gaussian-size', 'value'),
-         State('gaussian-sigma', 'value'),
-         State('filter-check', 'values')])
+         State('larva-weight-check', 'values'),
+         State('larva-window-size', 'value'),
+         State('larva-window-sigma', 'value'),
+         State('larva-smoothing-check', 'values')])
 def callback(tab_name, data_root, env, detect,
         larva, adult, larva_coef, adult_coef, weight, size, sigma, checks):
     # Guard
