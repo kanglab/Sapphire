@@ -38,10 +38,9 @@ DATA_ROOT = '/mnt/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaUniv/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/OkayamaUniv/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
+
 THETA = 50
 
-THRESH_FUNC = my_threshold.n_times_mean
-THRESH_FUNC = my_threshold.n_times_nonzero_mean
 THRESH_FUNC = my_threshold.entire_stats
 
 
