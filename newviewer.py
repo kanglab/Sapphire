@@ -455,15 +455,30 @@ app.layout = html.Div([
                     ], style={'width': '740px'}),
 
                     html.Div([
-                        dcc.Slider(
-                            id='midpoint-slider',
+                        dcc.Input(
+                            id='midpoint-selector',
+                            type='number',
+                            value=0,
                             min=0,
-                            step=1,
+                            style={
+                                'width': '10%',
+                                'display': 'inline-block',
+                                'vertical-align': 'middle',
+                                'margin': '0% 2%',
+                            },
                         ),
-                    ], style={
-                        'width': '80%',
-                        'margin-left': '130px',
-                    }),
+                        html.Div([
+                            dcc.Slider(
+                                id='midpoint-slider',
+                                min=0,
+                                step=1,
+                            ),
+                        ], style={
+                            'width': '80%',
+                            'margin-left': '3%',
+                            'display': 'inline-block',
+                        }),
+                    ]),
 
                 ], style={'display': 'inline-block'}),
             ],
