@@ -153,7 +153,7 @@ app.layout = html.Div([
                         },
                     ),
                     html.Br(),
-                    'Time Step:',
+                    'Frame:',
                     html.Br(),
                     html.Div([
                             dcc.Input(
@@ -1785,7 +1785,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                     ],
                     'font': {'size': 15},
                     'xaxis': {
-                        'title': 'Time Step',
+                        'title': 'Frame',
                         'tickfont': {'size': 15},
                     },
                     'yaxis': {
@@ -1999,7 +1999,7 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
                 ],
                 'font': {'size': 15},
                 'xaxis': {
-                    'title': 'Time Step',
+                    'title': 'Frame',
                     'tickfont': {'size': 15},
                 },
                 'yaxis': {
@@ -3257,7 +3257,7 @@ def callback(coef, well_idx, weight,
             'layout': {
                 'font': {'size': 15},
                 'xaxis': {
-                    'title': 'Time Step',
+                    'title': 'Frame',
                     'range': [0, 1.1 * len(survival_ratio)],
                     'tickfont': {'size': 15},
                 },
@@ -3383,7 +3383,7 @@ def callback(coef, well_idx, weight,
             'layout': {
                 'font': {'size': 15},
                 'xaxis': {
-                    'title': 'Time Step',
+                    'title': 'Frame',
                     'tickfont': {'size': 15},
                     'range': [0, 1.1 * len(larva_diffs.T)],
                 },
@@ -3541,7 +3541,7 @@ def callback(larva_coef, adult_coef, well_idx, weight,
             'layout': {
                 'font': {'size': 15},
                 'xaxis': {
-                    'title': 'Time Step',
+                    'title': 'Frame',
                     'tickfont': {'size': 15},
                     'range': [0, 1.1 * len(adult_diffs.T)],
                 },
