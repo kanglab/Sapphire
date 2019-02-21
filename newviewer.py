@@ -258,34 +258,6 @@ app.layout = html.Div([
                 html.Div([
                     html.Div(id='larva-signal-div', children=[
                         html.Div([
-                            html.Div([
-                                dcc.Slider(
-                                    id='larva-thresh',
-                                    value=2,
-                                    min=-5,
-                                    max=20,
-                                    step=.1,
-                                    updatemode='mouseup',
-                                    vertical=True,
-                                )],
-                                style={
-                                    'display': 'inline-block',
-                                    'height': '170px',
-                                    'width': '10px',
-                                    'padding-bottom': '60px',
-                                    'margin': '0px 5px',
-                                },
-                            ),
-                            dcc.Graph(
-                                id='larva-signal',
-                                style={
-                                    'display': 'inline-block',
-                                    'height': '280px',
-                                    'width': '700px',
-                                },
-                            ),
-                        ]),
-                        html.Div([
                             dcc.Checklist(
                                 id='larva-smoothing-check',
                                 options=[
@@ -332,35 +304,112 @@ app.layout = html.Div([
                             'margin': '0px 30px',
                             'text-align': 'right',
                         }),
+                        html.Div([
+                            html.Div([
+                                dcc.Slider(
+                                    id='larva-thresh',
+                                    value=2,
+                                    min=-5,
+                                    max=20,
+                                    step=.1,
+                                    updatemode='mouseup',
+                                    vertical=True,
+                                )],
+                                style={
+                                    'display': 'inline-block',
+                                    'height': '170px',
+                                    'width': '10px',
+                                    'padding-bottom': '60px',
+                                    'margin': '0px 5px',
+                                },
+                            ),
+                            dcc.Graph(
+                                id='larva-signal',
+                                style={
+                                    'display': 'inline-block',
+                                    'height': '280px',
+                                    'width': '700px',
+                                },
+                            ),
+                        ]),
                     ], style={'width': '740px'}),
 
                     html.Div(id='adult-signal-div', children=[
                         html.Div([
-                            dcc.Slider(
-                                id='adult-thresh',
-                                value=2,
-                                min=-5,
-                                max=20,
-                                step=.1,
-                                updatemode='mouseup',
-                                vertical=True,
-                            )],
-                            style={
-                                'display': 'inline-block',
-                                'height': '170px',
-                                'width': '10px',
-                                'padding-bottom': '60px',
-                                'margin': '0px 5px',
-                            },
-                        ),
-                        dcc.Graph(
-                            id='adult-signal',
-                            style={
-                                'display': 'inline-block',
-                                'height': '280px',
-                                'width': '700px',
-                            },
-                        ),
+                            dcc.Checklist(
+                                id='adult-smoothing-check',
+                                options=[
+                                    {'label': 'Smoothing', 'value': True}],
+                                values=[],
+                                style={
+                                    'display': 'inline-block',
+                                    'margin-right': '10px',
+                                },
+                            ),
+                            'Size:',
+                            dcc.Input(
+                                id='adult-window-size',
+                                type='number',
+                                value=10,
+                                min=0,
+                                size=5,
+                                style={
+                                    'width': '80px',
+                                    'margin': '0px 10px 0px 5px',
+                                },
+                            ),
+                            'Sigma:',
+                            dcc.Input(
+                                id='adult-window-sigma',
+                                type='number',
+                                value=5,
+                                min=0,
+                                size=5,
+                                step=0.1,
+                                style={
+                                    'width': '80px',
+                                    'margin': '0px 10px 0px 5px',
+                                },
+                            ),
+                            dcc.Checklist(
+                                id='adult-weight-check',
+                                options=[
+                                    {'label': 'Weight', 'value': True}],
+                                values=[],
+                                style={'display': 'inline-block'},
+                            ),
+                        ], style={
+                            'margin': '0px 30px',
+                            'text-align': 'right',
+                        }),
+                        html.Div([
+                            html.Div([
+                                dcc.Slider(
+                                    id='adult-thresh',
+                                    value=2,
+                                    min=-5,
+                                    max=20,
+                                    step=.1,
+                                    updatemode='mouseup',
+                                    vertical=True,
+                                )],
+                                style={
+                                    'display': 'inline-block',
+                                    'height': '170px',
+                                    'width': '10px',
+                                    'padding-bottom': '60px',
+                                    'margin': '0px 5px',
+                                },
+                            ),
+                            dcc.Graph(
+                                id='adult-signal',
+                                style={
+                                    'display': 'inline-block',
+                                    'height': '280px',
+                                    'width': '700px',
+                                },
+                            ),
+                        ]),
                     ], style={'width': '740px'}),
 
                 ], style={'display': 'inline-block'}),
@@ -1815,7 +1864,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                     },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=70, r=0, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=70, r=0, b=50, t=10, pad=0),
                 'shapes': day_and_night(timestamps),
             },
         }
@@ -2028,7 +2077,7 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=70, r=0, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=70, r=0, b=50, t=10, pad=0),
                 'shapes': day_and_night(timestamps),
             },
         }
