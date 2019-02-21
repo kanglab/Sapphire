@@ -183,37 +183,6 @@ app.layout = html.Div([
                         },
                     ),
                     html.Br(),
-
-                    'Smoothing:',
-                    dcc.Checklist(
-                        id='filter-check',
-                        options=[{'label': 'Apply', 'value': True}],
-                        values=[],
-                    ),
-                    'Size:',
-                    dcc.Input(
-                        id='gaussian-size',
-                        type='number',
-                        value=10,
-                        min=0,
-                        size=5,
-                    ),
-                    html.Br(),
-                    'Sigma:',
-                    dcc.Input(
-                        id='gaussian-sigma',
-                        type='number',
-                        value=5,
-                        min=0,
-                        size=5,
-                        step=0.1,
-                    ),
-                    html.Br(),
-                    dcc.Checklist(
-                        id='weight-check',
-                        options=[{'label': 'Signal Weight', 'value': True}],
-                        values=[],
-                    ),
                     ],
                     style={
                         'display': 'inline-block',
@@ -289,31 +258,80 @@ app.layout = html.Div([
                 html.Div([
                     html.Div(id='larva-signal-div', children=[
                         html.Div([
-                            dcc.Slider(
-                                id='larva-thresh',
-                                value=2,
-                                min=-5,
-                                max=20,
-                                step=.1,
-                                updatemode='mouseup',
-                                vertical=True,
-                            )],
-                            style={
-                                'display': 'inline-block',
-                                'height': '170px',
-                                'width': '10px',
-                                'padding-bottom': '60px',
-                                'margin': '0px 5px',
-                            },
-                        ),
-                        dcc.Graph(
-                            id='larva-signal',
-                            style={
-                                'display': 'inline-block',
-                                'height': '280px',
-                                'width': '700px',
-                            },
-                        ),
+                            html.Div([
+                                dcc.Slider(
+                                    id='larva-thresh',
+                                    value=2,
+                                    min=-5,
+                                    max=20,
+                                    step=.1,
+                                    updatemode='mouseup',
+                                    vertical=True,
+                                )],
+                                style={
+                                    'display': 'inline-block',
+                                    'height': '170px',
+                                    'width': '10px',
+                                    'padding-bottom': '60px',
+                                    'margin': '0px 5px',
+                                },
+                            ),
+                            dcc.Graph(
+                                id='larva-signal',
+                                style={
+                                    'display': 'inline-block',
+                                    'height': '280px',
+                                    'width': '700px',
+                                },
+                            ),
+                        ]),
+                        html.Div([
+                            dcc.Checklist(
+                                id='filter-check',
+                                options=[
+                                    {'label': 'Smoothing', 'value': True}],
+                                values=[],
+                                style={
+                                    'display': 'inline-block',
+                                    'margin-right': '10px',
+                                },
+                            ),
+                            'Size:',
+                            dcc.Input(
+                                id='gaussian-size',
+                                type='number',
+                                value=10,
+                                min=0,
+                                size=5,
+                                style={
+                                    'width': '80px',
+                                    'margin': '0px 10px 0px 5px',
+                                },
+                            ),
+                            'Sigma:',
+                            dcc.Input(
+                                id='gaussian-sigma',
+                                type='number',
+                                value=5,
+                                min=0,
+                                size=5,
+                                step=0.1,
+                                style={
+                                    'width': '80px',
+                                    'margin': '0px 10px 0px 5px',
+                                },
+                            ),
+                            dcc.Checklist(
+                                id='weight-check',
+                                options=[
+                                    {'label': 'Weight', 'value': True}],
+                                values=[],
+                                style={'display': 'inline-block'},
+                            ),
+                        ], style={
+                            'margin': '0px 30px',
+                            'text-align': 'right',
+                        }),
                     ], style={'width': '740px'}),
 
                     html.Div(id='adult-signal-div', children=[
