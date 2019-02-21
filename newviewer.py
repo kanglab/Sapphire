@@ -4380,7 +4380,7 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
 
         larva_diffs = seasoning(
                 larva_diffs, 'larva', detect, larva_w_style, larva_w_sigma,
-                smooth=len(checks) != 0,
+                smooth=len(larva_smoothing) != 0,
                 weight=len(larva_weighting) != 0,
                 pupar_times=None,
                 midpoint=midpoint,
@@ -4425,7 +4425,7 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
             + 'Mean (mean),{}\n'.format(adult_diffs.mean())  \
             + 'Coefficient (coef),{}\n'.format(adult_coef)  \
             + 'Standard Deviation (std),{}\n'.format(adult_diffs.std())  \
-            + 'Smoothing Window Size,{}\n'.format(size)  \
+            + 'Smoothing Window Size,{}\n'.format(adult_w_size)  \
             + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma)  \
             + pd.DataFrame(auto_evals).to_csv(
                     index=False, encoding='utf-8', header=False),
