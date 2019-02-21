@@ -22,7 +22,6 @@ import numpy as np
 import pandas as pd
 import scipy.signal
 import my_threshold
-import flask_caching
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
@@ -39,19 +38,15 @@ DATA_ROOT = '/mnt/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaUniv/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/OkayamaUniv/'
 DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
+
 THETA = 50
 
-THRESH_FUNC = my_threshold.n_times_mean
-THRESH_FUNC = my_threshold.n_times_nonzero_mean
 THRESH_FUNC = my_threshold.entire_stats
 
 
 app = dash.Dash('Sapphire')
 app.css.append_css(
         {'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
-cache = flask_caching.Cache()
-cache.init_app(
-        app.server, config={'CACHE_TYPE': 'filesystem', 'CACHE_DIR': 'cache/'})
     
 
 # ================================
@@ -158,7 +153,7 @@ app.layout = html.Div([
                         },
                     ),
                     html.Br(),
-                    'Time Step:',
+                    'Frame:',
                     html.Br(),
                     html.Div([
                             dcc.Input(
@@ -1790,7 +1785,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                     ],
                     'font': {'size': 15},
                     'xaxis': {
-                        'title': 'Time Step',
+                        'title': 'Frame',
                         'tickfont': {'size': 15},
                     },
                     'yaxis': {
@@ -2004,7 +1999,7 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
                 ],
                 'font': {'size': 15},
                 'xaxis': {
-                    'title': 'Time Step',
+                    'title': 'Frame',
                     'tickfont': {'size': 15},
                 },
                 'yaxis': {
@@ -3262,7 +3257,7 @@ def callback(coef, well_idx, weight,
             'layout': {
                 'font': {'size': 15},
                 'xaxis': {
-                    'title': 'Time Step',
+                    'title': 'Frame',
                     'range': [0, 1.1 * len(survival_ratio)],
                     'tickfont': {'size': 15},
                 },
@@ -3388,7 +3383,7 @@ def callback(coef, well_idx, weight,
             'layout': {
                 'font': {'size': 15},
                 'xaxis': {
-                    'title': 'Time Step',
+                    'title': 'Frame',
                     'tickfont': {'size': 15},
                     'range': [0, 1.1 * len(larva_diffs.T)],
                 },
@@ -3546,7 +3541,7 @@ def callback(larva_coef, adult_coef, well_idx, weight,
             'layout': {
                 'font': {'size': 15},
                 'xaxis': {
-                    'title': 'Time Step',
+                    'title': 'Frame',
                     'tickfont': {'size': 15},
                     'range': [0, 1.1 * len(adult_diffs.T)],
                 },
