@@ -183,37 +183,6 @@ app.layout = html.Div([
                         },
                     ),
                     html.Br(),
-
-                    'Smoothing:',
-                    dcc.Checklist(
-                        id='filter-check',
-                        options=[{'label': 'Apply', 'value': True}],
-                        values=[],
-                    ),
-                    'Size:',
-                    dcc.Input(
-                        id='gaussian-size',
-                        type='number',
-                        value=10,
-                        min=0,
-                        size=5,
-                    ),
-                    html.Br(),
-                    'Sigma:',
-                    dcc.Input(
-                        id='gaussian-sigma',
-                        type='number',
-                        value=5,
-                        min=0,
-                        size=5,
-                        step=0.1,
-                    ),
-                    html.Br(),
-                    dcc.Checklist(
-                        id='weight-check',
-                        options=[{'label': 'Signal Weight', 'value': True}],
-                        values=[],
-                    ),
                     ],
                     style={
                         'display': 'inline-block',
@@ -289,60 +258,158 @@ app.layout = html.Div([
                 html.Div([
                     html.Div(id='larva-signal-div', children=[
                         html.Div([
-                            dcc.Slider(
-                                id='larva-thresh',
-                                value=2,
-                                min=-5,
-                                max=20,
-                                step=.1,
-                                updatemode='mouseup',
-                                vertical=True,
-                            )],
-                            style={
-                                'display': 'inline-block',
-                                'height': '170px',
-                                'width': '10px',
-                                'padding-bottom': '60px',
-                                'margin': '0px 5px',
-                            },
-                        ),
-                        dcc.Graph(
-                            id='larva-signal',
-                            style={
-                                'display': 'inline-block',
-                                'height': '280px',
-                                'width': '700px',
-                            },
-                        ),
+                            dcc.Checklist(
+                                id='larva-smoothing-check',
+                                options=[
+                                    {'label': 'Smoothing', 'value': True}],
+                                values=[],
+                                style={
+                                    'display': 'inline-block',
+                                    'margin-right': '10px',
+                                },
+                            ),
+                            'Size:',
+                            dcc.Input(
+                                id='larva-window-size',
+                                type='number',
+                                value=10,
+                                min=0,
+                                size=5,
+                                style={
+                                    'width': '80px',
+                                    'margin': '0px 10px 0px 5px',
+                                },
+                            ),
+                            'Sigma:',
+                            dcc.Input(
+                                id='larva-window-sigma',
+                                type='number',
+                                value=5,
+                                min=0,
+                                size=5,
+                                step=0.1,
+                                style={
+                                    'width': '80px',
+                                    'margin': '0px 10px 0px 5px',
+                                },
+                            ),
+                            dcc.Checklist(
+                                id='larva-weight-check',
+                                options=[
+                                    {'label': 'Weight', 'value': True}],
+                                values=[],
+                                style={'display': 'inline-block'},
+                            ),
+                        ], style={
+                            'margin': '0px 30px',
+                            'text-align': 'right',
+                        }),
+                        html.Div([
+                            html.Div([
+                                dcc.Slider(
+                                    id='larva-thresh',
+                                    value=2,
+                                    min=-5,
+                                    max=20,
+                                    step=.1,
+                                    updatemode='mouseup',
+                                    vertical=True,
+                                )],
+                                style={
+                                    'display': 'inline-block',
+                                    'height': '170px',
+                                    'width': '10px',
+                                    'padding-bottom': '60px',
+                                    'margin': '0px 5px',
+                                },
+                            ),
+                            dcc.Graph(
+                                id='larva-signal',
+                                style={
+                                    'display': 'inline-block',
+                                    'height': '280px',
+                                    'width': '700px',
+                                },
+                            ),
+                        ]),
                     ], style={'width': '740px'}),
 
                     html.Div(id='adult-signal-div', children=[
                         html.Div([
-                            dcc.Slider(
-                                id='adult-thresh',
-                                value=2,
-                                min=-5,
-                                max=20,
-                                step=.1,
-                                updatemode='mouseup',
-                                vertical=True,
-                            )],
-                            style={
-                                'display': 'inline-block',
-                                'height': '170px',
-                                'width': '10px',
-                                'padding-bottom': '60px',
-                                'margin': '0px 5px',
-                            },
-                        ),
-                        dcc.Graph(
-                            id='adult-signal',
-                            style={
-                                'display': 'inline-block',
-                                'height': '280px',
-                                'width': '700px',
-                            },
-                        ),
+                            dcc.Checklist(
+                                id='adult-smoothing-check',
+                                options=[
+                                    {'label': 'Smoothing', 'value': True}],
+                                values=[],
+                                style={
+                                    'display': 'inline-block',
+                                    'margin-right': '10px',
+                                },
+                            ),
+                            'Size:',
+                            dcc.Input(
+                                id='adult-window-size',
+                                type='number',
+                                value=10,
+                                min=0,
+                                size=5,
+                                style={
+                                    'width': '80px',
+                                    'margin': '0px 10px 0px 5px',
+                                },
+                            ),
+                            'Sigma:',
+                            dcc.Input(
+                                id='adult-window-sigma',
+                                type='number',
+                                value=5,
+                                min=0,
+                                size=5,
+                                step=0.1,
+                                style={
+                                    'width': '80px',
+                                    'margin': '0px 10px 0px 5px',
+                                },
+                            ),
+                            dcc.Checklist(
+                                id='adult-weight-check',
+                                options=[
+                                    {'label': 'Weight', 'value': True}],
+                                values=[],
+                                style={'display': 'inline-block'},
+                            ),
+                        ], style={
+                            'margin': '0px 30px',
+                            'text-align': 'right',
+                        }),
+                        html.Div([
+                            html.Div([
+                                dcc.Slider(
+                                    id='adult-thresh',
+                                    value=2,
+                                    min=-5,
+                                    max=20,
+                                    step=.1,
+                                    updatemode='mouseup',
+                                    vertical=True,
+                                )],
+                                style={
+                                    'display': 'inline-block',
+                                    'height': '170px',
+                                    'width': '10px',
+                                    'padding-bottom': '60px',
+                                    'margin': '0px 5px',
+                                },
+                            ),
+                            dcc.Graph(
+                                id='adult-signal',
+                                style={
+                                    'display': 'inline-block',
+                                    'height': '280px',
+                                    'width': '700px',
+                                },
+                            ),
+                        ]),
                     ], style={'width': '740px'}),
 
                 ], style={'display': 'inline-block'}),
@@ -967,11 +1034,23 @@ def callback(changed_data, larva_signal, adult_signal, buff):
 
 
 # =====================================================
-#  Toggle validation or invalidation of gaussian-size
+#  Toggle valid/invalid of window size
 # =====================================================
 @app.callback(
-        Output('gaussian-size', 'disabled'),
-        [Input('filter-check', 'values')])
+        Output('larva-window-size', 'disabled'),
+        [Input('larva-smoothing-check', 'values')])
+def callback(checks):
+
+    if len(checks) == 0:
+        return True
+
+    else:
+        return False
+
+
+@app.callback(
+        Output('adult-window-size', 'disabled'),
+        [Input('adult-smoothing-check', 'values')])
 def callback(checks):
 
     if len(checks) == 0:
@@ -982,11 +1061,23 @@ def callback(checks):
 
 
 # ======================================================
-#  Toggle validation or invalidation of gaussian-sigma
+#  Toggle valid/invalid of window sigma
 # ======================================================
 @app.callback(
-        Output('gaussian-sigma', 'disabled'),
-        [Input('filter-check', 'values')])
+        Output('larva-window-sigma', 'disabled'),
+        [Input('larva-smoothing-check', 'values')])
+def callback(checks):
+
+    if len(checks) == 0:
+        return True
+
+    else:
+        return False
+
+
+@app.callback(
+        Output('adult-window-sigma', 'disabled'),
+        [Input('adult-smoothing-check', 'values')])
 def callback(checks):
 
     if len(checks) == 0:
@@ -1666,10 +1757,10 @@ def well_coordinates(params):
         [Input('well-selector', 'value'),
          Input('larva-thresh', 'value'),
          Input('time-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('larva-weight-check', 'values'),
+         Input('larva-smoothing-check', 'values'),
+         Input('larva-window-size', 'value'),
+         Input('larva-window-sigma', 'value')],
         [State('larva-signal', 'figure'),
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
@@ -1797,7 +1888,7 @@ def callback(well_idx, coef, time, weight, checks, size, sigma,
                     },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=70, r=0, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=70, r=0, b=50, t=10, pad=0),
                 'shapes': day_and_night(timestamps),
             },
         }
@@ -1834,10 +1925,10 @@ def callback(detect):
          Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('time-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('adult-weight-check', 'values'),
+         Input('adult-smoothing-check', 'values'),
+         Input('adult-window-size', 'value'),
+         Input('adult-window-sigma', 'value')],
         [State('adult-signal', 'figure'),
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
@@ -2010,7 +2101,7 @@ def callback(well_idx, larva_coef, adult_coef, time, weight, checks,
                 },
                 'showlegend': False,
                 'hovermode': 'closest',
-                'margin': go.layout.Margin(l=70, r=0, b=50, t=50, pad=0),
+                'margin': go.layout.Margin(l=70, r=0, b=50, t=10, pad=0),
                 'shapes': day_and_night(timestamps),
             },
         }
@@ -2045,10 +2136,10 @@ def callback(detect):
         Output('larva-summary', 'figure'),
         [Input('larva-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('larva-weight-check', 'values'),
+         Input('larva-smoothing-check', 'values'),
+         Input('larva-window-size', 'value'),
+         Input('larva-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -2294,10 +2385,10 @@ def callback(detect):
         [Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('adult-weight-check', 'values'),
+         Input('adult-smoothing-check', 'values'),
+         Input('adult-window-size', 'value'),
+         Input('adult-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -2583,10 +2674,10 @@ def callback(detect):
         Output('larva-hist', 'figure'),
         [Input('larva-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('larva-weight-check', 'values'),
+         Input('larva-smoothing-check', 'values'),
+         Input('larva-window-size', 'value'),
+         Input('larva-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -2773,10 +2864,10 @@ def callback(detect):
         [Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('adult-weight-check', 'values'),
+         Input('adult-smoothing-check', 'values'),
+         Input('adult-window-size', 'value'),
+         Input('adult-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -3007,17 +3098,23 @@ def callback(detect):
         [Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('larva-weight-check', 'values'),
+         Input('larva-smoothing-check', 'values'),
+         Input('larva-window-size', 'value'),
+         Input('larva-window-sigma', 'value'),
+         Input('adult-weight-check', 'values'),
+         Input('adult-smoothing-check', 'values'),
+         Input('adult-window-size', 'value'),
+         Input('adult-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(larva_coef, adult_coef, well_idx, weight,
-        checks, size, sigma, data_root, env, detect, larva, adult):
+def callback(larva_coef, adult_coef, well_idx,
+        larva_weighting, larva_smoothing, larva_w_size, larva_w_sigma,
+        adult_weighting, adult_smoothing, adult_w_size, adult_w_sigma,
+        data_root, env, detect, larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -3043,9 +3140,9 @@ def callback(larva_coef, adult_coef, well_idx, weight,
             data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
 
     larva_diffs = seasoning(
-            larva_diffs, 'larva', detect, size, sigma,
-            smooth=len(checks) != 0,
-            weight=len(weight) != 0,
+            larva_diffs, 'larva', detect, larva_w_size, larva_w_sigma,
+            smooth=len(larva_smoothing) != 0,
+            weight=len(larva_weighting) != 0,
             pupar_times=None)
 
     # Compute thresholds
@@ -3062,9 +3159,9 @@ def callback(larva_coef, adult_coef, well_idx, weight,
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
 
     adult_diffs = seasoning(
-            adult_diffs, 'adult', detect, size, sigma,
-            smooth=len(checks) != 0,
-            weight=len(weight) != 0,
+            adult_diffs, 'adult', detect, adult_w_size, adult_w_sigma,
+            smooth=len(adult_smoothing) != 0,
+            weight=len(adult_weighting) != 0,
             pupar_times=pupars)
 
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
@@ -3150,10 +3247,10 @@ def callback(detect):
         Output('survival-curve', 'figure'),
         [Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('adult-weight-check', 'values'),
+         Input('adult-smoothing-check', 'values'),
+         Input('adult-window-size', 'value'),
+         Input('adult-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -3302,10 +3399,10 @@ def callback(detect):
         Output('larva-boxplot', 'figure'),
         [Input('larva-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('larva-weight-check', 'values'),
+         Input('larva-smoothing-check', 'values'),
+         Input('larva-window-size', 'value'),
+         Input('larva-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -3432,10 +3529,10 @@ def callback(detect):
         [Input('larva-thresh', 'value'),
          Input('adult-thresh', 'value'),
          Input('well-selector', 'value'),
-         Input('weight-check', 'values'),
-         Input('filter-check', 'values'),
-         Input('gaussian-size', 'value'),
-         Input('gaussian-sigma', 'value')],
+         Input('adult-weight-check', 'values'),
+         Input('adult-smoothing-check', 'values'),
+         Input('adult-window-size', 'value'),
+         Input('adult-window-sigma', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -3784,10 +3881,10 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('larva-thresh', 'value'),
-         State('weight-check', 'values'),
-         State('gaussian-size', 'value'),
-         State('gaussian-sigma', 'value'),
-         State('filter-check', 'values')])
+         State('larva-weight-check', 'values'),
+         State('larva-window-size', 'value'),
+         State('larva-window-sigma', 'value'),
+         State('larva-smoothing-check', 'values')])
 def callback(tab_name, data_root, env,
         detect, larva, coef, weight, size, sigma, checks):
     # Guard
@@ -4039,10 +4136,10 @@ def callback(detect):
          State('adult-dropdown', 'value'),
          State('larva-thresh', 'value'),
          State('adult-thresh', 'value'),
-         State('weight-check', 'values'),
-         State('gaussian-size', 'value'),
-         State('gaussian-sigma', 'value'),
-         State('filter-check', 'values')])
+         State('adult-weight-check', 'values'),
+         State('adult-window-size', 'value'),
+         State('adult-window-sigma', 'value'),
+         State('adult-smoothing-check', 'values')])
 def callback(tab_name, data_root, env, detect,
         larva, adult, larva_coef, adult_coef, weight, size, sigma, checks):
     # Guard
