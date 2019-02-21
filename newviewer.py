@@ -4518,7 +4518,7 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
             elif weight_style == 'ramp':
                 # Ramp filter
                 signals = signals *  \
-                        (np.arange(len(signals.T)) / len(signals.T))[::-1]
+                        (-1 / midpoint * np.arange(len(signals.T)) + 1)
             else:
                 pass
 
@@ -4536,7 +4536,8 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
             elif weight_style == 'ramp':
                 # Ramp filter
                 signals = signals *  \
-                        (np.arange(len(signals.T)) / len(signals.T))[::-1]
+                        (-1 / midpoint * np.arange(len(signals.T)) + 1)
+
             else:
                 pass
 
@@ -4571,8 +4572,10 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
 
             elif weight_style == 'ramp':
                 # Ramp filter
-                signals = signals *  \
-                        (np.arange(len(signals.T)) / len(signals.T))
+                signals = signals * (
+                        1 / (len(signals.T) - midpoint)
+                        * np.arange(len(signals.T))
+                        - midpoint / (len(signals.T) - midpoint))
             else:
                 pass
 
@@ -4590,7 +4593,8 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
             elif weight_style == 'ramp':
                 # Ramp filter
                 signals = signals *  \
-                        (np.arange(len(signals.T)) / len(signals.T))[::-1]
+                        (-1 / midpoint * np.arange(len(signals.T)) + 1)
+
             else:
                 pass
 
