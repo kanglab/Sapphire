@@ -426,32 +426,50 @@ app.layout = html.Div([
                         }),
                         html.Div([
                             html.Div([
-                                dcc.Slider(
-                                    id='adult-thresh',
+                                html.Div([
+                                    dcc.Slider(
+                                        id='adult-thresh',
+                                        value=2,
+                                        min=-5,
+                                        max=20,
+                                        step=.1,
+                                        updatemode='mouseup',
+                                        vertical=True,
+                                    ),
+                                ], style={
+                                    'height': '170px',
+                                    'width': '10px',
+                                    'margin': '20px 35px 10px',
+                                }),
+                                dcc.Input(
+                                    id='adult-thresh-selector',
+                                    type='number',
                                     value=2,
                                     min=-5,
                                     max=20,
-                                    step=.1,
-                                    updatemode='mouseup',
-                                    vertical=True,
-                                )],
-                                style={
-                                    'display': 'inline-block',
-                                    'height': '170px',
-                                    'width': '10px',
-                                    'padding-bottom': '60px',
-                                    'margin': '0px 5px',
-                                },
-                            ),
+                                    step=0.1,
+                                    style={
+                                        'width': '70px',
+                                        'margin': '0px 10px 10px',
+                                    },
+                                ),
+                            ], style={
+                                'display': 'table-cell',
+                                'vertical-align': 'top',
+                            }),
                             dcc.Graph(
                                 id='adult-signal',
                                 style={
-                                    'display': 'inline-block',
+                                    'display': 'table-cell',
+                                    'vertical-align': 'top',
                                     'height': '280px',
-                                    'width': '700px',
+                                    'width': '650px',
                                 },
                             ),
-                        ]),
+                        ], style={
+                            'display': 'table',
+                            'table-layout': 'fixed',
+                        }),
                     ], style={'width': '740px'}),
 
                     html.Div([
@@ -792,7 +810,7 @@ def callback(_, data_root, env):
 
 
 # =====================================================
-#  Initialize the maximum value of the well-selector.
+#  Callbacks for selecting a well
 # =====================================================
 @app.callback(
         Output('well-selector', 'max'),
@@ -808,10 +826,6 @@ def callback(env, data_root):
     return params['n-rows'] * params['n-plates'] * params['n-clms'] - 1
         
 
-# ====================================================
-#  Initialize the current value of the well-selector
-#  when selecting a value on the well-slider.
-# ====================================================
 @app.callback(
         Output('well-selector', 'value'),
         [Input('well-slider', 'value')])
@@ -819,9 +833,6 @@ def callback(well_idx):
     return well_idx
 
 
-# ===================================================
-#  Initialize the maximum value of the well-slider.
-# ===================================================
 @app.callback(
         Output('well-slider', 'max'),
         [Input('env-dropdown', 'value')],
@@ -836,12 +847,6 @@ def callback(env, data_root):
     return params['n-rows'] * params['n-plates'] * params['n-clms'] - 1
 
 
-# =======================================================
-#  Initialize the current value of the well-slider
-#  when selecting a dataset
-#  or when clicking a data point in the larva-summary
-#  or when selecting a result directory to draw graphs.
-# =======================================================
 @app.callback(
         Output('well-slider', 'value'),
         [Input('env-dropdown', 'value'),
@@ -858,6 +863,8 @@ def callback(_, buff, larva_data, adult_data, changed_data, well_idx):
     return buff[changed_data]
 
 
+# =====================================================
+# =====================================================
 @app.callback(
         Output('changed-well', 'children'),
         [Input('current-well', 'clickData'),
@@ -980,7 +987,7 @@ def callback(changed_data, current_well, larva_summary, adult_summary,
 
 
 # =====================================================
-#  Initialize the maximum value of the time-selector.
+#  Callbacks for selecting time step (frame)
 # =====================================================
 @app.callback(
         Output('time-selector', 'max'),
@@ -994,10 +1001,6 @@ def callback(env, data_root):
             os.path.join(data_root, env, 'original', '*.jpg'))) - 2
 
 
-# ====================================================
-#  Initialize the current value of the time-selector
-#  when selecting a value on the time-slider.
-# ====================================================
 @app.callback(
         Output('time-selector', 'value'),
         [Input('time-slider', 'value')])
@@ -1005,9 +1008,6 @@ def callback(timestep):
     return timestep
 
 
-# ===================================================
-#  Initialize the maximum value of the time-slider.
-# ===================================================
 @app.callback(
         Output('time-slider', 'max'),
         [Input('env-dropdown', 'value')],
@@ -1020,11 +1020,6 @@ def callback(env, data_root):
             os.path.join(data_root, env, 'original', '*.jpg'))) - 2
 
 
-# ======================================================
-#  Initialize the current value of the time-slider
-#  when selecting a dataset
-#  or when clicking a data point in the larva-summary.
-# ======================================================
 @app.callback(
         Output('time-slider', 'value'),
         [Input('env-dropdown', 'value'),
@@ -1033,13 +1028,14 @@ def callback(env, data_root):
          Input('adult-dropdown', 'value')],
         [State('changed-time', 'children')])
 def callback(_, buff, larva_data, adult_data, changed_data):
-
     buff = json.loads(buff)
     changed_data = json.loads(changed_data)['changed']
 
     return buff[changed_data]
 
 
+# =====================================================
+# =====================================================
 @app.callback(
         Output('changed-time', 'children'),
         [Input('larva-signal', 'clickData'),
@@ -1848,6 +1844,16 @@ def well_coordinates(params):
 
 
 # ======================================================
+#  Callbacks for threshold
+# ======================================================
+@app.callback(
+        Output('adult-thresh-selector', 'value'),
+        [Input('adult-thresh', 'value')])
+def callback(threshold):
+    return threshold
+
+
+# ======================================================
 #  Callbacks for midpoint
 # ======================================================
 @app.callback(
@@ -2071,7 +2077,7 @@ def callback(detect):
         Output('adult-signal', 'figure'),
         [Input('well-selector', 'value'),
          Input('larva-thresh', 'value'),
-         Input('adult-thresh', 'value'),
+         Input('adult-thresh-selector', 'value'),
          Input('time-selector', 'value'),
          Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
@@ -2549,7 +2555,7 @@ def callback(detect):
 @app.callback(
         Output('adult-summary', 'figure'),
         [Input('larva-thresh', 'value'),
-         Input('adult-thresh', 'value'),
+         Input('adult-thresh-selector', 'value'),
          Input('well-selector', 'value'),
          Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
@@ -3045,7 +3051,7 @@ def callback(detect):
 @app.callback(
         Output('adult-hist', 'figure'),
         [Input('larva-thresh', 'value'),
-         Input('adult-thresh', 'value'),
+         Input('adult-thresh-selector', 'value'),
          Input('well-selector', 'value'),
          Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
@@ -3292,7 +3298,7 @@ def callback(detect):
 @app.callback(
         Output('pupa-vs-eclo', 'figure'),
         [Input('larva-thresh', 'value'),
-         Input('adult-thresh', 'value'),
+         Input('adult-thresh-selector', 'value'),
          Input('well-selector', 'value'),
          Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
@@ -3448,7 +3454,7 @@ def callback(detect):
 # ===========================================
 @app.callback(
         Output('survival-curve', 'figure'),
-        [Input('adult-thresh', 'value'),
+        [Input('adult-thresh-selector', 'value'),
          Input('well-selector', 'value'),
          Input('midpoint-selector', 'value'),
          Input('adult-weight-check', 'values'),
@@ -3738,7 +3744,7 @@ def callback(detect):
 @app.callback(
         Output('adult-boxplot', 'figure'),
         [Input('larva-thresh', 'value'),
-         Input('adult-thresh', 'value'),
+         Input('adult-thresh-selector', 'value'),
          Input('well-selector', 'value'),
          Input('midpoint-selector', 'value'),
          Input('larva-weight-check', 'values'),
@@ -4363,7 +4369,7 @@ def callback(detect):
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value'),
          State('larva-thresh', 'value'),
-         State('adult-thresh', 'value'),
+         State('adult-thresh-selector', 'value'),
          State('midpoint-selector', 'value'),
          State('larva-weight-check', 'values'),
          State('larva-weight-style', 'value'),
