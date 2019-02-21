@@ -22,7 +22,6 @@ import numpy as np
 import pandas as pd
 import scipy.signal
 import my_threshold
-import flask_caching
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
@@ -49,9 +48,6 @@ THRESH_FUNC = my_threshold.entire_stats
 app = dash.Dash('Sapphire')
 app.css.append_css(
         {'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
-cache = flask_caching.Cache()
-cache.init_app(
-        app.server, config={'CACHE_TYPE': 'filesystem', 'CACHE_DIR': 'cache/'})
     
 
 # ================================
