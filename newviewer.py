@@ -4487,7 +4487,7 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
             + 'Coefficient (coef),{}\n'.format(adult_coef)  \
             + 'Standard Deviation (std),{}\n'.format(adult_diffs.std())  \
             + 'Smoothing Window Size,{}\n'.format(adult_w_size)  \
-            + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma)  \
+            + 'Smoothing Sigma,{}\nEvent Timing\n'.format(adult_w_sigma)  \
             + pd.DataFrame(auto_evals).to_csv(
                     index=False, encoding='utf-8', header=False),
 
