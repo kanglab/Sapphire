@@ -258,74 +258,6 @@ app.layout = html.Div([
                 html.Div([
                     html.Div(id='larva-signal-div', children=[
                         html.Div([
-                            dcc.Checklist(
-                                id='larva-smoothing-check',
-                                options=[
-                                    {'label': 'Smoothing', 'value': True}],
-                                values=[],
-                                style={
-                                    'display': 'inline-block',
-                                    'margin-right': '10px',
-                                },
-                            ),
-                            'Size:',
-                            dcc.Input(
-                                id='larva-window-size',
-                                type='number',
-                                value=10,
-                                min=0,
-                                size=5,
-                                style={
-                                    'width': '80px',
-                                    'margin': '0px 10px 0px 5px',
-                                },
-                            ),
-                            'Sigma:',
-                            dcc.Input(
-                                id='larva-window-sigma',
-                                type='number',
-                                value=5,
-                                min=0,
-                                size=5,
-                                step=0.1,
-                                style={
-                                    'width': '80px',
-                                    'margin': '0px 10px 0px 5px',
-                                },
-                            ),
-                            dcc.Checklist(
-                                id='larva-weight-check',
-                                options=[
-                                    {'label': 'Weight', 'value': True}],
-                                values=[],
-                                style={
-                                    'display': 'inline-block',
-                                    'margin': '0px 10px',
-                                },
-                            ),
-                            dcc.RadioItems(
-                                id='larva-weight-style',
-                                options=[
-                                    {
-                                        'label': 'Step',
-                                        'value': 'step',
-                                        'disabled': True,
-                                    },
-                                    {
-                                        'label': 'Ramp',
-                                        'value': 'ramp',
-                                        'disabled': True,
-                                    },
-                                ],
-                                value='step',
-                                labelStyle={'display': 'inline-block'},
-                                style={'display': 'inline-block'},
-                            ),
-                        ], style={
-                            'margin': '0px 30px',
-                            'text-align': 'right',
-                        }),
-                        html.Div([
                             html.Div([
                                 html.Div([
                                     dcc.Slider(
@@ -361,86 +293,89 @@ app.layout = html.Div([
                             dcc.Graph(
                                 id='larva-signal',
                                 style={
-                                    'display': 'inline-block',
-                                    'height': '280px',
-                                    'width': '650px',
+                                    'display': 'table-cell',
+                                    'vertical-align': 'top',
+                                    'height': '240px',
+                                    'width': '550px',
                                 },
                             ),
+                            html.Div([
+                                dcc.Checklist(
+                                    id='larva-smoothing-check',
+                                    options=[
+                                        {'label': 'Smoothing', 'value': True}],
+                                    values=[],
+                                    style={
+                                        'margin-left': '10px',
+                                    },
+                                ),
+                                html.Div([
+                                    'Size:',
+                                    dcc.Input(
+                                        id='larva-window-size',
+                                        type='number',
+                                        value=10,
+                                        min=0,
+                                        size=5,
+                                        style={
+                                            'width': '80px',
+                                            'margin': '0px 10px 0px 20px',
+                                        },
+                                    ),
+                                ], style={'margin': '0px 0px 0px 30px'}),
+                                html.Div([
+                                    'Sigma:',
+                                    dcc.Input(
+                                        id='larva-window-sigma',
+                                        type='number',
+                                        value=5,
+                                        min=0,
+                                        size=5,
+                                        step=0.1,
+                                        style={
+                                            'width': '80px',
+                                            'margin': '0px 10px 0px 5px',
+                                        },
+                                    ),
+                                ], style={'margin': '0px 0px 0px 30px'}),
+                                dcc.Checklist(
+                                    id='larva-weight-check',
+                                    options=[
+                                        {'label': 'Weight', 'value': True}],
+                                    values=[],
+                                    style={
+                                        'margin': '0px 10px',
+                                    },
+                                ),
+                                dcc.RadioItems(
+                                    id='larva-weight-style',
+                                    options=[
+                                        {
+                                            'label': 'Step',
+                                            'value': 'step',
+                                            'disabled': True,
+                                        },
+                                        {
+                                            'label': 'Ramp',
+                                            'value': 'ramp',
+                                            'disabled': True,
+                                        },
+                                    ],
+                                    value='step',
+                                    labelStyle={'display': 'inline-block'},
+                                    style={'margin': '0px 0px 0px 30px'},
+                                ),
+                            ], style={
+                                'display': 'table-cell',
+                                'vertical-align': 'middle',
+                            }),
                         ], style={
                             'display': 'table',
                             'table-layout': 'fixed',
                         }),
-                    ], style={'width': '740px'}),
+                    ], style={'width': '810px', 'margin-top': '10px'}),
 
                     html.Div(id='adult-signal-div', children=[
-                        html.Div([
-                            dcc.Checklist(
-                                id='adult-smoothing-check',
-                                options=[
-                                    {'label': 'Smoothing', 'value': True}],
-                                values=[],
-                                style={
-                                    'display': 'inline-block',
-                                    'margin-right': '10px',
-                                },
-                            ),
-                            'Size:',
-                            dcc.Input(
-                                id='adult-window-size',
-                                type='number',
-                                value=10,
-                                min=0,
-                                size=5,
-                                style={
-                                    'width': '80px',
-                                    'margin': '0px 10px 0px 5px',
-                                },
-                            ),
-                            'Sigma:',
-                            dcc.Input(
-                                id='adult-window-sigma',
-                                type='number',
-                                value=5,
-                                min=0,
-                                size=5,
-                                step=0.1,
-                                style={
-                                    'width': '80px',
-                                    'margin': '0px 10px 0px 5px',
-                                },
-                            ),
-                            dcc.Checklist(
-                                id='adult-weight-check',
-                                options=[
-                                    {'label': 'Weight', 'value': True}],
-                                values=[],
-                                style={
-                                    'display': 'inline-block',
-                                    'margin': '0px 10px',
-                                },
-                            ),
-                            dcc.RadioItems(
-                                id='adult-weight-style',
-                                options=[
-                                    {
-                                        'label': 'Step',
-                                        'value': 'step',
-                                        'disabled': True,
-                                    },
-                                    {
-                                        'label': 'Ramp',
-                                        'value': 'ramp',
-                                        'disabled': True,
-                                    },
-                                ],
-                                value='step',
-                                labelStyle={'display': 'inline-block'},
-                                style={'display': 'inline-block'},
-                            ),
-                        ], style={
-                            'margin': '0px 30px',
-                            'text-align': 'right',
-                        }),
                         html.Div([
                             html.Div([
                                 html.Div([
@@ -479,15 +414,86 @@ app.layout = html.Div([
                                 style={
                                     'display': 'table-cell',
                                     'vertical-align': 'top',
-                                    'height': '280px',
-                                    'width': '650px',
+                                    'height': '240px',
+                                    'width': '550px',
                                 },
                             ),
+                            html.Div([
+                                dcc.Checklist(
+                                    id='adult-smoothing-check',
+                                    options=[
+                                        {'label': 'Smoothing', 'value': True}],
+                                    values=[],
+                                    style={
+                                        'margin-left': '10px',
+                                    },
+                                ),
+                                html.Div([
+                                    'Size:',
+                                    dcc.Input(
+                                        id='adult-window-size',
+                                        type='number',
+                                        value=10,
+                                        min=0,
+                                        size=5,
+                                        style={
+                                            'width': '80px',
+                                            'margin': '0px 10px 0px 20px',
+                                        },
+                                    ),
+                                ], style={'margin': '0px 0px 0px 30px'}),
+                                html.Div([
+                                    'Sigma:',
+                                    dcc.Input(
+                                        id='adult-window-sigma',
+                                        type='number',
+                                        value=5,
+                                        min=0,
+                                        size=5,
+                                        step=0.1,
+                                        style={
+                                            'width': '80px',
+                                            'margin': '0px 10px 0px 5px',
+                                        },
+                                    ),
+                                ], style={'margin': '0px 0px 0px 30px'}),
+                                dcc.Checklist(
+                                    id='adult-weight-check',
+                                    options=[
+                                        {'label': 'Weight', 'value': True}],
+                                    values=[],
+                                    style={
+                                        'display': 'inline-block',
+                                        'margin': '0px 10px',
+                                    },
+                                ),
+                                dcc.RadioItems(
+                                    id='adult-weight-style',
+                                    options=[
+                                        {
+                                            'label': 'Step',
+                                            'value': 'step',
+                                            'disabled': True,
+                                        },
+                                        {
+                                            'label': 'Ramp',
+                                            'value': 'ramp',
+                                            'disabled': True,
+                                        },
+                                    ],
+                                    value='step',
+                                    labelStyle={'display': 'inline-block'},
+                                    style={'margin': '0px 0px 0px 30px'},
+                                ),
+                            ], style={
+                                'display': 'table-cell',
+                                'vertical-align': 'middle',
+                            }),
                         ], style={
                             'display': 'table',
                             'table-layout': 'fixed',
                         }),
-                    ], style={'width': '740px'}),
+                    ], style={'width': '810px', 'margin-top': '10px'}),
 
                     html.Div([
                         dcc.Input(
@@ -2079,12 +2085,14 @@ def callback(detect):
 
     if detect == 'pupariation':
         return {
-                'width': '740px',
+                'width': '810px',
+                'margin-top': '10px',
             }
 
     elif detect == 'pupa-and-eclo':
         return {
-                'width': '740px',
+                'width': '810px',
+                'margin-top': '10px',
             }
 
     elif detect == 'death':
@@ -2309,12 +2317,14 @@ def callback(detect):
         
     elif detect == 'pupa-and-eclo':
         return {
-                'width': '740px',
+                'width': '810px',
+                'margin-top': '10px',
             }
         
     elif detect == 'death':
         return {
-                'width': '740px',
+                'width': '810px',
+                'margin-top': '10px',
             }
 
     else:
