@@ -4450,7 +4450,7 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
                 data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
 
         larva_diffs = seasoning(
-                larva_diffs, 'larva', detect, larva_w_style, larva_w_sigma,
+                larva_diffs, 'larva', detect, larva_w_size, larva_w_sigma,
                 smooth=len(larva_smoothing) != 0,
                 weight=len(larva_weighting) != 0,
                 pupar_times=None,
