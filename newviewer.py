@@ -473,7 +473,6 @@ app.layout = html.Div([
                         dcc.Input(
                             id='midpoint-selector',
                             type='number',
-                            value=0,
                             min=0,
                             style={
                                 'width': '70px',
@@ -625,6 +624,8 @@ app.layout = html.Div([
     ], style={'width': '100%'}),
 
     dcc.Store(id='hidden-timestamp'),
+
+    dcc.Store(id='hidden-midpoint'),
 
     html.Div('{"changed": "nobody"}',
             id='changed-well', style={'display': 'none'}),
@@ -1877,14 +1878,26 @@ def callback(env, data_root):
 
 @app.callback(
         Output('midpoint-slider', 'value'),
-        [Input('env-dropdown', 'value')],
-        [State('data-root', 'children')])
-def callback(env, data_root):
-    if env is None:
+        [Input('well-selector', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('hidden-midpoint', 'data')])
+def callback(well_idx, data_root, dataset_name, midpoints):
+    if well_idx is None or dataset_name is None or midpoints is None:
         return 50
 
+    groups = np.loadtxt(
+            os.path.join(data_root, dataset_name, 'grouping.csv'),
+            dtype=np.int16, delimiter=',').flatten()
+
+    group_idx = groups[well_idx] - 1
+
+    return midpoints['midpoint'][group_idx]
+
+    '''
     return int(len(glob.glob(
             os.path.join(data_root, env, 'original', '*.jpg'))) / 2) - 1
+    '''
 
 
 @app.callback(
@@ -1904,6 +1917,38 @@ def callback(env, data_root):
         [Input('midpoint-slider', 'value')])
 def callback(midpoint):
     return midpoint
+
+
+@app.callback(
+        Output('hidden-midpoint', 'data'),
+        [Input('midpoint-selector', 'value')],
+        [State('hidden-midpoint', 'data'),
+         State('well-selector', 'value'),
+         State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(midpoint, midpoints, well_idx, data_root, dataset_name):
+    # Guard
+    if well_idx is None or dataset_name is None:
+        return
+
+    # Initialize the buffer
+    if midpoints is None:
+        midpoints = {'midpoint': [midpoint] * len(GROUP_COLORS)}
+        return midpoints
+
+    groups = np.loadtxt(
+            os.path.join(data_root, dataset_name, 'grouping.csv'),
+            dtype=np.int16, delimiter=',').flatten()
+
+    if os.path.exists(os.path.join(data_root, dataset_name, 'grouping.csv')):
+        group_idx = groups[well_idx] - 1
+        midpoints['midpoint'][group_idx] = midpoint
+
+        return midpoints
+
+    else:
+        midpoints = {'midpoint': [midpoint]}
+        return midpoints
 
 
 # =========================================
@@ -2084,8 +2129,7 @@ def callback(detect):
 # =========================================
 @app.callback(
         Output('adult-signal', 'figure'),
-        [Input('well-selector', 'value'),
-         Input('larva-thresh-selector', 'value'),
+        [Input('larva-thresh-selector', 'value'),
          Input('adult-thresh-selector', 'value'),
          Input('time-selector', 'value'),
          Input('midpoint-selector', 'value'),
@@ -2099,17 +2143,18 @@ def callback(detect):
          Input('adult-smoothing-check', 'values'),
          Input('adult-window-size', 'value'),
          Input('adult-window-sigma', 'value')],
-        [State('adult-signal', 'figure'),
+        [State('well-selector', 'value'),
+         State('adult-signal', 'figure'),
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value'),
          State('hidden-timestamp', 'data')])
-def callback(well_idx, larva_coef, adult_coef, time, midpoint,
+def callback(larva_coef, adult_coef, time, midpoint,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
-        adult_w_size, adult_w_sigma, figure, data_root, env, detect,
+        adult_w_size, adult_w_sigma, well_idx, figure, data_root, env, detect,
         larva, adult, timestamps):
     # Guard
     if env is None:
