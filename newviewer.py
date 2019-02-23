@@ -1136,6 +1136,43 @@ def callback(changed_data, larva_signal, adult_signal, buff):
 
 
 # =====================================================
+#  Select signal type
+# =====================================================
+@app.callback(
+        Output('larva-signal-type', 'options'),
+        [Input('larva-dropdown', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(larva, data_root, dataset_name):
+    # Guard
+    if larva is None or dataset_name is None:
+        return []
+
+    signal_files = sorted(glob.glob(os.path.join(data_root,
+            dataset_name, 'inference', 'larva', larva, '*signals.npy')))
+    signal_files = [os.path.basename(file_path) for file_path in signal_files]
+
+    return [{'label': i, 'value': i} for i in signal_files]
+
+
+@app.callback(
+        Output('adult-signal-type', 'options'),
+        [Input('adult-dropdown', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(adult, data_root, dataset_name):
+    # Guard
+    if adult is None or dataset_name is None:
+        return []
+
+    signal_files = sorted(glob.glob(os.path.join(data_root,
+            dataset_name, 'inference', 'adult', adult, '*signals.npy')))
+    signal_files = [os.path.basename(file_path) for file_path in signal_files]
+
+    return [{'label': i, 'value': i} for i in signal_files]
+
+
+# =====================================================
 #  Toggle valid/invalid of window size
 # =====================================================
 @app.callback(
