@@ -1987,7 +1987,7 @@ def callback(well_idx, coef, time, midpoints, weight, style, checks, size,
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
 
-    threshold = THRESH_FUNC(larva_diffs, coef=coef)
+    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
@@ -1997,7 +1997,7 @@ def callback(well_idx, coef, time, midpoints, weight, style, checks, size,
             midpoints=midpoints,
             weight_style=style)
 
-    auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
+    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
 
     if os.path.exists(
             os.path.join(data_root, env, 'original', 'pupariation.csv')):
@@ -2032,7 +2032,7 @@ def callback(well_idx, coef, time, midpoints, weight, style, checks, size,
             {
                 # Threshold (horizontal line)
                 'x': [0, len(larva_diffs[0, :])],
-                'y': [threshold[well_idx, 0], threshold[well_idx, 0]],
+                'y': [thresholds[well_idx, 0], thresholds[well_idx, 0]],
                 'mode': 'lines',
                 'name': 'Threshold',
                 'line': {'width': 2, 'color': '#4169e1'},
@@ -2067,7 +2067,7 @@ def callback(well_idx, coef, time, midpoints, weight, style, checks, size,
                             'y': 1.0 * larva_diffs.max(),
                             'text':
                                 'Threshold: {:.1f}'.format(
-                                        threshold[well_idx, 0]) +  \
+                                        thresholds[well_idx, 0]) +  \
                                  '={:.1f}'.format(larva_diffs.mean()) +  \
                                  '{:+.1f}'.format(coef) +  \
                                  '*{:.1f}'.format(larva_diffs.std()),
@@ -2419,7 +2419,7 @@ def callback(coef, well_idx, midpoints, weight, style,
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
 
-    threshold = THRESH_FUNC(larva_diffs, coef=coef)
+    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
@@ -2429,7 +2429,7 @@ def callback(coef, well_idx, midpoints, weight, style,
             midpoints=midpoints,
             weight_style=style)
 
-    auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
+    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals[targets] - manual_evals[targets]
@@ -2960,7 +2960,7 @@ def callback(coef, well_idx, midpoints, weight, style,
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
 
-    threshold = THRESH_FUNC(larva_diffs, coef=coef)
+    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
@@ -2970,7 +2970,7 @@ def callback(coef, well_idx, midpoints, weight, style,
             midpoints=midpoints,
             weight_style=style)
 
-    auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
+    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
@@ -3533,7 +3533,7 @@ def callback(coef, well_idx, midpoints, weight, style,
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
 
-    threshold = THRESH_FUNC(adult_diffs, coef=coef)
+    thresholds = THRESH_FUNC(adult_diffs, coef=coef)
 
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, size, sigma,
@@ -3543,7 +3543,7 @@ def callback(coef, well_idx, midpoints, weight, style,
             midpoints=midpoints,
             weight_style=style)
 
-    auto_evals = detect_event(adult_diffs, threshold, 'adult', detect)
+    auto_evals = detect_event(adult_diffs, thresholds, 'adult', detect)
 
     if group_tables == []:
         # Compute survival ratio of all the animals
@@ -3695,9 +3695,9 @@ def callback(coef, well_idx, midpoints, weight, style,
             weight_style=style)
 
     # Compute thresholds
-    threshold = my_threshold.entire_stats(larva_diffs, coef=coef)
+    thresholds = my_threshold.entire_stats(larva_diffs, coef=coef)
 
-    auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
+    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
 
     # Make data to be drawn
     if group_tables == []:
@@ -4182,7 +4182,7 @@ def callback(tab_name, data_root, env,
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
 
-    threshold = THRESH_FUNC(larva_diffs, coef=coef)
+    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
@@ -4192,7 +4192,7 @@ def callback(tab_name, data_root, env,
             midpoints=midpoints,
             weight_style=style)
 
-    auto_evals = detect_event(larva_diffs, threshold, 'larva', detect)
+    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
 
     auto_evals = auto_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
@@ -4202,7 +4202,7 @@ def callback(tab_name, data_root, env,
             + 'Dataset,{}\n'.format(env)  \
             + 'Morphology,larva\n'  \
             + 'Inference Data,{}\n'.format(larva)  \
-            + 'Threshold Value,{}\n'.format(threshold[0, 0])  \
+            + 'Threshold Value,{}\n'.format(thresholds[0, 0])  \
             + '(Threshold Value = mean + coef * std)\n'  \
             + 'Mean (mean),{}\n'.format(larva_diffs.mean())  \
             + 'Coefficient (coef),{}\n'.format(coef)  \
