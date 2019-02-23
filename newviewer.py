@@ -2004,7 +2004,7 @@ def callback(midpoint, midpoints, well_idx, data_root, dataset_name):
         return midpoints
 
     else:
-        return {'midpoint': [midpoint]}
+        return {'midpoint': [midpoint] * n_wells}
 
 
 # =========================================
