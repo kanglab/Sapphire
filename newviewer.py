@@ -198,7 +198,7 @@ app.layout = html.Div([
                         options=[{
                             'label': 'Black List',
                             'value': 'checked',
-                            'disabled': True,
+                            'disabled': False,
                         }],
                         values=[],
                     ),
@@ -626,8 +626,8 @@ app.layout = html.Div([
     ], style={'width': '100%'}),
 
     dcc.Store(id='hidden-timestamp'),
-
     dcc.Store(id='hidden-midpoint'),
+    dcc.Store(id='hidden-blacklist'),
 
     html.Div('{"changed": "nobody"}',
             id='changed-well', style={'display': 'none'}),
@@ -1195,21 +1195,47 @@ def callback(checks):
         Output('blacklist-check', 'values'),
         [Input('well-selector', 'value')],
         [State('data-root', 'children'),
-         State('env-dropdown', 'value')])
-def callback(well_idx, data_root, env):
-    if well_idx is None or env is None:
+         State('env-dropdown', 'value'),
+         State('hidden-blacklist', 'data')])
+def callback(well_idx, data_root, env, blacklist):
+    if well_idx is None or env is None or blacklist is None:
         return []
 
-    blacklist, exist = load_blacklist(data_root, env)
-    
-    if not exist:
-        return []
-
-    if blacklist[well_idx]:
+    if blacklist['value'][well_idx]:
         return 'checked'
 
     else:
         return []
+
+
+@app.callback(
+        Output('hidden-blacklist', 'data'),
+        [Input('blacklist-check', 'values')],
+        [State('hidden-blacklist', 'data'),
+         State('well-selector', 'value'),
+         State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(check, blacklist, well_idx, data_root, dataset_name):
+    # Guard
+    if well_idx is None or dataset_name is None:
+        return
+
+    # Load a mask params
+    with open(os.path.join(data_root, dataset_name, 'mask_params.json')) as f:
+        params = json.load(f)
+    n_wells = params['n-rows'] * params['n-plates'] * params['n-clms']
+
+    # Initialize the buffer
+    if blacklist is None or len(blacklist['value']) != n_wells:
+        blacklist, exist = load_blacklist(data_root, dataset_name)
+        return {'value': list(blacklist)}
+
+    if check:
+        blacklist['value'][well_idx] = True
+    else:
+        blacklist['value'][well_idx] = False
+
+    return blacklist
 
 
 # ========================
@@ -2358,14 +2384,15 @@ def callback(detect):
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
          Input('larva-window-size', 'value'),
-         Input('larva-window-sigma', 'value')],
+         Input('larva-window-sigma', 'value'),
+         Input('hidden-blacklist', 'data')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
 def callback(coef, well_idx, midpoints, weight, style,
-        checks, size, sigma, data_root, env, detect, larva, adult):
+        checks, size, sigma, blacklist, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -2377,9 +2404,6 @@ def callback(coef, well_idx, midpoints, weight, style,
     if not os.path.exists(os.path.join(
             data_root, env, 'original', 'pupariation.csv')):
         return {'data': []}
-    
-    # Load a blacklist
-    blacklist, _ = load_blacklist(data_root, env)
 
     # Load a manual evaluation of event timing
     if not os.path.exists(os.path.join(
@@ -2401,7 +2425,7 @@ def callback(coef, well_idx, midpoints, weight, style,
             dtype=np.int16, delimiter=',').flatten()
 
     # Target wells will be evaluated
-    exceptions = np.logical_or(blacklist, manual_evals == 0)
+    exceptions = np.logical_or(blacklist['value'], manual_evals == 0)
     targets = np.logical_not(exceptions)
 
     # Load a group table
@@ -2615,7 +2639,8 @@ def callback(detect):
          Input('adult-weight-style', 'value'),
          Input('adult-smoothing-check', 'values'),
          Input('adult-window-size', 'value'),
-         Input('adult-window-sigma', 'value')],
+         Input('adult-window-sigma', 'value'),
+         Input('hidden-blacklist', 'data')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -2624,7 +2649,8 @@ def callback(detect):
 def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
-        adult_w_size, adult_w_sigma, data_root, env, detect, larva, adult):
+        adult_w_size, adult_w_sigma, blacklist, data_root, env, detect,
+        larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -2637,9 +2663,6 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
             data_root, env, 'original', 'eclosion.csv'))  \
         and detect == 'pupa-and-eclo':
         return {'data': []}
-    
-    # Load a blacklist
-    blacklist, _ = load_blacklist(data_root, env)
 
     # Load a manual evaluation of event timing
     if detect == 'pupa-and-eclo':
@@ -2685,7 +2708,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
                 dtype=np.int16, delimiter=',').flatten()
 
     # Target wells will be evaluated
-    exceptions = np.logical_or(blacklist, manual_evals == 0)
+    exceptions = np.logical_or(blacklist['value'], manual_evals == 0)
     targets = np.logical_not(exceptions)
 
     # Load a group table
@@ -2910,13 +2933,14 @@ def callback(detect):
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
          Input('larva-window-size', 'value'),
-         Input('larva-window-sigma', 'value')],
+         Input('larva-window-sigma', 'value'),
+         Input('hidden-blacklist', 'data')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value')])
 def callback(coef, well_idx, midpoints, weight, style,
-        checks, size, sigma, data_root, env, detect, larva):
+        checks, size, sigma, blacklist, data_root, env, detect, larva):
     # Guard
     if env is None:
         return {'data': []}
@@ -2928,15 +2952,10 @@ def callback(coef, well_idx, midpoints, weight, style,
     if not os.path.exists(os.path.join(
             data_root, env, 'original', 'pupariation.csv')):
         return {'data': []}
-    
-    # Load a blacklist
-    blacklist, _ = load_blacklist(data_root, env)
 
     # Load a manual evaluation of event timing
-
     if not os.path.exists(os.path.join(
                 data_root, env, 'original', 'pupariation.csv')):
-            #return {'data': []}
             non_manualdata = {'layout': {
                         'annotations': [
                         {
@@ -2953,7 +2972,7 @@ def callback(coef, well_idx, midpoints, weight, style,
             dtype=np.int16, delimiter=',').flatten()
 
     # Target wells will be evaluated
-    exceptions = np.logical_or(blacklist, manual_evals == 0)
+    exceptions = np.logical_or(blacklist['value'], manual_evals == 0)
     targets = np.logical_not(exceptions)
 
     # Load the data
@@ -3108,7 +3127,8 @@ def callback(detect):
          Input('adult-weight-style', 'value'),
          Input('adult-smoothing-check', 'values'),
          Input('adult-window-size', 'value'),
-         Input('adult-window-sigma', 'value')],
+         Input('adult-window-sigma', 'value'),
+         Input('hidden-blacklist', 'data')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -3117,7 +3137,8 @@ def callback(detect):
 def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
-        adult_w_size, adult_w_sigma, data_root, env, detect, larva, adult):
+        adult_w_size, adult_w_sigma, blacklist, data_root, env, detect,
+        larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -3129,8 +3150,6 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')):
         return {'data': []}
-    # Load a blacklist
-    blacklist, _ = load_blacklist(data_root, env)
 
     # Load a manual evaluation of event timing
     if detect == 'pupa-and-eclo':
@@ -3155,7 +3174,6 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
     elif detect == 'death':
         if not os.path.exists(os.path.join(
                 data_root, env, 'original', 'death.csv')):
-            #return {'data': []}
             non_manualdata = {'layout': {
                         'annotations': [
                         {
@@ -3172,7 +3190,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
                 dtype=np.int16, delimiter=',').flatten()
 
     # Target wells will be evaluated
-    exceptions = np.logical_or(blacklist, manual_evals == 0)
+    exceptions = np.logical_or(blacklist['value'], manual_evals == 0)
     targets = np.logical_not(exceptions)
 
 
@@ -3353,7 +3371,8 @@ def callback(detect):
          Input('adult-weight-style', 'value'),
          Input('adult-smoothing-check', 'values'),
          Input('adult-window-size', 'value'),
-         Input('adult-window-sigma', 'value')],
+         Input('adult-window-sigma', 'value'),
+         Input('hidden-blacklist', 'data')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -3362,7 +3381,7 @@ def callback(detect):
 def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
         larva_w_style, larva_smoothing, larva_w_size, larva_w_sigma,
         adult_weighting, adult_w_style, adult_smoothing, adult_w_size,
-        adult_w_sigma, data_root, env, detect, larva, adult):
+        adult_w_sigma, blacklist, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -3380,8 +3399,8 @@ def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
         return {'data': []}
 
     # Load a blacklist and whitelist
-    blacklist, _ = load_blacklist(data_root, env)
-    whitelist, _ = load_blacklist(data_root, env, white=True)
+    blacklist = np.array(blacklist['value'])
+    whitelist = np.logical_not(blacklist)
 
     # Load the data
     larva_diffs = np.load(os.path.join(
@@ -3503,13 +3522,14 @@ def callback(detect):
          Input('adult-weight-style', 'value'),
          Input('adult-smoothing-check', 'values'),
          Input('adult-window-size', 'value'),
-         Input('adult-window-sigma', 'value')],
+         Input('adult-window-sigma', 'value'),
+         Input('hidden-blacklist', 'data')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('adult-dropdown', 'value')])
 def callback(coef, well_idx, midpoints, weight, style,
-        checks, size, sigma, data_root, env, detect, adult):
+        checks, size, sigma, blacklist, data_root, env, detect, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -3523,8 +3543,8 @@ def callback(coef, well_idx, midpoints, weight, style,
     if detect == 'pupa-and-eclo':
         return {'data': []}
 
-    # Load a whitelist
-    whitelist, _ = load_blacklist(data_root, env, white=True)
+    # Load a blacklist and whitelist
+    whitelist = np.logical_not(np.array(blacklist['value']))
 
     # Load a group table
     group_tables = load_grouping_csv(data_root, env)
@@ -3658,13 +3678,14 @@ def callback(detect):
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
          Input('larva-window-size', 'value'),
-         Input('larva-window-sigma', 'value')],
+         Input('larva-window-sigma', 'value'),
+         Input('hidden-blacklist', 'data')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value')])
 def callback(coef, well_idx, midpoints, weight, style,
-        checks, size, sigma, data_root, env, detect, larva):
+        checks, size, sigma, blacklist, data_root, env, detect, larva):
     # Guard
     if env is None:
         return {'data': []}
@@ -3676,8 +3697,8 @@ def callback(coef, well_idx, midpoints, weight, style,
     if detect == 'death':
         return {'data': []}
 
-    # Load a whitelist
-    whitelist, _ = load_blacklist(data_root, env, white=True)
+    # Load a blacklist and whitelist
+    whitelist = np.logical_not(np.array(blacklist['value']))
 
     # Load a group table
     group_tables = load_grouping_csv(data_root, env)
@@ -3797,7 +3818,8 @@ def callback(detect):
          Input('adult-weight-style', 'value'),
          Input('adult-smoothing-check', 'values'),
          Input('adult-window-size', 'value'),
-         Input('adult-window-sigma', 'value')],
+         Input('adult-window-sigma', 'value'),
+         Input('hidden-blacklist', 'data')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -3806,7 +3828,8 @@ def callback(detect):
 def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
-        adult_w_size, adult_w_sigma, data_root, env, detect, larva, adult):
+        adult_w_size, adult_w_sigma, blacklist, data_root, env, detect,
+        larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -3818,8 +3841,8 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
     if detect == 'pupariation':
         return {'data': []}
 
-    # Load a whitelist
-    whitelist, _ = load_blacklist(data_root, env, white=True)
+    # Load a blacklist and whitelist
+    whitelist = np.logical_not(np.array(blacklist['value']))
 
     # Load a group table
     group_tables = load_grouping_csv(data_root, env)
