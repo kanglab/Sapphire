@@ -267,6 +267,7 @@ app.layout = html.Div([
                             }),
                             dcc.Graph(
                                 id='larva-signal',
+                                figure={'data': []},
                                 style={
                                     'display': 'table-cell',
                                     'vertical-align': 'top',
@@ -385,6 +386,7 @@ app.layout = html.Div([
                             }),
                             dcc.Graph(
                                 id='adult-signal',
+                                figure={'data': []},
                                 style={
                                     'display': 'table-cell',
                                     'vertical-align': 'top',
@@ -473,7 +475,6 @@ app.layout = html.Div([
                         dcc.Input(
                             id='midpoint-selector',
                             type='number',
-                            value=0,
                             min=0,
                             style={
                                 'width': '70px',
@@ -625,6 +626,8 @@ app.layout = html.Div([
     ], style={'width': '100%'}),
 
     dcc.Store(id='hidden-timestamp'),
+
+    dcc.Store(id='hidden-midpoint'),
 
     html.Div('{"changed": "nobody"}',
             id='changed-well', style={'display': 'none'}),
@@ -1877,14 +1880,15 @@ def callback(env, data_root):
 
 @app.callback(
         Output('midpoint-slider', 'value'),
-        [Input('env-dropdown', 'value')],
-        [State('data-root', 'children')])
-def callback(env, data_root):
-    if env is None:
+        [Input('well-selector', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('hidden-midpoint', 'data')])
+def callback(well_idx, data_root, dataset_name, midpoints):
+    if well_idx is None or dataset_name is None or midpoints is None:
         return 50
 
-    return int(len(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg'))) / 2) - 1
+    return midpoints['midpoint'][well_idx]
 
 
 @app.callback(
@@ -1906,6 +1910,43 @@ def callback(midpoint):
     return midpoint
 
 
+@app.callback(
+        Output('hidden-midpoint', 'data'),
+        [Input('midpoint-selector', 'value')],
+        [State('hidden-midpoint', 'data'),
+         State('well-selector', 'value'),
+         State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(midpoint, midpoints, well_idx, data_root, dataset_name):
+    # Guard
+    if well_idx is None or dataset_name is None:
+        return
+
+    # Load a mask params
+    with open(os.path.join(data_root, dataset_name, 'mask_params.json')) as f:
+        params = json.load(f)
+    n_wells = params['n-rows'] * params['n-plates'] * params['n-clms']
+
+    # Initialize the buffer
+    if midpoints is None or len(midpoints['midpoint']) != n_wells:
+        midpoints = {'midpoint': [50] * n_wells}
+        return midpoints
+
+    group_ids = np.loadtxt(
+            os.path.join(data_root, dataset_name, 'grouping.csv'),
+            dtype=np.int16, delimiter=',').flatten()
+
+    if os.path.exists(os.path.join(data_root, dataset_name, 'grouping.csv')):
+        midpoints['midpoint'] = np.array(midpoints['midpoint'])
+        group_id = group_ids[well_idx]
+        midpoints['midpoint'][group_ids == group_id] = midpoint
+
+        return midpoints
+
+    else:
+        return {'midpoint': [midpoint]}
+
+
 # =========================================
 #  Update the figure in the larva-signal
 # =========================================
@@ -1914,7 +1955,7 @@ def callback(midpoint):
         [Input('well-selector', 'value'),
          Input('larva-thresh-selector', 'value'),
          Input('time-selector', 'value'),
-         Input('midpoint-selector', 'value'),
+         Input('hidden-midpoint', 'data'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -1926,7 +1967,7 @@ def callback(midpoint):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('hidden-timestamp', 'data')])
-def callback(well_idx, coef, time, midpoint, weight, style, checks, size,
+def callback(well_idx, coef, time, midpoints, weight, style, checks, size,
         sigma, figure, data_root, env, detect, larva, timestamps):
     # Guard
     if env is None:
@@ -1951,7 +1992,7 @@ def callback(well_idx, coef, time, midpoint, weight, style, checks, size,
             smooth=len(checks) != 0,
             weight=len(weight) != 0,
             pupar_times=None,
-            midpoint=midpoint,
+            midpoints=midpoints,
             weight_style=style)
 
     # Compute thresholds
@@ -2084,11 +2125,10 @@ def callback(detect):
 # =========================================
 @app.callback(
         Output('adult-signal', 'figure'),
-        [Input('well-selector', 'value'),
-         Input('larva-thresh-selector', 'value'),
+        [Input('larva-thresh-selector', 'value'),
          Input('adult-thresh-selector', 'value'),
          Input('time-selector', 'value'),
-         Input('midpoint-selector', 'value'),
+         Input('hidden-midpoint', 'data'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -2099,17 +2139,18 @@ def callback(detect):
          Input('adult-smoothing-check', 'values'),
          Input('adult-window-size', 'value'),
          Input('adult-window-sigma', 'value')],
-        [State('adult-signal', 'figure'),
+        [State('well-selector', 'value'),
+         State('adult-signal', 'figure'),
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value'),
          State('hidden-timestamp', 'data')])
-def callback(well_idx, larva_coef, adult_coef, time, midpoint,
+def callback(larva_coef, adult_coef, time, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
-        adult_w_size, adult_w_sigma, figure, data_root, env, detect,
+        adult_w_size, adult_w_sigma, well_idx, figure, data_root, env, detect,
         larva, adult, timestamps):
     # Guard
     if env is None:
@@ -2142,7 +2183,7 @@ def callback(well_idx, larva_coef, adult_coef, time, midpoint,
                 smooth=len(larva_smoothing) != 0,
                 weight=len(larva_weighting) != 0,
                 pupar_times=None,
-                midpoint=midpoint,
+                midpoints=midpoints,
                 weight_style=larva_w_style)
 
         # Compute thresholds
@@ -2163,7 +2204,7 @@ def callback(well_idx, larva_coef, adult_coef, time, midpoint,
             smooth=len(adult_smoothing) != 0,
             weight=len(adult_weighting) != 0,
             pupar_times=pupar_times,
-            midpoint=midpoint,
+            midpoints=midpoints,
             weight_style=adult_w_style)
 
     # Compute thresholds
@@ -2308,14 +2349,14 @@ def callback(detect):
         return {}
 
 
-# ==========================================
-#  Update the figure in the larva-summary.
-# ==========================================
+# =========================================
+#  Update the figure in the larva-summary
+# =========================================
 @app.callback(
         Output('larva-summary', 'figure'),
         [Input('larva-thresh-selector', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-selector', 'value'),
+         Input('hidden-midpoint', 'data'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -2326,7 +2367,7 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(coef, well_idx, midpoint, weight, style,
+def callback(coef, well_idx, midpoints, weight, style,
         checks, size, sigma, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
@@ -2386,7 +2427,7 @@ def callback(coef, well_idx, midpoint, weight, style,
             smooth=len(checks) != 0,
             weight=len(weight) != 0,
             pupar_times=None,
-            midpoint=midpoint,
+            midpoints=midpoints,
             weight_style=style)
 
     # Compute thresholds
@@ -2568,7 +2609,7 @@ def callback(detect):
         [Input('larva-thresh-selector', 'value'),
          Input('adult-thresh-selector', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-selector', 'value'),
+         Input('hidden-midpoint', 'data'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -2584,7 +2625,7 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(larva_coef, adult_coef, well_idx, midpoint,
+def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
         adult_w_size, adult_w_sigma, data_root, env, detect, larva, adult):
@@ -2671,7 +2712,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoint,
                 smooth=len(larva_smoothing) != 0,
                 weight=len(larva_weighting) != 0,
                 pupar_times=None,
-                midpoint=midpoint,
+                midpoints=midpoints,
                 weight_style=larva_w_style)
 
         # Compute thresholds
@@ -2692,7 +2733,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoint,
             smooth=len(adult_smoothing) != 0,
             weight=len(adult_weighting) != 0,
             pupar_times=pupar_times,
-            midpoint=midpoint,
+            midpoints=midpoints,
             weight_style=adult_w_style)
 
     # Compute thresholds
@@ -2870,7 +2911,7 @@ def callback(detect):
         Output('larva-hist', 'figure'),
         [Input('larva-thresh-selector', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-selector', 'value'),
+         Input('hidden-midpoint', 'data'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -2880,7 +2921,7 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value')])
-def callback(coef, well_idx, midpoint, weight, style,
+def callback(coef, well_idx, midpoints, weight, style,
         checks, size, sigma, data_root, env, detect, larva):
     # Guard
     if env is None:
@@ -2930,7 +2971,7 @@ def callback(coef, well_idx, midpoint, weight, style,
             smooth=len(checks) != 0,
             weight=len(weight) != 0,
             pupar_times=None,
-            midpoint=midpoint,
+            midpoints=midpoints,
             weight_style=style)
 
     # Compute thresholds
@@ -3064,7 +3105,7 @@ def callback(detect):
         [Input('larva-thresh-selector', 'value'),
          Input('adult-thresh-selector', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-selector', 'value'),
+         Input('hidden-midpoint', 'data'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -3080,7 +3121,7 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(larva_coef, adult_coef, well_idx, midpoint,
+def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
         adult_w_size, adult_w_sigma, data_root, env, detect, larva, adult):
@@ -3158,7 +3199,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoint,
                 smooth=len(larva_smoothing) != 0,
                 weight=len(larva_weighting) != 0,
                 pupar_times=None,
-                midpoint=midpoint,
+                midpoints=midpoints,
                 weight_style=larva_w_style)
 
         # Compute thresholds
@@ -3179,7 +3220,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoint,
             smooth=len(adult_smoothing) != 0,
             weight=len(adult_weighting) != 0,
             pupar_times=pupar_times,
-            midpoint=midpoint,
+            midpoints=midpoints,
             weight_style=adult_w_style)
 
     # Compute thresholds
@@ -3311,7 +3352,7 @@ def callback(detect):
         [Input('larva-thresh-selector', 'value'),
          Input('adult-thresh-selector', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-selector', 'value'),
+         Input('hidden-midpoint', 'data'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -3327,7 +3368,7 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(larva_coef, adult_coef, well_idx, midpoint, larva_weighting,
+def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
         larva_w_style, larva_smoothing, larva_w_size, larva_w_sigma,
         adult_weighting, adult_w_style, adult_smoothing, adult_w_size,
         adult_w_sigma, data_root, env, detect, larva, adult):
@@ -3360,7 +3401,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoint, larva_weighting,
             smooth=len(larva_smoothing) != 0,
             weight=len(larva_weighting) != 0,
             pupar_times=None,
-            midpoint=midpoint,
+            midpoints=midpoints,
             weight_style=larva_w_style)
 
     # Compute thresholds
@@ -3381,7 +3422,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoint, larva_weighting,
             smooth=len(adult_smoothing) != 0,
             weight=len(adult_weighting) != 0,
             pupar_times=pupars,
-            midpoint=midpoint,
+            midpoints=midpoints,
             weight_style=adult_w_style)
 
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
@@ -3467,7 +3508,7 @@ def callback(detect):
         Output('survival-curve', 'figure'),
         [Input('adult-thresh-selector', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-selector', 'value'),
+         Input('hidden-midpoint', 'data'),
          Input('adult-weight-check', 'values'),
          Input('adult-weight-style', 'value'),
          Input('adult-smoothing-check', 'values'),
@@ -3477,7 +3518,7 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('adult-dropdown', 'value')])
-def callback(coef, well_idx, midpoint, weight, style,
+def callback(coef, well_idx, midpoints, weight, style,
         checks, size, sigma, data_root, env, detect, adult):
     # Guard
     if env is None:
@@ -3507,7 +3548,7 @@ def callback(coef, well_idx, midpoint, weight, style,
             smooth=len(checks) != 0,
             weight=len(weight) != 0,
             pupar_times=None,
-            midpoint=midpoint,
+            midpoints=midpoints,
             weight_style=style)
 
     # Compute thresholds
@@ -3623,7 +3664,7 @@ def callback(detect):
         Output('larva-boxplot', 'figure'),
         [Input('larva-thresh-selector', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-selector', 'value'),
+         Input('hidden-midpoint', 'data'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -3633,7 +3674,7 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value')])
-def callback(coef, well_idx, midpoint, weight, style,
+def callback(coef, well_idx, midpoints, weight, style,
         checks, size, sigma, data_root, env, detect, larva):
     # Guard
     if env is None:
@@ -3661,7 +3702,7 @@ def callback(coef, well_idx, midpoint, weight, style,
             smooth=len(checks) != 0,
             weight=len(weight) != 0,
             pupar_times=None,
-            midpoint=midpoint,
+            midpoints=midpoints,
             weight_style=style)
 
     # Compute thresholds
@@ -3757,7 +3798,7 @@ def callback(detect):
         [Input('larva-thresh-selector', 'value'),
          Input('adult-thresh-selector', 'value'),
          Input('well-selector', 'value'),
-         Input('midpoint-selector', 'value'),
+         Input('hidden-midpoint', 'data'),
          Input('larva-weight-check', 'values'),
          Input('larva-weight-style', 'value'),
          Input('larva-smoothing-check', 'values'),
@@ -3773,7 +3814,7 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value')])
-def callback(larva_coef, adult_coef, well_idx, midpoint,
+def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
         adult_w_size, adult_w_sigma, data_root, env, detect, larva, adult):
@@ -3811,7 +3852,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoint,
                 smooth=len(larva_smoothing) != 0,
                 weight=len(larva_weighting) != 0,
                 pupar_times=None,
-                midpoint=midpoint,
+                midpoints=midpoints,
                 weight_style=larva_w_style)
 
         # Compute thresholds
@@ -3832,7 +3873,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoint,
             smooth=len(adult_smoothing) != 0,
             weight=len(adult_weighting) != 0,
             pupar_times=pupar_times,
-            midpoint=midpoint,
+            midpoints=midpoints,
             weight_style=adult_w_style)
 
     # Compute thresholds
@@ -4122,14 +4163,14 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('larva-thresh-selector', 'value'),
-         State('midpoint-selector', 'value'),
+         State('hidden-midpoint', 'data'),
          State('larva-weight-check', 'values'),
          State('larva-weight-style', 'value'),
          State('larva-window-size', 'value'),
          State('larva-window-sigma', 'value'),
          State('larva-smoothing-check', 'values')])
 def callback(tab_name, data_root, env,
-        detect, larva, coef, midpoint, weight, style, size, sigma, checks):
+        detect, larva, coef, midpoints, weight, style, size, sigma, checks):
     # Guard
     if data_root is None:
         return 'Not available.'
@@ -4159,7 +4200,7 @@ def callback(tab_name, data_root, env,
             smooth=len(checks) != 0,
             weight=len(weight) != 0,
             pupar_times=None,
-            midpoint=midpoint,
+            midpoints=midpoints,
             weight_style=style)
 
     # Compute thresholds
@@ -4381,7 +4422,7 @@ def callback(detect):
          State('adult-dropdown', 'value'),
          State('larva-thresh-selector', 'value'),
          State('adult-thresh-selector', 'value'),
-         State('midpoint-selector', 'value'),
+         State('hidden-midpoint', 'data'),
          State('larva-weight-check', 'values'),
          State('larva-weight-style', 'value'),
          State('larva-window-size', 'value'),
@@ -4393,7 +4434,7 @@ def callback(detect):
          State('adult-window-sigma', 'value'),
          State('adult-smoothing-check', 'values')])
 def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
-        adult_coef, midpoint, larva_weighting, larva_w_style, larva_w_size,
+        adult_coef, midpoints, larva_weighting, larva_w_style, larva_w_size,
         larva_w_sigma, larva_smoothing, adult_weighting, adult_w_style,
         adult_w_size, adult_w_sigma, adult_smoothing):
     # Guard
@@ -4431,7 +4472,7 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
                 smooth=len(larva_smoothing) != 0,
                 weight=len(larva_weighting) != 0,
                 pupar_times=None,
-                midpoint=midpoint,
+                midpoints=midpoints,
                 weight_style=larva_w_style)
 
         # Compute thresholds
@@ -4452,7 +4493,7 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
             smooth=len(adult_smoothing) != 0,
             weight=len(adult_weighting) != 0,
             pupar_times=pupar_times,
-            midpoint=midpoint,
+            midpoints=midpoints,
             weight_style=adult_w_style)
 
     # Compute thresholds
@@ -4544,7 +4585,7 @@ def callback(detect):
 #  Utility functions
 # ====================
 def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
-        pupar_times, midpoint=None, weight_style=None):
+        pupar_times, midpoints=None, weight_style=None):
 
     # Smooth the signals
     if smooth:
@@ -4561,12 +4602,14 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
 
             # Step or ramp weight
             if weight_style == 'step':
-                signals[:, midpoint:] = 0
+                for well_idx, midpoint in enumerate(midpoints['midpoint']):
+                    signals[well_idx, midpoint:] = 0
 
             elif weight_style == 'ramp':
                 # Ramp filter
-                signals = signals *  \
-                        (-1 / midpoint * np.arange(len(signals.T)) + 1)
+                for well_idx, midpoint in enumerate(midpoints['midpoint']):
+                    signals[well_idx] = signals[well_idx] *  \
+                            (-1 / midpoint * np.arange(len(signals.T)) + 1)
             else:
                 pass
 
@@ -4579,12 +4622,14 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
 
             # Step or ramp weight
             if weight_style == 'step':
-                signals[:, midpoint:] = 0
+                for well_idx, midpoint in enumerate(midpoints['midpoint']):
+                    signals[well_idx, midpoint:] = 0
 
             elif weight_style == 'ramp':
                 # Ramp filter
-                signals = signals *  \
-                        (-1 / midpoint * np.arange(len(signals.T)) + 1)
+                for well_idx, midpoint in enumerate(midpoints['midpoint']):
+                    signals[well_idx] = signals[well_idx] *  \
+                            (-1 / midpoint * np.arange(len(signals.T)) + 1)
 
             else:
                 pass
@@ -4616,14 +4661,16 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
 
             # Step or ramp weight
             if weight_style == 'step':
-                signals[:, :midpoint] = 0
+                for well_idx, midpoint in enumerate(midpoints['midpoint']):
+                    signals[well_idx, :midpoint] = 0
 
             elif weight_style == 'ramp':
                 # Ramp filter
-                signals = signals * (
-                        1 / (len(signals.T) - midpoint)
-                        * np.arange(len(signals.T))
-                        - midpoint / (len(signals.T) - midpoint))
+                for well_idx, midpoint in enumerate(midpoints['midpoint']):
+                    signals[well_idx] = signals[well_idx] * (
+                            1 / (len(signals.T) - midpoint)
+                            * np.arange(len(signals.T))
+                            - midpoint / (len(signals.T) - midpoint))
             else:
                 pass
 
@@ -4636,12 +4683,14 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
 
             # Step or ramp weight
             if weight_style == 'step':
-                signals[:, midpoint:] = 0
+                for well_idx, midpoint in enumerate(midpoints['midpoint']):
+                    signals[well_idx, midpoint:] = 0
 
             elif weight_style == 'ramp':
                 # Ramp filter
-                signals = signals *  \
-                        (-1 / midpoint * np.arange(len(signals.T)) + 1)
+                for well_idx, midpoint in enumerate(midpoints['midpoint']):
+                    signals[well_idx] = signals[well_idx] *  \
+                            (-1 / midpoint * np.arange(len(signals.T)) + 1)
 
             else:
                 pass
