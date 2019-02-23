@@ -185,7 +185,7 @@ app.layout = html.Div([
                     html.Br(),
                     ],
                     style={
-                        'display': 'inline-block',
+                        'display': 'table-cell',
                         'margin': '10px 10px',
                         'vertical-align': 'top',
                     },
@@ -200,16 +200,15 @@ app.layout = html.Div([
                             'disabled': True,
                         }],
                         values=[],
-                        style={'display': 'table'},
                     ),
 
-                    html.Div(id='org-image', style={'display': 'table'}),
+                    html.Div(id='org-image'),
 
-                    html.Div(id='label-and-prob', style={'display': 'table'}),
+                    html.Div(id='label-and-prob'),
 
                     ],
                     style={
-                        'display': 'inline-block',
+                        'display': 'table-cell',
                         'margin': '10px 5px',
                         'vertical-align': 'top',
                     },
@@ -218,7 +217,7 @@ app.layout = html.Div([
                 dcc.Graph(
                     id='current-well',
                     style={
-                        'display': 'inline-block',
+                        'display': 'table-cell',
                         'margin-left': '5px',
                         'margin-top': '55px',
                         'vertical-align': 'top',
@@ -245,7 +244,7 @@ app.layout = html.Div([
                 # ),
 
                 html.Div([
-                    'Data root :',
+                    'Data root:',
                     html.Div(DATA_ROOT, id='data-root'),
                     ],
                     style={
@@ -272,7 +271,7 @@ app.layout = html.Div([
                                 ], style={
                                     'height': '170px',
                                     'width': '10px',
-                                    'margin': '20px 35px 10px',
+                                    'margin': '0px 25px 10px',
                                 }),
                                 dcc.Input(
                                     id='larva-thresh-selector',
@@ -283,7 +282,6 @@ app.layout = html.Div([
                                     step=0.1,
                                     style={
                                         'width': '70px',
-                                        'margin': '0px 10px 10px',
                                     },
                                 ),
                             ], style={
@@ -318,11 +316,11 @@ app.layout = html.Div([
                                         min=0,
                                         size=5,
                                         style={
-                                            'width': '80px',
-                                            'margin': '0px 10px 0px 20px',
+                                            'width': '70px',
+                                            'margin-left': '25px',
                                         },
                                     ),
-                                ], style={'margin': '0px 0px 0px 30px'}),
+                                ], style={'margin': '0px 0px 0px 20px'}),
                                 html.Div([
                                     'Sigma:',
                                     dcc.Input(
@@ -333,18 +331,18 @@ app.layout = html.Div([
                                         size=5,
                                         step=0.1,
                                         style={
-                                            'width': '80px',
-                                            'margin': '0px 10px 0px 5px',
+                                            'width': '70px',
+                                            'margin-left': '10px',
                                         },
                                     ),
-                                ], style={'margin': '0px 0px 0px 30px'}),
+                                ], style={'margin': '0px 0px 0px 20px'}),
                                 dcc.Checklist(
                                     id='larva-weight-check',
                                     options=[
                                         {'label': 'Weight', 'value': True}],
                                     values=[],
                                     style={
-                                        'margin': '0px 10px',
+                                        'margin-left': '10px',
                                     },
                                 ),
                                 dcc.RadioItems(
@@ -371,7 +369,7 @@ app.layout = html.Div([
                             }),
                         ], style={
                             'display': 'table',
-                            'table-layout': 'fixed',
+                            'table-layout': 'auto',
                         }),
                     ], style={'width': '810px', 'margin-top': '10px'}),
 
@@ -391,7 +389,7 @@ app.layout = html.Div([
                                 ], style={
                                     'height': '170px',
                                     'width': '10px',
-                                    'margin': '20px 35px 10px',
+                                    'margin': '0px 25px 10px',
                                 }),
                                 dcc.Input(
                                     id='adult-thresh-selector',
@@ -402,7 +400,6 @@ app.layout = html.Div([
                                     step=0.1,
                                     style={
                                         'width': '70px',
-                                        'margin': '0px 10px 10px',
                                     },
                                 ),
                             ], style={
@@ -437,11 +434,11 @@ app.layout = html.Div([
                                         min=0,
                                         size=5,
                                         style={
-                                            'width': '80px',
-                                            'margin': '0px 10px 0px 20px',
+                                            'width': '70px',
+                                            'margin-left': '25px',
                                         },
                                     ),
-                                ], style={'margin': '0px 0px 0px 30px'}),
+                                ], style={'margin': '0px 0px 0px 20px'}),
                                 html.Div([
                                     'Sigma:',
                                     dcc.Input(
@@ -452,11 +449,11 @@ app.layout = html.Div([
                                         size=5,
                                         step=0.1,
                                         style={
-                                            'width': '80px',
-                                            'margin': '0px 10px 0px 5px',
+                                            'width': '70px',
+                                            'margin-left': '10px',
                                         },
                                     ),
-                                ], style={'margin': '0px 0px 0px 30px'}),
+                                ], style={'margin': '0px 0px 0px 20px'}),
                                 dcc.Checklist(
                                     id='adult-weight-check',
                                     options=[
@@ -491,7 +488,7 @@ app.layout = html.Div([
                             }),
                         ], style={
                             'display': 'table',
-                            'table-layout': 'fixed',
+                            'table-layout': 'auto',
                         }),
                     ], style={'width': '810px', 'margin-top': '10px'}),
 
@@ -505,7 +502,7 @@ app.layout = html.Div([
                                 'width': '70px',
                                 'display': 'inline-block',
                                 'vertical-align': 'middle',
-                                'margin': '0px 25px 0px 100px',
+                                'margin': '0px 10px 0px 120px',
                             },
                         ),
                         html.Div([
@@ -515,14 +512,21 @@ app.layout = html.Div([
                                 step=1,
                             ),
                         ], style={
-                            'width': '545px',
+                            'width': '450px',
                             'display': 'inline-block',
                         }),
                     ]),
+                ], style={
+                        'display': 'table-cell',
+                        'vertical-align': 'middle',
+                }),
+            ], style={
+                    'display': 'table',
+                    'table-layout': 'auto',
+                    'border-collapse': 'separate',
+                    'border-spacing': '8px 10px',
+            }),
 
-                ], style={'display': 'inline-block'}),
-            ],
-            ),
             html.Div([
                 dcc.Graph(
                     id='larva-summary',
