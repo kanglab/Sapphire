@@ -278,6 +278,20 @@ app.layout = html.Div([
                                 },
                             ),
                             html.Div([
+                                html.Div('Signal Type:',
+                                    style={'margin-left': '10px'},
+                                ),
+                                html.Div([
+                                    dcc.Dropdown(
+                                        id='larva-signal-type',
+                                        placeholder='Select a signal...',
+                                        clearable=False,
+                                    ),
+                                    ],
+                                    style={
+                                        'margin-left': '10px',
+                                    },
+                                ),
                                 dcc.Checklist(
                                     id='larva-smoothing-check',
                                     options=[
@@ -397,6 +411,20 @@ app.layout = html.Div([
                                 },
                             ),
                             html.Div([
+                                html.Div('Signal Type:',
+                                    style={'margin-left': '10px'},
+                                ),
+                                html.Div([
+                                    dcc.Dropdown(
+                                        id='adult-signal-type',
+                                        placeholder='Select a signal...',
+                                        clearable=False,
+                                    ),
+                                    ],
+                                    style={
+                                        'margin-left': '10px',
+                                    },
+                                ),
                                 dcc.Checklist(
                                     id='adult-smoothing-check',
                                     options=[
