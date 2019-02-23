@@ -183,15 +183,16 @@ app.layout = html.Div([
                         },
                     ),
                     html.Br(),
-                    ],
-                    style={
-                        'display': 'table-cell',
-                        'margin': '10px 10px',
-                        'vertical-align': 'top',
-                    },
-                ),
+                ], style={
+                    'display': 'table-cell',
+                    'vertical-align': 'top',
+                }),
 
                 html.Div([
+                    html.Div(id='org-image'),
+
+                    html.Div(id='label-and-prob'),
+
                     dcc.Checklist(
                         id='blacklist-check',
                         options=[{
@@ -202,46 +203,22 @@ app.layout = html.Div([
                         values=[],
                     ),
 
-                    html.Div(id='org-image'),
+                ], style={
+                    'display': 'table-cell',
+                    'vertical-align': 'top',
+                }),
 
-                    html.Div(id='label-and-prob'),
+                html.Div([
+                    html.Div('Original Image at "t"'),
 
-                    ],
-                    style={
-                        'display': 'table-cell',
-                        'margin': '10px 5px',
-                        'vertical-align': 'top',
-                    },
-                ),
-
-                dcc.Graph(
-                    id='current-well',
-                    style={
-                        'display': 'table-cell',
-                        'margin-left': '5px',
-                        'margin-top': '55px',
-                        'vertical-align': 'top',
-                    },
-                    config={'displayModeBar': False},
-                ),
-                # html.Div([
-                #         html.Img(
-                #             id='current-well',
-                #             style={
-                #                 'background': '#555555',
-                #                 'height': 'auto',
-                #                 'width': '200px',
-                #                 'padding': '5px',
-                #             },
-                #         ),
-                #     ],
-                #     style={
-                #         'display': 'inline-block',
-                #         'margin-left': '5px',
-                #         'margin-top': '55px',
-                #         'vertical-align': 'top',
-                #     },
-                # ),
+                    dcc.Graph(
+                        id='current-well',
+                        config={'displayModeBar': False},
+                    ),
+                ], style={
+                    'display': 'table-cell',
+                    'vertical-align': 'top',
+                }),
 
                 html.Div([
                     'Data root:',
@@ -361,7 +338,7 @@ app.layout = html.Div([
                                     ],
                                     value='step',
                                     labelStyle={'display': 'inline-block'},
-                                    style={'margin': '0px 0px 0px 30px'},
+                                    style={'margin': '0px 0px 0px 20px'},
                                 ),
                             ], style={
                                 'display': 'table-cell',
@@ -480,7 +457,7 @@ app.layout = html.Div([
                                     ],
                                     value='step',
                                     labelStyle={'display': 'inline-block'},
-                                    style={'margin': '0px 0px 0px 30px'},
+                                    style={'margin': '0px 0px 0px 20px'},
                                 ),
                             ], style={
                                 'display': 'table-cell',
@@ -524,7 +501,7 @@ app.layout = html.Div([
                     'display': 'table',
                     'table-layout': 'auto',
                     'border-collapse': 'separate',
-                    'border-spacing': '8px 10px',
+                    'border-spacing': '5px 10px',
             }),
 
             html.Div([
@@ -1271,7 +1248,9 @@ def callback(time, well_idx, data_root, env):
     orgimg2.save(buf2, format='JPEG')
 
     return [
-            html.Div('Original Image'),
+            html.Div('Image at "t"',
+                    style={'display': 'inline-block', 'margin-right': '25px'}),
+            html.Div('"t+1"', style={'display': 'inline-block'}),
             html.Img(
                 src='data:image/jpeg;base64,{}'.format(
                         base64.b64encode(buf1.getvalue()).decode('utf-8')),
@@ -1577,9 +1556,6 @@ def callback(time, well_idx, data_root, env, detect, larva, adult):
                         },
                     ),
                 ]),
-                html.Div('Image at "t"',
-                        style={'display': 'inline-block', 'margin-right': '25px'}),
-                html.Div('"t+1"', style={'display': 'inline-block'}),
             ]
 
     elif detect == 'death':
@@ -1669,9 +1645,6 @@ def callback(time, well_idx, data_root, env, detect, larva, adult):
                     },
                 ),
             ]),
-            html.Div('Image at "t"',
-                    style={'display': 'inline-block', 'margin-right': '25px'}),
-            html.Div('"t+1"', style={'display': 'inline-block'}),
         ]
 
     return data
