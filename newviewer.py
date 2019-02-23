@@ -888,12 +888,10 @@ def callback(env, data_root):
         Output('well-slider', 'value'),
         [Input('env-dropdown', 'value'),
          Input('well-buff', 'children'),
-         Input('larva-dropdown', 'value'),
-         Input('adult-dropdown', 'value')],
-        [State('changed-well', 'children'),
-         State('well-slider', 'value')])
-def callback(_, buff, larva_data, adult_data, changed_data, well_idx):
-
+         Input('larva-signal-type', 'value'),
+         Input('adult-signal-type', 'value')],
+        [State('changed-well', 'children')])
+def callback(_, buff, __, ___, changed_data):
     buff = json.loads(buff)
     changed_data = json.loads(changed_data)['changed']
 
@@ -1062,10 +1060,10 @@ def callback(env, data_root):
         Output('time-slider', 'value'),
         [Input('env-dropdown', 'value'),
          Input('time-buff', 'children'),
-         Input('larva-dropdown', 'value'),
-         Input('adult-dropdown', 'value')],
+         Input('larva-signal-type', 'value'),
+         Input('adult-signal-type', 'value')],
         [State('changed-time', 'children')])
-def callback(_, buff, larva_data, adult_data, changed_data):
+def callback(_, buff, __, ___, changed_data):
     buff = json.loads(buff)
     changed_data = json.loads(changed_data)['changed']
 
@@ -1179,8 +1177,8 @@ def callback(adult, data_root, dataset_name):
          State('env-dropdown', 'value')])
 def callback(options, data_root, dataset_name):
     # Guard
-    if options is None or dataset_name is None:
-        return []
+    if options == [] or dataset_name is None:
+        return None
 
     return options[0]['value']
 
@@ -1192,8 +1190,8 @@ def callback(options, data_root, dataset_name):
          State('env-dropdown', 'value')])
 def callback(options, data_root, dataset_name):
     # Guard
-    if options is None or dataset_name is None:
-        return []
+    if options == [] or dataset_name is None:
+        return None
 
     return options[0]['value']
 
@@ -2117,9 +2115,10 @@ def callback(midpoint, midpoints, well_idx, data_root, dataset_name):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('hidden-timestamp', 'data')])
+         State('hidden-timestamp', 'data'),
+         State('larva-signal-type', 'value')])
 def callback(well_idx, coef, time, midpoints, weight, style, checks, size,
-        sigma, figure, data_root, env, detect, larva, timestamps):
+        sigma, figure, data_root, env, detect, larva, timestamps, signal_name):
     # Guard
     if env is None:
         return {'data': []}
@@ -2136,7 +2135,7 @@ def callback(well_idx, coef, time, midpoints, weight, style, checks, size,
 
     # Load the data
     larva_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+            data_root, env, 'inference', 'larva', larva, signal_name)).T
 
     diffs_mean = larva_diffs.mean()
     diffs_std = larva_diffs.std()
@@ -2298,12 +2297,14 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value'),
-         State('hidden-timestamp', 'data')])
+         State('hidden-timestamp', 'data'),
+         State('larva-signal-type', 'value'),
+         State('adult-signal-type', 'value')])
 def callback(larva_coef, adult_coef, time, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
         adult_w_size, adult_w_sigma, well_idx, figure, data_root, env, detect,
-        larva, adult, timestamps):
+        larva, adult, timestamps, larva_signal_name, adult_signal_name):
     # Guard
     if env is None:
         return {'data': []}
@@ -2327,8 +2328,8 @@ def callback(larva_coef, adult_coef, time, midpoints,
 
     else:
         # Load the data
-        larva_diffs = np.load(os.path.join(
-                data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+        larva_diffs = np.load(os.path.join(data_root,
+                env, 'inference', 'larva', larva, larva_signal_name)).T
 
         larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
@@ -2348,7 +2349,7 @@ def callback(larva_coef, adult_coef, time, midpoints,
     # ----------------------------------------
     # Load the data
     adult_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
+            data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
     diffs_mean = adult_diffs.mean()
     diffs_std = adult_diffs.std()
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
@@ -2518,16 +2519,16 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('adult-dropdown', 'value')])
-def callback(coef, well_idx, midpoints, weight, style,
-        checks, size, sigma, blacklist, data_root, env, detect, larva, adult):
+         State('larva-signal-type', 'value')])
+def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
+        blacklist, data_root, env, detect, larva, signal_name):
     # Guard
     if env is None:
         return {'data': []}
     if larva is None:
         return {'data': []}
     if not os.path.exists(os.path.join(
-            data_root, env, 'inference', 'larva', larva, 'signals.npy')):
+            data_root, env, 'inference', 'larva', larva, signal_name)):
         return {'data': []}
     if not os.path.exists(os.path.join(
             data_root, env, 'original', 'pupariation.csv')):
@@ -2559,9 +2560,6 @@ def callback(coef, well_idx, midpoints, weight, style,
     # Load a group table
     group_tables = load_grouping_csv(data_root, env)
 
-    # Load the data
-    larva_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
     # Load a manual data
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', 'pupariation.csv'),
@@ -2569,7 +2567,7 @@ def callback(coef, well_idx, midpoints, weight, style,
 
     # Load the data
     larva_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+            data_root, env, 'inference', 'larva', larva, signal_name)).T
 
     thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
@@ -2773,19 +2771,21 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('adult-dropdown', 'value')])
+         State('adult-dropdown', 'value'),
+         State('larva-signal-type', 'value'),
+         State('adult-signal-type', 'value')])
 def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
         adult_w_size, adult_w_sigma, blacklist, data_root, env, detect,
-        larva, adult):
+        larva, adult, larva_signal_name, adult_signal_name):
     # Guard
     if env is None:
         return {'data': []}
     if adult is None:
         return {'data': []}
     if not os.path.exists(os.path.join(
-            data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+            data_root, env, 'inference', 'adult', adult, adult_signal_name)):
         return {'data': []}
     if not os.path.exists(os.path.join(
             data_root, env, 'original', 'eclosion.csv'))  \
@@ -2851,8 +2851,8 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
 
     else:
         # Load the data
-        larva_diffs = np.load(os.path.join(
-                data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+        larva_diffs = np.load(os.path.join(data_root,
+                env, 'inference', 'larva', larva, larva_signal_name)).T
 
         larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
@@ -2872,7 +2872,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
     # ----------------------------------------
     # Load the data
     adult_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
+            data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
 
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
@@ -3066,16 +3066,17 @@ def callback(detect):
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
-         State('larva-dropdown', 'value')])
-def callback(coef, well_idx, midpoints, weight, style,
-        checks, size, sigma, blacklist, data_root, env, detect, larva):
+         State('larva-dropdown', 'value'),
+         State('larva-signal-type', 'value')])
+def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
+        blacklist, data_root, env, detect, larva, signal_name):
     # Guard
     if env is None:
         return {'data': []}
     if larva is None:
         return {'data': []}
     if not os.path.exists(os.path.join(
-            data_root, env, 'inference', 'larva', larva, 'signals.npy')):
+            data_root, env, 'inference', 'larva', larva, signal_name)):
         return {'data': []}
     if not os.path.exists(os.path.join(
             data_root, env, 'original', 'pupariation.csv')):
@@ -3105,7 +3106,7 @@ def callback(coef, well_idx, midpoints, weight, style,
 
     # Load the data
     larva_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+            data_root, env, 'inference', 'larva', larva, signal_name)).T
 
     thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
@@ -3261,22 +3262,21 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('adult-dropdown', 'value')])
+         State('adult-dropdown', 'value'),
+         State('larva-signal-type', 'value'),
+         State('adult-signal-type', 'value')])
 def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
         adult_w_size, adult_w_sigma, blacklist, data_root, env, detect,
-        larva, adult):
+        larva, adult, larva_signal_name, adult_signal_name):
     # Guard
     if env is None:
         return {'data': []}
     if adult is None:
         return {'data': []}
     if not os.path.exists(os.path.join(
-            data_root, env, 'inference', 'adult', adult, 'signals.npy')):
-        return {'data': []}
-    if not os.path.exists(os.path.join(
-            data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+            data_root, env, 'inference', 'adult', adult, adult_signal_name)):
         return {'data': []}
 
     # Load a manual evaluation of event timing
@@ -3330,8 +3330,8 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
 
     else:
         # Load the data
-        larva_diffs = np.load(os.path.join(
-                data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+        larva_diffs = np.load(os.path.join(data_root,
+                env, 'inference', 'larva', larva, larva_signal_name)).T
 
         larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
@@ -3351,7 +3351,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
     # ----------------------------------------
     # Load the data
     adult_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
+            data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
 
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
@@ -3505,11 +3505,13 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('adult-dropdown', 'value')])
+         State('adult-dropdown', 'value'),
+         State('larva-signal-type', 'value'),
+         State('adult-signal-type', 'value')])
 def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
         larva_w_style, larva_smoothing, larva_w_size, larva_w_sigma,
         adult_weighting, adult_w_style, adult_smoothing, adult_w_size,
-        adult_w_sigma, blacklist, data_root, env, detect, larva, adult):
+        adult_w_sigma, blacklist, data_root, env, detect, larva, adult, larva_signal_name, adult_signal_name):
     # Guard
     if env is None:
         return {'data': []}
@@ -3518,10 +3520,10 @@ def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
     if adult is None:
         return {'data': []}
     if not os.path.exists(os.path.join(
-            data_root, env, 'inference', 'larva', larva, 'signals.npy')):
+            data_root, env, 'inference', 'larva', larva, larva_signal_name)):
         return {'data': []}
     if not os.path.exists(os.path.join(
-            data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+            data_root, env, 'inference', 'adult', adult, adult_signal_name)):
         return {'data': []}
     if detect == 'death':
         return {'data': []}
@@ -3532,7 +3534,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
 
     # Load the data
     larva_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+            data_root, env, 'inference', 'larva', larva, larva_signal_name)).T
 
     larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
@@ -3552,7 +3554,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
     pupars[pupars == larva_diffs.shape[1]] = 0
 
     adult_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
+            data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
 
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
@@ -3655,16 +3657,17 @@ def callback(detect):
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
-         State('adult-dropdown', 'value')])
-def callback(coef, well_idx, midpoints, weight, style,
-        checks, size, sigma, blacklist, data_root, env, detect, adult):
+         State('adult-dropdown', 'value'),
+         State('adult-signal-type', 'value')])
+def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
+        blacklist, data_root, env, detect, adult, signal_name):
     # Guard
     if env is None:
         return {'data': []}
     if adult is None:
         return {'data': []}
     if not os.path.exists(os.path.join(
-            data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+            data_root, env, 'inference', 'adult', adult, signal_name)):
         return {'data': []}
     if detect == 'pupariation':
         return {'data': []}
@@ -3679,7 +3682,7 @@ def callback(coef, well_idx, midpoints, weight, style,
 
     # Load the data
     adult_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
+            data_root, env, 'inference', 'adult', adult, signal_name)).T
 
     thresholds = THRESH_FUNC(adult_diffs, coef=coef)
 
@@ -3795,7 +3798,7 @@ def callback(detect):
 
 
 # ===========================================
-#  Update the figure in the boxplot.
+#  Update the boxplot for larva
 # ===========================================
 @app.callback(
         Output('larva-boxplot', 'figure'),
@@ -3811,16 +3814,17 @@ def callback(detect):
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
-         State('larva-dropdown', 'value')])
-def callback(coef, well_idx, midpoints, weight, style,
-        checks, size, sigma, blacklist, data_root, env, detect, larva):
+         State('larva-dropdown', 'value'),
+         State('larva-signal-type', 'value')])
+def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
+        blacklist, data_root, env, detect, larva, signal_name):
     # Guard
     if env is None:
         return {'data': []}
     if larva is None:
         return {'data': []}
     if not os.path.exists(os.path.join(
-            data_root, env, 'inference', 'larva', larva, 'signals.npy')):
+            data_root, env, 'inference', 'larva', larva, signal_name)):
         return {'data': []}
     if detect == 'death':
         return {'data': []}
@@ -3833,7 +3837,7 @@ def callback(coef, well_idx, midpoints, weight, style,
 
     # Load the data
     larva_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+            data_root, env, 'inference', 'larva', larva, signal_name)).T
 
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
@@ -3929,7 +3933,7 @@ def callback(detect):
 
 
 # ===========================================
-#  Update the figure in the boxplot.
+#  Update the boxplot for adult
 # ===========================================
 @app.callback(
         Output('adult-boxplot', 'figure'),
@@ -3952,19 +3956,21 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('adult-dropdown', 'value')])
+         State('adult-dropdown', 'value'),
+         State('larva-signal-type', 'value'),
+         State('adult-signal-type', 'value')])
 def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
         adult_w_size, adult_w_sigma, blacklist, data_root, env, detect,
-        larva, adult):
+        larva, adult, larva_signal_name, adult_signal_name):
     # Guard
     if env is None:
         return {'data': []}
     if adult is None:
         return {'data': []}
     if not os.path.exists(os.path.join(
-            data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+            data_root, env, 'inference', 'adult', adult, adult_signal_name)):
         return {'data': []}
     if detect == 'pupariation':
         return {'data': []}
@@ -3984,8 +3990,8 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
 
     else:
         # Load the data
-        larva_diffs = np.load(os.path.join(
-                data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+        larva_diffs = np.load(os.path.join(data_root,
+                env, 'inference', 'larva', larva, larva_signal_name)).T
 
         larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
@@ -4005,7 +4011,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
     # ----------------------------------------
     # Load the data
     adult_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
+            data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
 
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
@@ -4306,9 +4312,10 @@ def callback(detect):
          State('larva-weight-style', 'value'),
          State('larva-window-size', 'value'),
          State('larva-window-sigma', 'value'),
-         State('larva-smoothing-check', 'values')])
-def callback(tab_name, data_root, env,
-        detect, larva, coef, midpoints, weight, style, size, sigma, checks):
+         State('larva-smoothing-check', 'values'),
+         State('larva-signal-type', 'value')])
+def callback(tab_name, data_root, env, detect, larva, coef,
+        midpoints, weight, style, size, sigma, checks, signal_name):
     # Guard
     if data_root is None:
         return 'Not available.'
@@ -4323,7 +4330,7 @@ def callback(tab_name, data_root, env,
     if detect == 'death':
         return []
     if not os.path.exists(os.path.join(
-            data_root, env, 'inference', 'larva', larva, 'signals.npy')):
+            data_root, env, 'inference', 'larva', larva, signal_name)):
         return 'Not available.'
 
     # Load a mask params
@@ -4331,7 +4338,7 @@ def callback(tab_name, data_root, env,
         params = json.load(f)
 
     larva_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+            data_root, env, 'inference', 'larva', larva, signal_name)).T
     diffs_mean = larva_diffs.mean()
     diffs_std = larva_diffs.std()
     thresholds = THRESH_FUNC(larva_diffs, coef=coef)
@@ -4570,11 +4577,14 @@ def callback(detect):
          State('adult-weight-style', 'value'),
          State('adult-window-size', 'value'),
          State('adult-window-sigma', 'value'),
-         State('adult-smoothing-check', 'values')])
+         State('adult-smoothing-check', 'values'),
+         State('larva-signal-type', 'value'),
+         State('adult-signal-type', 'value')])
 def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
         adult_coef, midpoints, larva_weighting, larva_w_style, larva_w_size,
         larva_w_sigma, larva_smoothing, adult_weighting, adult_w_style,
-        adult_w_size, adult_w_sigma, adult_smoothing):
+        adult_w_size, adult_w_sigma, adult_smoothing, larva_signal_name,
+        adult_signal_name):
     # Guard
     if data_root is None:
         return 'Not available.'
@@ -4587,7 +4597,7 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
     if adult is None:
         return 'Not available.'
     if not os.path.exists(os.path.join(
-            data_root, env, 'inference', 'adult', adult, 'signals.npy')):
+            data_root, env, 'inference', 'adult', adult, adult_signal_name)):
         return 'Not available.'
 
     # Load a mask params
@@ -4602,8 +4612,8 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
         pupar_times = None
 
     else:
-        larva_diffs = np.load(os.path.join(
-                data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
+        larva_diffs = np.load(os.path.join(data_root,
+                env, 'inference', 'larva', larva, larva_signal_name)).T
 
         larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
@@ -4623,7 +4633,7 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
     # ----------------------------------------
     # Load the data
     adult_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
+            data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
     diffs_mean = adult_diffs.mean()
     diffs_std = adult_diffs.std()
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
