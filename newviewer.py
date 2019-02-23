@@ -203,6 +203,8 @@ app.layout = html.Div([
                         values=[],
                     ),
 
+                    html.Div(id='blacklist-link'),
+
                 ], style={
                     'display': 'table-cell',
                     'vertical-align': 'top',
@@ -1236,6 +1238,36 @@ def callback(check, blacklist, well_idx, data_root, dataset_name):
         blacklist['value'][well_idx] = False
 
     return blacklist
+
+
+@app.callback(
+        Output('blacklist-link', 'children'),
+        [Input('hidden-blacklist', 'data')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(blacklist, data_root, dataset_name):
+    # Guard
+    if blacklist is None:
+        return 'Now loading...'
+
+    # Load a mask params
+    with open(os.path.join(data_root, dataset_name, 'mask_params.json')) as f:
+        params = json.load(f)
+    n_wells = params['n-rows'] * params['n-plates'] * params['n-clms']
+
+    blacklist_table = np.array(blacklist['value'], dtype=int).reshape(
+            params['n-rows'] * params['n-plates'], params['n-clms'])
+    df = pd.DataFrame(blacklist_table)
+
+    return [
+            html.A(
+                'Download the Blacklist',
+                download='Blacklist({}).csv'.format(dataset_name[0:20]),
+                href='data:text/csv;charset=utf-8,' + df.to_csv(
+                        index=False, header=False),
+                target='_blank',
+            ),
+        ]
 
 
 # ========================
