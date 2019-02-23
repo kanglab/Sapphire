@@ -2047,6 +2047,8 @@ def callback(well_idx, coef, time, midpoints, weight, style, checks, size,
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
 
+    diffs_mean = larva_diffs.mean()
+    diffs_std = larva_diffs.std()
     thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
     larva_diffs = seasoning(
@@ -2128,9 +2130,9 @@ def callback(well_idx, coef, time, midpoints, weight, style, checks, size,
                             'text':
                                 'Threshold: {:.1f}'.format(
                                         thresholds[well_idx, 0]) +  \
-                                 '={:.1f}'.format(larva_diffs.mean()) +  \
+                                 '={:.1f}'.format(diffs_mean) +  \
                                  '{:+.1f}'.format(coef) +  \
-                                 '*{:.1f}'.format(larva_diffs.std()),
+                                 '*{:.1f}'.format(diffs_std),
                             'showarrow': False,
                             'xanchor': 'left',
                         },
@@ -2256,7 +2258,8 @@ def callback(larva_coef, adult_coef, time, midpoints,
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
-
+    diffs_mean = adult_diffs.mean()
+    diffs_std = adult_diffs.std()
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
     adult_diffs = seasoning(
@@ -2356,9 +2359,9 @@ def callback(larva_coef, adult_coef, time, midpoints,
                         'text':
                             'Threshold: {:.1f}'.format(
                                     adult_thresh[well_idx, 0]) +  \
-                             '={:.1f}'.format(adult_diffs.mean()) +  \
+                             '={:.1f}'.format(diffs_mean) +  \
                              '{:+.1f}'.format(adult_coef) +  \
-                             '*{:.1f}'.format(adult_diffs.std()),
+                             '*{:.1f}'.format(diffs_std),
                         'showarrow': False,
                         'xanchor': 'left',
                     },
@@ -4238,7 +4241,8 @@ def callback(tab_name, data_root, env,
 
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, 'signals.npy')).T
-
+    diffs_mean = larva_diffs.mean()
+    diffs_std = larva_diffs.std()
     thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
     larva_diffs = seasoning(
@@ -4261,9 +4265,9 @@ def callback(tab_name, data_root, env,
             + 'Inference Data,{}\n'.format(larva)  \
             + 'Threshold Value,{}\n'.format(thresholds[0, 0])  \
             + '(Threshold Value = mean + coef * std)\n'  \
-            + 'Mean (mean),{}\n'.format(larva_diffs.mean())  \
+            + 'Mean (mean),{}\n'.format(diffs_mean)  \
             + 'Coefficient (coef),{}\n'.format(coef)  \
-            + 'Standard Deviation (std),{}\n'.format(larva_diffs.std())  \
+            + 'Standard Deviation (std),{}\n'.format(diffs_std)  \
             + 'Smoothing Window Size,{}\n'.format(size)  \
             + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma)  \
             + pd.DataFrame(auto_evals).to_csv(
@@ -4529,7 +4533,8 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, 'signals.npy')).T
-
+    diffs_mean = adult_diffs.mean()
+    diffs_std = adult_diffs.std()
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
     adult_diffs = seasoning(
@@ -4552,9 +4557,9 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
             + 'Inference Data,{}\n'.format(adult)  \
             + 'Threshold Value,{}\n'.format(adult_thresh[0, 0])  \
             + '(Threshold Value = mean + coef * std)\n'  \
-            + 'Mean (mean),{}\n'.format(adult_diffs.mean())  \
+            + 'Mean (mean),{}\n'.format(diffs_mean)  \
             + 'Coefficient (coef),{}\n'.format(adult_coef)  \
-            + 'Standard Deviation (std),{}\n'.format(adult_diffs.std())  \
+            + 'Standard Deviation (std),{}\n'.format(diffs_std)  \
             + 'Smoothing Window Size,{}\n'.format(adult_w_size)  \
             + 'Smoothing Sigma,{}\nEvent Timing\n'.format(adult_w_sigma)  \
             + pd.DataFrame(auto_evals).to_csv(
