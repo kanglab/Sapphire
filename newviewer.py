@@ -873,6 +873,7 @@ def callback(_, buff, larva_data, adult_data, changed_data, well_idx):
 
 
 # =====================================================
+#  Callbacks to buffer a ID of a clicked well
 # =====================================================
 @app.callback(
         Output('changed-well', 'children'),
@@ -1044,6 +1045,7 @@ def callback(_, buff, larva_data, adult_data, changed_data):
 
 
 # =====================================================
+#  Callbacks to buffer a clicked frame number
 # =====================================================
 @app.callback(
         Output('changed-time', 'children'),
@@ -1191,7 +1193,7 @@ def callback(checks):
 
 
 # ======================================
-#  Load a blacklist file and check it.
+#  Callbacks for blacklist
 # ======================================
 @app.callback(
         Output('blacklist-check', 'values'),
