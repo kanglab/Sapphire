@@ -1172,6 +1172,32 @@ def callback(adult, data_root, dataset_name):
     return [{'label': i, 'value': i} for i in signal_files]
 
 
+@app.callback(
+        Output('larva-signal-type', 'value'),
+        [Input('larva-signal-type', 'options')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(options, data_root, dataset_name):
+    # Guard
+    if options is None or dataset_name is None:
+        return []
+
+    return options[0]['value']
+
+
+@app.callback(
+        Output('adult-signal-type', 'value'),
+        [Input('adult-signal-type', 'options')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def callback(options, data_root, dataset_name):
+    # Guard
+    if options is None or dataset_name is None:
+        return []
+
+    return options[0]['value']
+
+
 # =====================================================
 #  Toggle valid/invalid of window size
 # =====================================================
