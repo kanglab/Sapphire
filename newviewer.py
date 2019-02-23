@@ -1992,11 +1992,11 @@ def callback(midpoint, midpoints, well_idx, data_root, dataset_name):
         midpoints = {'midpoint': [50] * n_wells}
         return midpoints
 
-    group_ids = np.loadtxt(
-            os.path.join(data_root, dataset_name, 'grouping.csv'),
-            dtype=np.int16, delimiter=',').flatten()
-
     if os.path.exists(os.path.join(data_root, dataset_name, 'grouping.csv')):
+        group_ids = np.loadtxt(
+                os.path.join(data_root, dataset_name, 'grouping.csv'),
+                dtype=np.int16, delimiter=',').flatten()
+
         midpoints['midpoint'] = np.array(midpoints['midpoint'])
         group_id = group_ids[well_idx]
         midpoints['midpoint'][group_ids == group_id] = midpoint
