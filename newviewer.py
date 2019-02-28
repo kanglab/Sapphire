@@ -20,6 +20,7 @@ import dash_auth
 import dash_table
 import numpy as np
 import pandas as pd
+import urllib.parse
 import scipy.signal
 import my_threshold
 import dash_core_components as dcc
@@ -4224,9 +4225,9 @@ def callback(tab_name, data_root, env, detect, larva):
 
         larva_csv = \
                   'data:text/csv;charset=utf-8,'  \
-                + 'Dataset,{}\n'.format(env)  \
+                + 'Dataset,{}\n'.format(urllib.parse.quote(env))  \
                 + 'Morphology,larva\n'  \
-                + 'Inference Data,{}\n'.format(larva)  \
+                + 'Inference Data,{}\n'.format(urllib.parse.quote(larva))  \
                 + 'Event Timing\n'  \
                 + pd.DataFrame(larva_evals).to_csv(
                         index=False, encoding='utf-8', header=False)
@@ -4358,9 +4359,9 @@ def callback(tab_name, data_root, env, detect, larva, coef,
 
     auto_to_csv =  \
               'data:text/csv;charset=utf-8,'  \
-            + 'Dataset,{}\n'.format(env)  \
+            + 'Dataset,{}\n'.format(urllib.parse.quote(env))  \
             + 'Morphology,larva\n'  \
-            + 'Inference Data,{}\n'.format(larva)  \
+            + 'Inference Data,{}\n'.format(urllib.parse.quote(larva))  \
             + 'Threshold Value,{}\n'.format(thresholds[0, 0])  \
             + '(Threshold Value = mean + coef * std)\n'  \
             + 'Mean (mean),{}\n'.format(diffs_mean)  \
@@ -4485,9 +4486,9 @@ def callback(tab_name, data_root, env, detect, adult):
 
     adult_csv = \
               'data:text/csv;charset=utf-8,'  \
-            + 'Dataset,{}\n'.format(env)  \
+            + 'Dataset,{}\n'.format(urllib.parse.quote(env))  \
             + 'Morphology,adult\n'  \
-            + 'Inference Data,{}\n'.format(adult)  \
+            + 'Inference Data,{}\n'.format(urllib.parse.quote(adult))  \
             + 'Event Timing\n'  \
             + pd.DataFrame(adult_evals).to_csv(
                     index=False, encoding='utf-8', header=False)
@@ -4653,9 +4654,9 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
 
     auto_to_csv =  \
               'data:text/csv;charset=utf-8,'  \
-            + 'Dataset,{}\n'.format(env)  \
+            + 'Dataset,{}\n'.format(urllib.parse.quote(env))  \
             + 'Morphology,adult\n'  \
-            + 'Inference Data,{}\n'.format(adult)  \
+            + 'Inference Data,{}\n'.format(urllib.parse.quote(adult))  \
             + 'Threshold Value,{}\n'.format(adult_thresh[0, 0])  \
             + '(Threshold Value = mean + coef * std)\n'  \
             + 'Mean (mean),{}\n'.format(diffs_mean)  \
