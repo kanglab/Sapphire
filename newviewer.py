@@ -20,6 +20,7 @@ import dash_auth
 import dash_table
 import numpy as np
 import pandas as pd
+import urllib.parse
 import scipy.signal
 import my_threshold
 import dash_core_components as dcc
@@ -4259,7 +4260,8 @@ def callback(tab_name, data_root, env, detect, larva):
                     'Download the Data',
                     id='download-link',
                     download='Manual_Detection.csv',
-                    href=larva_csv,
+                    href=urllib.parse.quote(
+                            larva_csv, safe=':/', encoding='utf-8'),
                     target='_blank',
                 ),
             ]
@@ -4369,7 +4371,9 @@ def callback(tab_name, data_root, env, detect, larva, coef,
             + 'Smoothing Window Size,{}\n'.format(size)  \
             + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma)  \
             + pd.DataFrame(auto_evals).to_csv(
-                    index=False, encoding='utf-8', header=False),
+                    index=False, encoding='utf-8', header=False)
+    print(auto_to_csv)
+    print(type(auto_to_csv))
 
     style = [{
             'if': {
@@ -4399,7 +4403,8 @@ def callback(tab_name, data_root, env, detect, larva, coef,
                 'Download the Data',
                 id='download-link',
                 download='Auto_Detection.csv',
-                href=auto_to_csv,
+                href=urllib.parse.quote(
+                        auto_to_csv, safe=':/', encoding='utf-8'),
                 target='_blank',
             ),
         ]
@@ -4520,7 +4525,8 @@ def callback(tab_name, data_root, env, detect, adult):
                 'Download the Data',
                 id='download-link',
                 download='Manual_Detection.csv',
-                href=adult_csv,
+                href=urllib.parse.quote(
+                        adult_csv, safe=':/', encoding='utf-8'),
                 target='_blank',
             ),
         ]
@@ -4664,7 +4670,7 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
             + 'Smoothing Window Size,{}\n'.format(adult_w_size)  \
             + 'Smoothing Sigma,{}\nEvent Timing\n'.format(adult_w_sigma)  \
             + pd.DataFrame(auto_evals).to_csv(
-                    index=False, encoding='utf-8', header=False),
+                    index=False, encoding='utf-8', header=False)
 
     style = [{
             'if': {
@@ -4694,7 +4700,8 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
                 'Download the Data',
                 id='download-link',
                 download='Auto_Detection.csv',
-                href=auto_to_csv,
+                href=urllib.parse.quote(
+                        auto_to_csv, safe=':/', encoding='utf-8'),
                 target='_blank',
             ),
         ]
