@@ -1849,7 +1849,7 @@ def callback(time, well_idx, data_root, env):
 
         groups = np.loadtxt(
                 os.path.join(data_root, env, 'grouping.csv'),
-                dtype=np.int16, delimiter=',').flatten()
+                dtype=np.int32, delimiter=',').flatten()
 
         for well_idx, group_id in enumerate(groups):
             mask[mask==well_idx] = group_id
@@ -2085,7 +2085,7 @@ def callback(midpoint, midpoints, well_idx, data_root, dataset_name):
     if os.path.exists(os.path.join(data_root, dataset_name, 'grouping.csv')):
         group_ids = np.loadtxt(
                 os.path.join(data_root, dataset_name, 'grouping.csv'),
-                dtype=np.int16, delimiter=',').flatten()
+                dtype=np.int32, delimiter=',').flatten()
 
         midpoints['midpoint'] = np.array(midpoints['midpoint'])
         group_id = group_ids[well_idx]
@@ -2158,7 +2158,7 @@ def callback(well_idx, coef, time, midpoints, weight, style, checks, size,
         manual_evals = np.loadtxt(
                 os.path.join(
                     data_root, env, 'original', 'pupariation.csv'),
-                dtype=np.int16, delimiter=',').flatten()
+                dtype=np.int32, delimiter=',').flatten()
 
         manual_data = [
             {
@@ -2371,7 +2371,7 @@ def callback(larva_coef, adult_coef, time, midpoints,
 
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
-                dtype=np.int16, delimiter=',').flatten()
+                dtype=np.int32, delimiter=',').flatten()
 
         manual_data = [
             {
@@ -2389,7 +2389,7 @@ def callback(larva_coef, adult_coef, time, midpoints,
 
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
-                dtype=np.int16, delimiter=',').flatten()
+                dtype=np.int32, delimiter=',').flatten()
 
         manual_data = [
             {
@@ -2552,7 +2552,7 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
 
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', 'pupariation.csv'),
-            dtype=np.int16, delimiter=',').flatten()
+            dtype=np.int32, delimiter=',').flatten()
 
     # Target wells will be evaluated
     exceptions = np.logical_or(blacklist['value'], manual_evals == 0)
@@ -2564,7 +2564,7 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
     # Load a manual data
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', 'pupariation.csv'),
-            dtype=np.int16, delimiter=',').flatten()
+            dtype=np.int32, delimiter=',').flatten()
 
     # Load the data
     larva_diffs = np.load(os.path.join(
@@ -2812,7 +2812,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
         else:
             manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
-                dtype=np.int16, delimiter=',').flatten()
+                dtype=np.int32, delimiter=',').flatten()
             
 
 
@@ -2834,7 +2834,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
         else:
             manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
-                dtype=np.int16, delimiter=',').flatten()
+                dtype=np.int32, delimiter=',').flatten()
 
     # Target wells will be evaluated
     exceptions = np.logical_or(blacklist['value'], manual_evals == 0)
@@ -3099,7 +3099,7 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
 
     manual_evals = np.loadtxt(
             os.path.join(data_root, env, 'original', 'pupariation.csv'),
-            dtype=np.int16, delimiter=',').flatten()
+            dtype=np.int32, delimiter=',').flatten()
 
     # Target wells will be evaluated
     exceptions = np.logical_or(blacklist['value'], manual_evals == 0)
@@ -3298,7 +3298,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
 
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
-                dtype=np.int16, delimiter=',').flatten()
+                dtype=np.int32, delimiter=',').flatten()
 
     elif detect == 'death':
         if not os.path.exists(os.path.join(
@@ -3316,7 +3316,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
 
         manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
-                dtype=np.int16, delimiter=',').flatten()
+                dtype=np.int32, delimiter=',').flatten()
 
     # Target wells will be evaluated
     exceptions = np.logical_or(blacklist['value'], manual_evals == 0)
@@ -4218,7 +4218,7 @@ def callback(tab_name, data_root, env, detect, larva):
         # Load a manual data
         larva_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'pupariation.csv'),
-                dtype=np.int16, delimiter=',').flatten()
+                dtype=np.int32, delimiter=',').flatten()
 
         larva_evals = larva_evals.reshape(
                 params['n-rows']*params['n-plates'], params['n-clms'])
@@ -4469,7 +4469,7 @@ def callback(tab_name, data_root, env, detect, adult):
         # Load a manual data
         adult_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
-                dtype=np.int16, delimiter=',').flatten()
+                dtype=np.int32, delimiter=',').flatten()
 
     elif detect == 'death':
         if not os.path.exists(os.path.join(
@@ -4479,7 +4479,7 @@ def callback(tab_name, data_root, env, detect, adult):
         # Load a manual data
         adult_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'death.csv'),
-                dtype=np.int16, delimiter=',').flatten()
+                dtype=np.int32, delimiter=',').flatten()
 
     adult_evals = adult_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
@@ -4894,7 +4894,7 @@ def load_blacklist(data_root, dataset_name, white=False):
     if os.path.exists(os.path.join(data_root, dataset_name, 'blacklist.csv')):
         blacklist = np.loadtxt(
                 os.path.join(data_root, dataset_name, 'blacklist.csv'),
-                dtype=np.int16, delimiter=',').flatten() == 1
+                dtype=np.int32, delimiter=',').flatten() == 1
 
         exist = True
 
@@ -4921,7 +4921,7 @@ def load_grouping_csv(data_root, dataset_name):
     if os.path.exists(os.path.join(data_root, dataset_name, 'grouping.csv')):
         groups = np.loadtxt(
                 os.path.join(data_root, dataset_name, 'grouping.csv'),
-                dtype=np.int16, delimiter=',').flatten()
+                dtype=np.int32, delimiter=',').flatten()
 
         return [groups == i for i in range(1, groups.max() + 1)]
 
