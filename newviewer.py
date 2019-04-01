@@ -3840,6 +3840,9 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, signal_name)).T
 
+    # Compute thresholds
+    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
+
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
             smooth=len(checks) != 0,
@@ -3847,9 +3850,6 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
             pupar_times=None,
             midpoints=midpoints,
             weight_style=style)
-
-    # Compute thresholds
-    thresholds = my_threshold.entire_stats(larva_diffs, coef=coef)
 
     auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
 
