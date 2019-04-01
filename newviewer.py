@@ -2140,8 +2140,6 @@ def callback(well_idx, coef, time, midpoints, weight, style, checks, size,
 
     diffs_mean = larva_diffs.mean()
     diffs_std = larva_diffs.std()
-    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
-
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
             smooth=len(checks) != 0,
@@ -2149,6 +2147,8 @@ def callback(well_idx, coef, time, midpoints, weight, style, checks, size,
             pupar_times=None,
             midpoints=midpoints,
             weight_style=style)
+
+    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
     auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
 
@@ -2332,8 +2332,6 @@ def callback(larva_coef, adult_coef, time, midpoints,
         larva_diffs = np.load(os.path.join(data_root,
                 env, 'inference', 'larva', larva, larva_signal_name)).T
 
-        larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
-
         larva_diffs = seasoning(
                 larva_diffs, 'larva', detect, larva_w_size, larva_w_sigma,
                 smooth=len(larva_smoothing) != 0,
@@ -2341,6 +2339,8 @@ def callback(larva_coef, adult_coef, time, midpoints,
                 pupar_times=None,
                 midpoints=midpoints,
                 weight_style=larva_w_style)
+
+        larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
         pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
 
@@ -2353,8 +2353,6 @@ def callback(larva_coef, adult_coef, time, midpoints,
             data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
     diffs_mean = adult_diffs.mean()
     diffs_std = adult_diffs.std()
-    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
-
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, adult_w_size, adult_w_sigma,
             smooth=len(adult_smoothing) != 0,
@@ -2362,6 +2360,8 @@ def callback(larva_coef, adult_coef, time, midpoints,
             pupar_times=pupar_times,
             midpoints=midpoints,
             weight_style=adult_w_style)
+
+    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
     auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
 
@@ -2570,8 +2570,6 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, signal_name)).T
 
-    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
-
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
             smooth=len(checks) != 0,
@@ -2579,6 +2577,8 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
             pupar_times=None,
             midpoints=midpoints,
             weight_style=style)
+
+    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
     auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
 
@@ -2855,8 +2855,6 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_diffs = np.load(os.path.join(data_root,
                 env, 'inference', 'larva', larva, larva_signal_name)).T
 
-        larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
-
         larva_diffs = seasoning(
                 larva_diffs, 'larva', detect, larva_w_size, larva_w_sigma,
                 smooth=len(larva_smoothing) != 0,
@@ -2864,6 +2862,8 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
                 pupar_times=None,
                 midpoints=midpoints,
                 weight_style=larva_w_style)
+
+        larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
         pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
 
@@ -2875,8 +2875,6 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
 
-    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
-
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, adult_w_size, adult_w_sigma,
             smooth=len(adult_smoothing) != 0,
@@ -2884,6 +2882,8 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
             pupar_times=pupar_times,
             midpoints=midpoints,
             weight_style=adult_w_style)
+
+    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
     auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
 
@@ -3109,8 +3109,6 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, signal_name)).T
 
-    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
-
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
             smooth=len(checks) != 0,
@@ -3118,6 +3116,8 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
             pupar_times=None,
             midpoints=midpoints,
             weight_style=style)
+
+    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
     auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
 
@@ -3334,8 +3334,6 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_diffs = np.load(os.path.join(data_root,
                 env, 'inference', 'larva', larva, larva_signal_name)).T
 
-        larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
-
         larva_diffs = seasoning(
                 larva_diffs, 'larva', detect, larva_w_size, larva_w_sigma,
                 smooth=len(larva_smoothing) != 0,
@@ -3343,6 +3341,8 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
                 pupar_times=None,
                 midpoints=midpoints,
                 weight_style=larva_w_style)
+
+        larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
         pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
 
@@ -3354,8 +3354,6 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
 
-    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
-
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, adult_w_size, adult_w_sigma,
             smooth=len(adult_smoothing) != 0,
@@ -3363,6 +3361,8 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
             pupar_times=pupar_times,
             midpoints=midpoints,
             weight_style=adult_w_style)
+
+    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
     auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
 
@@ -3537,8 +3537,6 @@ def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, larva_signal_name)).T
 
-    larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
-
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, larva_w_size, larva_w_sigma,
             smooth=len(larva_smoothing) != 0,
@@ -3546,6 +3544,8 @@ def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
             pupar_times=None,
             midpoints=midpoints,
             weight_style=larva_w_style)
+
+    larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
     # Evaluate event timing
     # Compute event times from signals
@@ -3557,8 +3557,6 @@ def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
 
-    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
-
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, adult_w_size, adult_w_sigma,
             smooth=len(adult_smoothing) != 0,
@@ -3566,6 +3564,8 @@ def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
             pupar_times=pupars,
             midpoints=midpoints,
             weight_style=adult_w_style)
+
+    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
     eclos = (adult_diffs > adult_thresh).argmax(axis=1)
 
@@ -3685,8 +3685,6 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, signal_name)).T
 
-    thresholds = THRESH_FUNC(adult_diffs, coef=coef)
-
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, size, sigma,
             smooth=len(checks) != 0,
@@ -3694,6 +3692,8 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
             pupar_times=None,
             midpoints=midpoints,
             weight_style=style)
+
+    thresholds = THRESH_FUNC(adult_diffs, coef=coef)
 
     auto_evals = detect_event(adult_diffs, thresholds, 'adult', detect)
 
@@ -3840,9 +3840,6 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, signal_name)).T
 
-    # Compute thresholds
-    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
-
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
             smooth=len(checks) != 0,
@@ -3850,6 +3847,9 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
             pupar_times=None,
             midpoints=midpoints,
             weight_style=style)
+
+    # Compute thresholds
+    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
     auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
 
@@ -3994,8 +3994,6 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_diffs = np.load(os.path.join(data_root,
                 env, 'inference', 'larva', larva, larva_signal_name)).T
 
-        larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
-
         larva_diffs = seasoning(
                 larva_diffs, 'larva', detect, larva_w_size, larva_w_sigma,
                 smooth=len(larva_smoothing) != 0,
@@ -4003,6 +4001,8 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
                 pupar_times=None,
                 midpoints=midpoints,
                 weight_style=larva_w_style)
+
+        larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
         pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
 
@@ -4014,8 +4014,6 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
 
-    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
-
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, adult_w_size, adult_w_sigma,
             smooth=len(adult_smoothing) != 0,
@@ -4023,6 +4021,8 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
             pupar_times=pupar_times,
             midpoints=midpoints,
             weight_style=adult_w_style)
+
+    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
     auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
 
@@ -4342,8 +4342,6 @@ def callback(tab_name, data_root, env, detect, larva, coef,
             data_root, env, 'inference', 'larva', larva, signal_name)).T
     diffs_mean = larva_diffs.mean()
     diffs_std = larva_diffs.std()
-    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
-
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
             smooth=len(checks) != 0,
@@ -4351,6 +4349,8 @@ def callback(tab_name, data_root, env, detect, larva, coef,
             pupar_times=None,
             midpoints=midpoints,
             weight_style=style)
+
+    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
     auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
 
@@ -4616,8 +4616,6 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
         larva_diffs = np.load(os.path.join(data_root,
                 env, 'inference', 'larva', larva, larva_signal_name)).T
 
-        larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
-
         larva_diffs = seasoning(
                 larva_diffs, 'larva', detect, larva_w_size, larva_w_sigma,
                 smooth=len(larva_smoothing) != 0,
@@ -4625,6 +4623,8 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
                 pupar_times=None,
                 midpoints=midpoints,
                 weight_style=larva_w_style)
+
+        larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
         pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
 
@@ -4637,8 +4637,6 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
             data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
     diffs_mean = adult_diffs.mean()
     diffs_std = adult_diffs.std()
-    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
-
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, adult_w_size, adult_w_sigma,
             smooth=len(adult_smoothing) != 0,
@@ -4646,6 +4644,8 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
             pupar_times=pupar_times,
             midpoints=midpoints,
             weight_style=adult_w_style)
+
+    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
     auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
 
