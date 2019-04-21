@@ -92,6 +92,11 @@ app.layout = html.Div([
                                 'disabled': True,
                             },
                             {
+                                'label': 'Eclosion',
+                                'value': 'eclosion',
+                                'disabled': True,
+                            },
+                            {
                                 'label': 'Pupariation&Eclosion',
                                 'value': 'pupa-and-eclo',
                                 'disabled': True,
@@ -737,6 +742,9 @@ def callback(env, data_root):
     if config['detect'] == 'pupariation':
         return 'pupariation'
 
+    elif config['detect'] == 'eclosion':
+        return 'eclosion'
+
     elif config['detect'] == 'pupa&eclo':
         return 'pupa-and-eclo'
 
@@ -762,6 +770,9 @@ def callback(detect, data_root, env):
     if detect == 'pupariation':
         return False
 
+    elif detect == 'eclosion':
+        return True
+
     elif detect == 'pupa-and-eclo':
         return False
 
@@ -777,7 +788,7 @@ def callback(detect, data_root, env):
 def callback(detect, data_root, env):
     if env is None:
         return []
-    if detect == 'death':
+    if detect == 'eclosion' or detect == 'death':
         return []
 
     results = [os.path.basename(i)
@@ -811,6 +822,9 @@ def callback(detect, data_root, env):
 
     if detect == 'pupariation':
         return True
+
+    elif detect == 'eclosion':
+        return False
 
     elif detect == 'pupa-and-eclo':
         return False
@@ -1655,7 +1669,7 @@ def callback(time, well_idx, data_root, env, detect, larva, adult):
             adult_label_img1.save(adult_label_buf1, format='JPEG')
             adult_label_img2.save(adult_label_buf2, format='JPEG')
 
-            data = data + [
+            data = [
                 html.Div('Adult'),
                 html.Div([
                     html.Img(
@@ -1711,7 +1725,7 @@ def callback(time, well_idx, data_root, env, detect, larva, adult):
                 ]),
             ]
 
-    elif detect == 'death':
+    elif detect in ('eclosion', 'death'):
         # Guard
         if adult is None:
             return
@@ -2259,6 +2273,9 @@ def callback(detect):
                 'margin-top': '10px',
             }
 
+    elif detect == 'eclosion':
+        return {'display': 'none'}
+
     elif detect == 'pupa-and-eclo':
         return {
                 'width': '810px',
@@ -2366,7 +2383,7 @@ def callback(larva_coef, adult_coef, time, midpoints,
     auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
 
     # Load a manual evaluation of event timing
-    if detect == 'pupa-and-eclo' and os.path.exists(
+    if detect in ('eclosion', 'pupa-and-eclo') and os.path.exists(
             os.path.join(data_root, env, 'original', 'eclosion.csv')):
 
         manual_evals = np.loadtxt(
@@ -2485,6 +2502,12 @@ def callback(detect):
 
     if detect == 'pupariation':
         return {'display': 'none'}
+        
+    elif detect == 'eclosion':
+        return {
+                'width': '810px',
+                'margin-top': '10px',
+            }
         
     elif detect == 'pupa-and-eclo':
         return {
@@ -2732,6 +2755,9 @@ def callback(detect):
                 'width': '20%',
             }
 
+    elif detect == 'eclosion':
+        return {'display': 'none'}
+
     elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
@@ -2740,9 +2766,7 @@ def callback(detect):
             }
 
     elif detect == 'death':
-        return {
-                'display': 'none',
-            }
+        return {'display': 'none'}
 
     else:
         return {}
@@ -2794,41 +2818,45 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
         return {'data': []}
 
     # Load a manual evaluation of event timing
-    if detect == 'pupa-and-eclo':
+    if detect in ('eclosion', 'pupa-and-eclo'):
         if not os.path.exists(os.path.join(
                 data_root, env, 'original', 'eclosion.csv')):
-            #return {'data': []}
-            non_manualdata = {'layout': {
+            non_manualdata = {
+                    'layout': {
                         'annotations': [
-                        {
-                        'x': 5.0,
-                        'y': 2.0,
-                        'text': 'Not Available',
-                        'showarrow': False,
-                        'xanchor': 'right',
-                    },]}}
+                            {
+                                'x': 5.0,
+                                'y': 2.0,
+                                'text': 'Not Available',
+                                'showarrow': False,
+                                'xanchor': 'right',
+                            },
+                        ]
+                    }
+                }
             return non_manualdata
 
         else:
             manual_evals = np.loadtxt(
                 os.path.join(data_root, env, 'original', 'eclosion.csv'),
                 dtype=np.int32, delimiter=',').flatten()
-            
-
 
     elif detect == 'death':
         if not os.path.exists(os.path.join(
                 data_root, env, 'original', 'death.csv')):
-            #return {'data': []}
-            non_manualdata = {'layout': {
+            non_manualdata = {
+                    'layout': {
                         'annotations': [
-                        {
-                        'x': 5.0,
-                        'y': 2.0,
-                        'text': 'Not Available',
-                        'showarrow': False,
-                        'xanchor': 'right',
-                    },]}}
+                            {
+                                'x': 5.0,
+                                'y': 2.0,
+                                'text': 'Not Available',
+                                'showarrow': False,
+                                'xanchor': 'right',
+                            },
+                        ]
+                    }
+                }
             return non_manualdata
 
         else:
@@ -3032,6 +3060,13 @@ def callback(detect):
     if detect == 'pupariation':
         return {'display': 'none'}
 
+    elif detect == 'eclosion':
+        return {
+                'display': 'inline-block',
+                'height': '300px',
+                'width': '20%',
+            }
+
     elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
@@ -3223,6 +3258,9 @@ def callback(detect):
                 'width': '20%',
             }
 
+    elif detect == 'eclosion':
+        return {'display': 'none'}
+
     elif detect == 'pupa-and-eclo':
         return {
                 'display': 'inline-block',
@@ -3231,9 +3269,7 @@ def callback(detect):
             }
 
     elif detect == 'death':
-        return {
-                'display': 'none',
-            }
+        return {'display': 'none'}
 
     else:
         return {}
@@ -3281,19 +3317,22 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
         return {'data': []}
 
     # Load a manual evaluation of event timing
-    if detect == 'pupa-and-eclo':
+    if detect in ('eclosion', 'pupa-and-eclo'):
         if not os.path.exists(os.path.join(
                 data_root, env, 'original', 'eclosion.csv')):
-            #return {'data': []}
-            non_manualdata = {'layout': {
+            non_manualdata = {
+                    'layout': {
                         'annotations': [
-                        {
-                        'x': 5.0,
-                        'y': 2.0,
-                        'text': 'Not Available',
-                        'showarrow': False,
-                        'xanchor': 'right',
-                    },]}}
+                            {
+                                'x': 5.0,
+                                'y': 2.0,
+                                'text': 'Not Available',
+                                'showarrow': False,
+                                'xanchor': 'right',
+                            },
+                        ]
+                    }
+                }
             return non_manualdata
 
         manual_evals = np.loadtxt(
@@ -3303,15 +3342,19 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
     elif detect == 'death':
         if not os.path.exists(os.path.join(
                 data_root, env, 'original', 'death.csv')):
-            non_manualdata = {'layout': {
+            non_manualdata = {
+                    'layout': {
                         'annotations': [
-                        {
-                        'x': 5.0,
-                        'y': 2.0,
-                        'text': 'Not Available',
-                        'showarrow': False,
-                        'xanchor': 'right',
-                    },]}}
+                            {
+                                'x': 5.0,
+                                'y': 2.0,
+                                'text': 'Not Available',
+                                'showarrow': False,
+                                'xanchor': 'right',
+                            },
+                        ]
+                    }
+                }
             return non_manualdata
 
         manual_evals = np.loadtxt(
@@ -3464,14 +3507,7 @@ def callback(detect):
     if detect == 'pupariation':
         return {'display': 'none'}
 
-    if detect == 'pupa-and-eclo':
-        return {
-                'display': 'inline-block',
-                'height': '300px',
-                'width': '20%',
-            }
-
-    elif detect == 'death':
+    elif detect in ('eclosion', 'pupa-and-eclo', 'death'):
         return {
                 'display': 'inline-block',
                 'height': '300px',
@@ -3624,7 +3660,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupariation':
+    if detect in ('pupariation', 'eclosion', 'death'):
         return {'display': 'none'}
 
     elif detect == 'pupa-and-eclo':
@@ -3633,9 +3669,6 @@ def callback(detect):
                 'height': '300px',
                 'width': '20%',
             }
-
-    elif detect == 'death':
-        return {'display': 'none'}
 
     else:
         return {}
@@ -3670,9 +3703,7 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'adult', adult, signal_name)):
         return {'data': []}
-    if detect == 'pupariation':
-        return {'data': []}
-    if detect == 'pupa-and-eclo':
+    if detect in ('pupariation', 'eclosion', 'pupa-and-eclo'):
         return {'data': []}
 
     # Load a blacklist and whitelist
@@ -3781,10 +3812,7 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupariation':
-        return {'display': 'none'}
-
-    elif detect == 'pupa-and-eclo':
+    if detect in ('pupariation', 'eclosion', 'pupa-and-eclo'):
         return {'display': 'none'}
 
     elif detect == 'death':
@@ -3911,23 +3939,15 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupariation':
+    if detect in ('pupariation', 'pupa-and-eclo'):
         return {
                 'display': 'inline-block',
                 'height': '300px',
                 'width': '20%',
             }
 
-    elif detect == 'pupa-and-eclo':
-        return {
-                'display': 'inline-block',
-                'height': '300px',
-                'width': '20%',
-            }
-
-    elif detect == 'death':
-        return {'display': 'none',
-            }
+    elif detect in ('eclosion', 'death'):
+        return {'display': 'none'}
 
     else:
         return {}
@@ -4087,14 +4107,7 @@ def callback(detect):
     if detect == 'pupariation':
         return {'display': 'none'}
 
-    elif detect == 'pupa-and-eclo':
-        return {
-                'display': 'inline-block',
-                'height': '300px',
-                'width': '20%',
-            }
-
-    elif detect == 'death':
+    elif detect in ('eclosion', 'pupa-and-eclo', 'death'):
         return {
                 'display': 'inline-block',
                 'height': '300px',
@@ -4210,7 +4223,7 @@ def callback(tab_name, data_root, env, detect, larva):
     with open(os.path.join(data_root, env, 'mask_params.json')) as f:
         params = json.load(f)
 
-    if detect == 'pupariation' or detect == 'pupa-and-eclo':
+    if detect in ('pupariation', 'pupa-and-eclo'):
         if not os.path.exists(os.path.join(
                 data_root, env, 'original', 'pupariation.csv')):
             return 'Not available.'
@@ -4265,7 +4278,7 @@ def callback(tab_name, data_root, env, detect, larva):
                 ),
             ]
 
-    if detect == 'death':
+    if detect in ('eclosion', 'death'):
         return []
 
 
@@ -4274,7 +4287,7 @@ def callback(tab_name, data_root, env, detect, larva):
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupariation':
+    if detect in ('pupariation', 'pupa-and-eclo'):
         return {
                 'display': 'inline-block',
                 'vertical-align': 'top',
@@ -4282,15 +4295,7 @@ def callback(detect):
                 'width': '400px',
             }
 
-    elif detect == 'pupa-and-eclo':
-        return {
-                'display': 'inline-block',
-                'vertical-align': 'top',
-                'margin': '10px',
-                'width': '400px',
-            }
-
-    elif detect == 'death':
+    elif detect in ('eclosion', 'death'):
         return {'display': 'none'}
 
     else:
@@ -4328,7 +4333,7 @@ def callback(tab_name, data_root, env, detect, larva, coef,
         return 'Not available.'
     if larva is None:
         return 'Not available.'
-    if detect == 'death':
+    if detect in ('eclosion', 'death'):
         return []
     if not os.path.exists(os.path.join(
             data_root, env, 'inference', 'larva', larva, signal_name)):
@@ -4411,7 +4416,7 @@ def callback(tab_name, data_root, env, detect, larva, coef,
         [Input('detect-target', 'value')])
 def callback(detect):
 
-    if detect == 'pupariation':
+    if detect in ('pupariation', 'pupa-and-eclo'):
         return {
                 'display': 'inline-block',
                 'vertical-align': 'top',
@@ -4419,15 +4424,7 @@ def callback(detect):
                 'width': '400px',
             }
 
-    elif detect == 'pupa-and-eclo':
-        return {
-                'display': 'inline-block',
-                'vertical-align': 'top',
-                'margin': '10px',
-                'width': '400px',
-            }
-
-    elif detect == 'death':
+    elif detect in ('eclosion', 'death'):
         return {'display': 'none'}
 
     else:
@@ -4461,7 +4458,7 @@ def callback(tab_name, data_root, env, detect, adult):
     with open(os.path.join(data_root, env, 'mask_params.json')) as f:
         params = json.load(f)
 
-    if detect == 'pupa-and-eclo':
+    if detect in ('eclosion', 'pupa-and-eclo'):
         if not os.path.exists(os.path.join(
                 data_root, env, 'original', 'eclosion.csv')):
             return 'Not available.'
@@ -4535,15 +4532,7 @@ def callback(detect):
     if detect == 'pupariation':
         return {'display': 'none'}
 
-    elif detect == 'pupa-and-eclo':
-        return {
-                'display': 'inline-block',
-                'vertical-align': 'top',
-                'margin': '10px',
-                'width': '400px',
-            }
-
-    elif detect == 'death':
+    elif detect in ('eclosion', 'pupa-and-eclo', 'death'):
         return {
                 'display': 'inline-block',
                 'vertical-align': 'top',
@@ -4594,6 +4583,8 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
     if tab_name != 'tab-2':
         return
     if detect is None:
+        return 'Not available.'
+    if detect == 'pupariation':
         return 'Not available.'
     if adult is None:
         return 'Not available.'
@@ -4709,15 +4700,7 @@ def callback(detect):
     if detect == 'pupariation':
         return {'display': 'none'}
 
-    elif detect == 'pupa-and-eclo':
-        return {
-                'display': 'inline-block',
-                'vertical-align': 'top',
-                'margin': '10px',
-                'width': '400px',
-            }
-
-    elif detect == 'death':
+    elif detect in ('eclosion', 'pupa-and-eclo', 'death'):
         return {
                 'display': 'inline-block',
                 'vertical-align': 'top',
@@ -4764,6 +4747,27 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
         # Not defined
         elif detect == 'pupariation' and signal_type == 'adult':
             pass
+
+        # Not defined
+        elif detect == 'eclosion' and signal_type == 'larva':
+            pass
+
+        # Detection of eclosion
+        elif detect == 'eclosion' and signal_type == 'adult':
+            # Step or ramp weight
+            if weight_style == 'step':
+                for well_idx, midpoint in enumerate(midpoints['midpoint']):
+                    signals[well_idx, :midpoint] = 0
+
+            elif weight_style == 'ramp':
+                # Ramp filter
+                for well_idx, midpoint in enumerate(midpoints['midpoint']):
+                    signals[well_idx] = signals[well_idx] * (
+                            1 / (len(signals.T) - midpoint)
+                            * np.arange(len(signals.T))
+                            - midpoint / (len(signals.T) - midpoint))
+            else:
+                pass
 
         # Detection of pupariation
         elif detect == 'pupa-and-eclo' and signal_type == 'larva':
@@ -4862,6 +4866,15 @@ def detect_event(signals, thresholds, signal_type, detect):
     elif detect == 'pupariation' and signal_type == 'adult':
         # Never evaluated
         pass
+
+    elif detect == 'eclosion' and signal_type == 'larva':
+        # Never evaluated
+        pass
+
+    elif detect == 'eclosion' and signal_type == 'adult':
+        # Detect the rising of the signal
+        # Compute event times from signals
+        auto_evals = (signals > thresholds).argmax(axis=1)
 
     elif detect == 'pupa-and-eclo' and signal_type == 'larva':
         # Detect the falling of the signal
