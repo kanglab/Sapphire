@@ -65,7 +65,7 @@ app.layout = html.Div([
         ),
     ]),
     dcc.Tabs(id='tabs', value='tab-1', children=[
-        dcc.Tab(id='tab-1', label='Tab 1', value='tab-1', children=[
+        dcc.Tab(id='tab-1', label='Main', value='tab-1', children=[
             html.Div([
                 html.Div([
                     'Dataset:',
@@ -97,7 +97,7 @@ app.layout = html.Div([
                                 'disabled': True,
                             },
                             {
-                                'label': 'Pupariation&Eclosion',
+                                'label': 'Pupariation & eclosion',
                                 'value': 'pupa-and-eclo',
                                 'disabled': True,
                             },
@@ -630,7 +630,7 @@ app.layout = html.Div([
             ]),
             html.Div(id='dummy-div'),
         ]),
-        dcc.Tab(id='tab-2', label='Tab 2', value='tab-2', children=[
+        dcc.Tab(id='tab-2', label='Data Table', value='tab-2', children=[
             html.Div(
                 id='timestamp-table',
                 style={
@@ -2268,7 +2268,7 @@ def callback(well_idx, coef, time, midpoints, weight, style,
                         'tickfont': {'size': 15},
                     },
                     'yaxis': {
-                        'title': 'Diff. of Larva ROI',
+                        'title': 'Activity',
                         'tickfont': {'size': 15},
                         'overlaying': 'y',
                         'range': [-0.1*larva_diffs.max(), larva_diffs.max()],
@@ -2504,7 +2504,7 @@ def callback(larva_coef, adult_coef, time, midpoints,
                     'tickfont': {'size': 15},
                 },
                 'yaxis': {
-                    'title':'Diff. of Adult ROI',
+                    'title': 'Activity',
                     'tickfont': {'size': 15},
                     'side': 'left',
                     'range': [-0.1*adult_diffs.max(), adult_diffs.max()],
@@ -3257,7 +3257,7 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
                 ],
                 'font': {'size': 15},
                 'xaxis': {
-                    'title': 'auto - manual',
+                    'title': 'Auto - manual',
                     'range': [-len(larva_diffs.T), len(larva_diffs.T)],
                     'tickfont': {'size': 15},
                 },
@@ -3512,7 +3512,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
                 ],
                 'font': {'size': 15},
                 'xaxis': {
-                    'title': 'auto - manual',
+                    'title': 'Auto - manual',
                     'range': [-len(adult_diffs.T), len(adult_diffs.T)],
                     'tickfont': {'size': 15},
                 },
@@ -4220,7 +4220,7 @@ def callback(tab_name, data_root, env, timestamps):
                 pagination_mode=False,
             ),
             html.A(
-                'Download the Data',
+                'Download',
                 id='download-link',
                 download='Timestamp({}).csv'.format(env[0:20]),
                 href='data:text/csv;charset=utf-8,' + df.to_csv(index=False),
@@ -4301,7 +4301,7 @@ def callback(tab_name, data_root, env, detect, larva):
                     style_table={'width': '100%'}
                 ),
                 html.A(
-                    'Download the Data',
+                    'Download',
                     id='download-link',
                     download='Manual_Detection.csv',
                     href=larva_csv,
@@ -4434,7 +4434,7 @@ def callback(tab_name, data_root, env, detect, larva, coef,
                 style_table={'width': '100%'}
             ),
             html.A(
-                'Download the Data',
+                'Download',
                 id='download-link',
                 download='Auto_Detection.csv',
                 href=auto_to_csv,
@@ -4547,7 +4547,7 @@ def callback(tab_name, data_root, env, detect, adult):
                 style_table={'width': '100%'}
             ),
             html.A(
-                'Download the Data',
+                'Download',
                 id='download-link',
                 download='Manual_Detection.csv',
                 href=adult_csv,
@@ -4716,7 +4716,7 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
                 style_table={'width': '100%'}
             ),
             html.A(
-                'Download the Data',
+                'Download',
                 id='download-link',
                 download='Auto_Detection.csv',
                 href=auto_to_csv,
