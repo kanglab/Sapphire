@@ -1687,7 +1687,7 @@ def callback(time, well_idx, data_root, env, detect, larva, adult):
             adult_label_img1.save(adult_label_buf1, format='JPEG')
             adult_label_img2.save(adult_label_buf2, format='JPEG')
 
-            data = [
+            data = data + [
                 html.Div('Adult'),
                 html.Div([
                     html.Img(
