@@ -3565,7 +3565,8 @@ def callback(detect):
          Input('adult-smoothing-check', 'values'),
          Input('adult-window-size', 'value'),
          Input('adult-window-sigma', 'value'),
-         Input('hidden-blacklist', 'data')],
+         Input('hidden-blacklist', 'data'),
+         Input('detection-method', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -3576,7 +3577,8 @@ def callback(detect):
 def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
         larva_w_style, larva_smoothing, larva_w_size, larva_w_sigma,
         adult_weighting, adult_w_style, adult_smoothing, adult_w_size,
-        adult_w_sigma, blacklist, data_root, env, detect, larva, adult, larva_signal_name, adult_signal_name):
+        adult_w_sigma, blacklist, method, data_root, env, detect, larva, adult,
+        larva_signal_name, adult_signal_name):
     # Guard
     if env is None:
         return {'data': []}
@@ -3597,7 +3599,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
     blacklist = np.array(blacklist['value'])
     whitelist = np.logical_not(blacklist)
 
-    # Load the data
+    # Evaluation of pupariation timings
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, larva_signal_name)).T
 
@@ -3611,13 +3613,10 @@ def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
 
     larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
-    # Evaluate event timing
-    # Compute event times from signals
-    # Scan the signal from the right hand side.
-    pupars = (larva_diffs.shape[1]
-            - (np.fliplr(larva_diffs) > larva_thresh).argmax(axis=1))
-    pupars[pupars == larva_diffs.shape[1]] = 0
+    pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect, method)
 
+
+    # Evaluation of eclosion timings
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
 
@@ -3625,35 +3624,35 @@ def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
             adult_diffs, 'adult', detect, adult_w_size, adult_w_sigma,
             smooth=len(adult_smoothing) != 0,
             weight=len(adult_weighting) != 0,
-            pupar_times=pupars,
+            pupar_times=pupar_times,
             midpoints=midpoints,
             weight_style=adult_w_style)
 
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
-    eclos = (adult_diffs > adult_thresh).argmax(axis=1)
+    eclo_times = detect_event(adult_diffs, adult_thresh, 'adult', detect, method)
 
     return {
             'data': [
                 {
-                    'x': list(pupars[blacklist]),
-                    'y': list(eclos[blacklist]),
+                    'x': list(pupar_times[blacklist]),
+                    'y': list(eclo_times[blacklist]),
                     'text': [str(i) for i in np.where(blacklist)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#000000'},
                     'name': 'Well in Blacklist',
                 },
                 {
-                    'x': list(pupars[whitelist]),
-                    'y': list(eclos[whitelist]),
+                    'x': list(pupar_times[whitelist]),
+                    'y': list(eclo_times[whitelist]),
                     'text': [str(i) for i in np.where(whitelist)[0]],
                     'mode': 'markers',
                     'marker': {'size': 4, 'color': '#1f77b4'},
                     'name': 'Well in Whitelist',
                 },
                 {
-                    'x': [pupars[well_idx]],
-                    'y': [eclos[well_idx]],
+                    'x': [pupar_times[well_idx]],
+                    'y': [eclo_times[well_idx]],
                     'text': str(well_idx),
                     'mode': 'markers',
                     'marker': {'size': 10, 'color': '#ff0000'},
