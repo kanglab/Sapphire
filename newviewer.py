@@ -108,6 +108,24 @@ app.layout = html.Div([
                             },
                         ],
                     ),
+                    'Detection Method:',
+                    html.Br(),
+                    dcc.RadioItems(
+                        id='detection-method',
+                        options=[
+                            {
+                                'label': 'Maximum',
+                                'value': 'maximum',
+                                'disabled': False,
+                            },
+                            {
+                                'label': 'Thresholding',
+                                'value': 'thresholding',
+                                'disabled': False,
+                            },
+                        ],
+                        value='maximum',
+                    ),
                     'Inference Data:',
                     html.Br(),
                     html.Div([
