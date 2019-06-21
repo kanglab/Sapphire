@@ -2149,9 +2149,11 @@ def callback(midpoint, midpoints, well_idx, data_root, dataset_name):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('hidden-timestamp', 'data'),
-         State('larva-signal-type', 'value')])
-def callback(well_idx, coef, time, midpoints, weight, style, checks, size,
-        sigma, figure, data_root, env, detect, larva, timestamps, signal_name):
+         State('larva-signal-type', 'value'),
+         State('detection-method', 'value')])
+def callback(well_idx, coef, time, midpoints, weight, style,
+        checks, size, sigma, figure, data_root, env, detect,
+        larva, timestamps, signal_name, method):
     # Guard
     if env is None:
         return {'data': []}
@@ -2182,7 +2184,7 @@ def callback(well_idx, coef, time, midpoints, weight, style, checks, size,
 
     thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
-    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
+    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect, method)
 
     if os.path.exists(
             os.path.join(data_root, env, 'original', 'pupariation.csv')):
@@ -2335,12 +2337,14 @@ def callback(detect):
          State('adult-dropdown', 'value'),
          State('hidden-timestamp', 'data'),
          State('larva-signal-type', 'value'),
-         State('adult-signal-type', 'value')])
+         State('adult-signal-type', 'value'),
+         State('detection-method', 'value')])
 def callback(larva_coef, adult_coef, time, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
-        adult_w_size, adult_w_sigma, well_idx, figure, data_root, env, detect,
-        larva, adult, timestamps, larva_signal_name, adult_signal_name):
+        adult_w_size, adult_w_sigma, well_idx, figure, data_root, env,
+        detect, larva, adult, timestamps, larva_signal_name,
+        adult_signal_name, method):
     # Guard
     if env is None:
         return {'data': []}
@@ -2377,7 +2381,7 @@ def callback(larva_coef, adult_coef, time, midpoints,
 
         larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
-        pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
+        pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect, method)
 
 
     # ----------------------------------------
@@ -2398,7 +2402,7 @@ def callback(larva_coef, adult_coef, time, midpoints,
 
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
-    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
+    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect, method)
 
     # Load a manual evaluation of event timing
     if detect in ('eclosion', 'pupa-and-eclo') and os.path.exists(
@@ -2561,9 +2565,10 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('larva-signal-type', 'value')])
+         State('larva-signal-type', 'value'),
+         State('detection-method', 'value')])
 def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
-        blacklist, data_root, env, detect, larva, signal_name):
+        blacklist, data_root, env, detect, larva, signal_name, method):
     # Guard
     if env is None:
         return {'data': []}
@@ -2621,7 +2626,7 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
 
     thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
-    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
+    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect, method)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals[targets] - manual_evals[targets]
@@ -2816,12 +2821,13 @@ def callback(detect):
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value'),
          State('larva-signal-type', 'value'),
-         State('adult-signal-type', 'value')])
+         State('adult-signal-type', 'value'),
+         State('detection-method', 'value')])
 def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
         adult_w_size, adult_w_sigma, blacklist, data_root, env, detect,
-        larva, adult, larva_signal_name, adult_signal_name):
+        larva, adult, larva_signal_name, adult_signal_name, method):
     # Guard
     if env is None:
         return {'data': []}
@@ -2911,7 +2917,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
 
         larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
-        pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
+        pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect, method)
 
 
     # ----------------------------------------
@@ -2931,7 +2937,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
 
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
-    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
+    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect, method)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals[targets] - manual_evals[targets]
@@ -3121,9 +3127,10 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('larva-signal-type', 'value')])
+         State('larva-signal-type', 'value'),
+         State('detection-method', 'value')])
 def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
-        blacklist, data_root, env, detect, larva, signal_name):
+        blacklist, data_root, env, detect, larva, signal_name, method):
     # Guard
     if env is None:
         return {'data': []}
@@ -3172,7 +3179,7 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
 
     thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
-    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
+    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect, method)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
@@ -3319,12 +3326,13 @@ def callback(detect):
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value'),
          State('larva-signal-type', 'value'),
-         State('adult-signal-type', 'value')])
+         State('adult-signal-type', 'value'),
+         State('detection-method', 'value')])
 def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
         adult_w_size, adult_w_sigma, blacklist, data_root, env, detect,
-        larva, adult, larva_signal_name, adult_signal_name):
+        larva, adult, larva_signal_name, adult_signal_name, method):
     # Guard
     if env is None:
         return {'data': []}
@@ -3405,7 +3413,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
 
         larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
-        pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
+        pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect, method)
 
 
     # ----------------------------------------
@@ -3425,7 +3433,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
 
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
-    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
+    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect, method)
 
     # Calculate how many frames auto-evaluation is far from manual's one
     errors = auto_evals - manual_evals
@@ -3710,9 +3718,10 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('adult-dropdown', 'value'),
-         State('adult-signal-type', 'value')])
+         State('adult-signal-type', 'value'),
+         State('detection-method', 'value')])
 def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
-        blacklist, data_root, env, detect, adult, signal_name):
+        blacklist, data_root, env, detect, adult, signal_name, method):
     # Guard
     if env is None:
         return {'data': []}
@@ -3744,7 +3753,7 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
 
     thresholds = THRESH_FUNC(adult_diffs, coef=coef)
 
-    auto_evals = detect_event(adult_diffs, thresholds, 'adult', detect)
+    auto_evals = detect_event(adult_diffs, thresholds, 'adult', detect, method)
 
     if group_tables == []:
         # Compute survival ratio of all the animals
@@ -3862,9 +3871,10 @@ def callback(detect):
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('larva-signal-type', 'value')])
+         State('larva-signal-type', 'value'),
+         State('detection-method', 'value')])
 def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
-        blacklist, data_root, env, detect, larva, signal_name):
+        blacklist, data_root, env, detect, larva, signal_name, method):
     # Guard
     if env is None:
         return {'data': []}
@@ -3897,7 +3907,7 @@ def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
     # Compute thresholds
     thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
-    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
+    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect, method)
 
     # Make data to be drawn
     if group_tables == []:
@@ -3997,12 +4007,13 @@ def callback(detect):
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value'),
          State('larva-signal-type', 'value'),
-         State('adult-signal-type', 'value')])
+         State('adult-signal-type', 'value'),
+         State('detection-method', 'value')])
 def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
         adult_w_size, adult_w_sigma, blacklist, data_root, env, detect,
-        larva, adult, larva_signal_name, adult_signal_name):
+        larva, adult, larva_signal_name, adult_signal_name, method):
     # Guard
     if env is None:
         return {'data': []}
@@ -4042,7 +4053,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
 
         larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
-        pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
+        pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect, method)
 
 
     # ----------------------------------------
@@ -4062,7 +4073,7 @@ def callback(larva_coef, adult_coef, well_idx, midpoints,
 
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
-    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
+    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect, method)
 
     # Make data to be drawn
     if group_tables == []:
@@ -4337,9 +4348,10 @@ def callback(detect):
          State('larva-window-size', 'value'),
          State('larva-window-sigma', 'value'),
          State('larva-smoothing-check', 'values'),
-         State('larva-signal-type', 'value')])
+         State('larva-signal-type', 'value'),
+         State('detection-method', 'value')])
 def callback(tab_name, data_root, env, detect, larva, coef,
-        midpoints, weight, style, size, sigma, checks, signal_name):
+        midpoints, weight, style, size, sigma, checks, signal_name, method):
     # Guard
     if data_root is None:
         return 'Not available.'
@@ -4375,7 +4387,7 @@ def callback(tab_name, data_root, env, detect, larva, coef,
 
     thresholds = THRESH_FUNC(larva_diffs, coef=coef)
 
-    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect)
+    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect, method)
 
     auto_evals = auto_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
@@ -4587,12 +4599,13 @@ def callback(detect):
          State('adult-window-sigma', 'value'),
          State('adult-smoothing-check', 'values'),
          State('larva-signal-type', 'value'),
-         State('adult-signal-type', 'value')])
+         State('adult-signal-type', 'value'),
+         State('detection-method', 'value')])
 def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
         adult_coef, midpoints, larva_weighting, larva_w_style, larva_w_size,
         larva_w_sigma, larva_smoothing, adult_weighting, adult_w_style,
         adult_w_size, adult_w_sigma, adult_smoothing, larva_signal_name,
-        adult_signal_name):
+        adult_signal_name, method):
     # Guard
     if data_root is None:
         return 'Not available.'
@@ -4635,7 +4648,7 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
 
         larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
 
-        pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect)
+        pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect, method)
 
 
     # ----------------------------------------
@@ -4656,7 +4669,7 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
 
     adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
 
-    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect)
+    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect, method)
 
     auto_evals = auto_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
