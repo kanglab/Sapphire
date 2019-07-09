@@ -2246,18 +2246,32 @@ def callback(well_idx, coef, time, midpoints, weight, style,
     return {
             'data': larva_data + manual_data + common_data,
             'layout': {
-                    'font': {'size': 15},
-                    'xaxis': {
-                        'title': 'Frame',
-                        'tickfont': {'size': 15},
+                'annotations': [
+                    {
+                        'x': 0.01 * len(larva_diffs.T),
+                        'y': 1.0 * larva_diffs.max(),
+                        'text':
+                            'Threshold: {:.1f}, Max: {:.1f}, Min: {:.1f}'  \
+                                    .format(thresholds[well_idx, 0],
+                                            larva_diffs[well_idx].max(),
+                                            larva_diffs[well_idx].min()),
+                        'showarrow': False,
+                        'xanchor': 'left',
+                        'yanchor': 'top',
                     },
-                    'yaxis': {
-                        'title': 'Activity',
-                        'tickfont': {'size': 15},
-                        'overlaying': 'y',
-                        'range': [-0.1*larva_diffs.max(), larva_diffs.max()],
+                ],
+                'font': {'size': 15},
+                'xaxis': {
+                    'title': 'Frame',
+                    'tickfont': {'size': 15},
+                },
+                'yaxis': {
+                    'title': 'Activity',
+                    'tickfont': {'size': 15},
+                    'overlaying': 'y',
+                    'range': [-0.1*larva_diffs.max(), larva_diffs.max()],
 
-                    },
+                },
                 'showlegend': False,
                 'hovermode': 'closest',
                 'margin': go.layout.Margin(l=70, r=0, b=50, t=10, pad=0),
@@ -2466,6 +2480,20 @@ def callback(larva_coef, adult_coef, time, midpoints,
     return {
             'data': adult_data + manual_data + common_data,
             'layout': {
+                'annotations': [
+                    {
+                        'x': 0.01 * len(adult_diffs.T),
+                        'y': 1.0 * adult_diffs.max(),
+                        'text':
+                            'Threshold: {:.1f}, Max: {:.1f}, Min: {:.1f}'  \
+                                    .format(adult_thresh[well_idx, 0],
+                                            adult_diffs[well_idx].max(),
+                                            adult_diffs[well_idx].min()),
+                        'showarrow': False,
+                        'xanchor': 'left',
+                        'yanchor': 'top',
+                    },
+                ],
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'Frame',
