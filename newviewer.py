@@ -4388,12 +4388,24 @@ def callback(tab_name, data_root, env, detect, larva, coef,
     auto_evals = auto_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
 
+    if method == 'relmax':
+        detection_method = 'Relative maxima'
+    elif method == 'thresholding':
+        detection_method = 'Thresholding'
+    elif method == 'max':
+        detection_method = 'Maximum'
+    else:
+        detection_method = 'Error'
+
     auto_to_csv =  \
               'data:text/csv;charset=utf-8,'  \
             + 'Dataset,{}\n'.format(urllib.parse.quote(env))  \
             + 'Morphology,larva\n'  \
             + 'Inference Data,{}\n'.format(urllib.parse.quote(larva))  \
-            + 'Threshold Value,{}\n'.format(thresholds[0, 0])  \
+            + 'Detection Method,{}\n'.format(detection_method)  \
+            + 'Threshold Value,{:.1f}\n'.format(thresholds[0, 0])  \
+            + '(coef * (min + (max - min) / 2) for each individual)\n'  \
+            + 'Coefficient (coef),{}\n'.format(coef)  \
             + 'Smoothing Window Size,{}\n'.format(size)  \
             + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma)  \
             + pd.DataFrame(auto_evals).to_csv(
@@ -4664,12 +4676,24 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
     auto_evals = auto_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
 
+    if method == 'relmax':
+        detection_method = 'Relative maxima'
+    elif method == 'thresholding':
+        detection_method = 'Thresholding'
+    elif method == 'max':
+        detection_method = 'Maximum'
+    else:
+        detection_method = 'Error'
+
     auto_to_csv =  \
               'data:text/csv;charset=utf-8,'  \
             + 'Dataset,{}\n'.format(urllib.parse.quote(env))  \
             + 'Morphology,adult\n'  \
             + 'Inference Data,{}\n'.format(urllib.parse.quote(adult))  \
-            + 'Threshold Value,{}\n'.format(adult_thresh[0, 0])  \
+            + 'Detection Method,{}\n'.format(detection_method)  \
+            + 'Threshold Value,{:.1f}\n'.format(adult_thresh[0, 0])  \
+            + '(coef * (min + (max - min) / 2) for each individual)\n'  \
+            + 'Coefficient (coef),{}\n'.format(adult_coef)  \
             + 'Smoothing Window Size,{}\n'.format(adult_w_size)  \
             + 'Smoothing Sigma,{}\nEvent Timing\n'.format(adult_w_sigma)  \
             + pd.DataFrame(auto_evals).to_csv(
