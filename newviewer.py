@@ -42,7 +42,7 @@ DATA_ROOT = '//133.24.88.18/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 
 THETA = 50
 
-THRESH_FUNC = my_threshold.entire_stats
+THRESH_FUNC = my_threshold.minmax
 
 
 app = dash.Dash('Sapphire')
@@ -2172,8 +2172,6 @@ def callback(well_idx, coef, time, midpoints, weight, style,
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, signal_name)).T
 
-    diffs_mean = larva_diffs.mean()
-    diffs_std = larva_diffs.std()
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
             smooth=len(checks) != 0,
@@ -2248,20 +2246,6 @@ def callback(well_idx, coef, time, midpoints, weight, style,
     return {
             'data': larva_data + manual_data + common_data,
             'layout': {
-                    'annotations': [
-                        {
-                            'x': 0.01 * len(larva_diffs.T),
-                            'y': 1.0 * larva_diffs.max(),
-                            'text':
-                                'Threshold: {:.1f}'.format(
-                                        thresholds[well_idx, 0]) +  \
-                                 '={:.1f}'.format(diffs_mean) +  \
-                                 '{:+.1f}'.format(coef) +  \
-                                 '*{:.1f}'.format(diffs_std),
-                            'showarrow': False,
-                            'xanchor': 'left',
-                        },
-                    ],
                     'font': {'size': 15},
                     'xaxis': {
                         'title': 'Frame',
@@ -2390,8 +2374,6 @@ def callback(larva_coef, adult_coef, time, midpoints,
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
-    diffs_mean = adult_diffs.mean()
-    diffs_std = adult_diffs.std()
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, adult_w_size, adult_w_sigma,
             smooth=len(adult_smoothing) != 0,
@@ -2484,20 +2466,6 @@ def callback(larva_coef, adult_coef, time, midpoints,
     return {
             'data': adult_data + manual_data + common_data,
             'layout': {
-                'annotations': [
-                    {
-                        'x': 0.01 * len(adult_diffs.T),
-                        'y': 1.0 * adult_diffs.max(),
-                        'text':
-                            'Threshold: {:.1f}'.format(
-                                    adult_thresh[well_idx, 0]) +  \
-                             '={:.1f}'.format(diffs_mean) +  \
-                             '{:+.1f}'.format(adult_coef) +  \
-                             '*{:.1f}'.format(diffs_std),
-                        'showarrow': False,
-                        'xanchor': 'left',
-                    },
-                ],
                 'font': {'size': 15},
                 'xaxis': {
                     'title': 'Frame',
@@ -4377,8 +4345,6 @@ def callback(tab_name, data_root, env, detect, larva, coef,
 
     larva_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'larva', larva, signal_name)).T
-    diffs_mean = larva_diffs.mean()
-    diffs_std = larva_diffs.std()
     larva_diffs = seasoning(
             larva_diffs, 'larva', detect, size, sigma,
             smooth=len(checks) != 0,
@@ -4400,10 +4366,6 @@ def callback(tab_name, data_root, env, detect, larva, coef,
             + 'Morphology,larva\n'  \
             + 'Inference Data,{}\n'.format(urllib.parse.quote(larva))  \
             + 'Threshold Value,{}\n'.format(thresholds[0, 0])  \
-            + '(Threshold Value = mean + coef * std)\n'  \
-            + 'Mean (mean),{}\n'.format(diffs_mean)  \
-            + 'Coefficient (coef),{}\n'.format(coef)  \
-            + 'Standard Deviation (std),{}\n'.format(diffs_std)  \
             + 'Smoothing Window Size,{}\n'.format(size)  \
             + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma)  \
             + pd.DataFrame(auto_evals).to_csv(
@@ -4659,8 +4621,6 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
     # Load the data
     adult_diffs = np.load(os.path.join(
             data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
-    diffs_mean = adult_diffs.mean()
-    diffs_std = adult_diffs.std()
     adult_diffs = seasoning(
             adult_diffs, 'adult', detect, adult_w_size, adult_w_sigma,
             smooth=len(adult_smoothing) != 0,
@@ -4682,10 +4642,6 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
             + 'Morphology,adult\n'  \
             + 'Inference Data,{}\n'.format(urllib.parse.quote(adult))  \
             + 'Threshold Value,{}\n'.format(adult_thresh[0, 0])  \
-            + '(Threshold Value = mean + coef * std)\n'  \
-            + 'Mean (mean),{}\n'.format(diffs_mean)  \
-            + 'Coefficient (coef),{}\n'.format(adult_coef)  \
-            + 'Standard Deviation (std),{}\n'.format(diffs_std)  \
             + 'Smoothing Window Size,{}\n'.format(adult_w_size)  \
             + 'Smoothing Sigma,{}\nEvent Timing\n'.format(adult_w_sigma)  \
             + pd.DataFrame(auto_evals).to_csv(
