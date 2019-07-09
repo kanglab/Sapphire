@@ -114,8 +114,8 @@ app.layout = html.Div([
                         id='detection-method',
                         options=[
                             {
-                                'label': 'Maximum',
-                                'value': 'maximum',
+                                'label': 'Relative maxima',
+                                'value': 'relmax',
                                 'disabled': False,
                             },
                             {
@@ -124,7 +124,7 @@ app.layout = html.Div([
                                 'disabled': False,
                             },
                         ],
-                        value='maximum',
+                        value='relmax',
                     ),
                     'Inference Data:',
                     html.Br(),
@@ -264,9 +264,9 @@ app.layout = html.Div([
                                 html.Div([
                                     dcc.Slider(
                                         id='larva-thresh',
-                                        value=2,
-                                        min=-5,
-                                        max=20,
+                                        value=1,
+                                        min=0,
+                                        max=2,
                                         step=.1,
                                         updatemode='mouseup',
                                         vertical=True,
@@ -397,9 +397,9 @@ app.layout = html.Div([
                                 html.Div([
                                     dcc.Slider(
                                         id='adult-thresh',
-                                        value=2,
-                                        min=-5,
-                                        max=20,
+                                        value=1,
+                                        min=0,
+                                        max=2,
                                         step=.1,
                                         updatemode='mouseup',
                                         vertical=True,
@@ -4887,8 +4887,32 @@ def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
 
 
 def detect_event(signals, thresholds, signal_type, detect, method):
-    if method == 'maximum':
-        auto_evals = signals.argmax(axis=1)
+    if method == 'relmax':
+        auto_evals = []
+        for signal in signals:
+            if signal.sum() == 0:
+                auto_evals.append(0)
+            else:
+                max = signal.max()
+                min = signal.min()
+                thresh = min + (max - min) / 2
+                signal_mask = signal > thresh
+
+                relmax_mask = np.zeros_like(signal, dtype=bool)
+                relmax_args = scipy.signal.argrelmax(signal, order=3)[0]
+                relmax_mask[relmax_args] = True
+
+                masked_relmax_args = np.where(
+                        np.logical_and(signal_mask, relmax_mask))[0]
+
+                if len(masked_relmax_args) == 0:
+                    auto_evals.append(0)
+                    continue
+
+                auto_eval = masked_relmax_args[-1]
+                auto_evals.append(auto_eval)
+
+        return np.array(auto_evals, dtype=int)
 
     elif method == 'thresholding':
 
