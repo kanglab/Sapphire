@@ -119,6 +119,11 @@ app.layout = html.Div([
                                 'disabled': False,
                             },
                             {
+                                'label': 'Maximum',
+                                'value': 'max',
+                                'disabled': False,
+                            },
+                            {
                                 'label': 'Thresholding',
                                 'value': 'thresholding',
                                 'disabled': False,
@@ -4920,7 +4925,10 @@ def detect_event(signals, thresholds, signal_type, detect, method):
                 auto_eval = masked_relmax_args[-1]
                 auto_evals.append(auto_eval)
 
-        return np.array(auto_evals, dtype=int)
+        auto_evals = np.array(auto_evals, dtype=int)
+
+    elif method == 'max':
+        auto_evals = signals.argmax(axis=1)
 
     elif method == 'thresholding':
 
