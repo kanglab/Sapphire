@@ -67,22 +67,30 @@ app.layout = html.Div([
     dcc.Tabs(id='tabs', value='tab-1', children=[
         dcc.Tab(id='tab-1', label='Main', value='tab-1', children=[
             html.Div([
+                'Dataset:',
+                html.Br(),
                 html.Div([
-                    'Dataset:',
-                    html.Br(),
-                    html.Div([
-                        dcc.Dropdown(
-                            id='env-dropdown',
-                            placeholder='Select a dataset...',
-                            clearable=False,
-                        ),
-                        ],
-                        style={
-                            'display': 'inline-block',
-                            'width': '200px',
-                            'vertical-align': 'middle',
-                        },
+                    dcc.Dropdown(
+                        id='env-dropdown',
+                        placeholder='Select a dataset...',
+                        clearable=False,
                     ),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                        'width': '400px',
+                        'vertical-align': 'middle',
+                        # 'white-space': 'nowrap',
+                    },
+                ),
+            ], style={
+                    'display': 'table',
+                    'table-layout': 'auto',
+                    'border-collapse': 'separate',
+                    'border-spacing': '5px 5px',
+            }),
+            html.Div([
+                html.Div([
                     dcc.RadioItems(
                         id='detect-target',
                         options=[
@@ -561,7 +569,7 @@ app.layout = html.Div([
                     'display': 'table',
                     'table-layout': 'auto',
                     'border-collapse': 'separate',
-                    'border-spacing': '5px 10px',
+                    'border-spacing': '5px 0px',
             }),
 
             html.Div([
