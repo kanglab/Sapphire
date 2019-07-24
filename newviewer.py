@@ -2157,25 +2157,20 @@ def callback(midpoint, midpoints, well_idx, data_root, dataset_name):
          Input('larva-window-size', 'value'),
          Input('larva-window-sigma', 'value'),
          Input('detection-method', 'value')],
-        [State('larva-signal', 'figure'),
-         State('data-root', 'children'),
+        [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('hidden-timestamp', 'data'),
          State('larva-signal-type', 'value')])
 def callback(well_idx, coef, time, midpoints, weight, style,
-        checks, size, sigma, method, figure, data_root, env, detect,
+        checks, size, sigma, method, data_root, env, detect,
         larva, timestamps, signal_name):
     # Guard
     if env is None:
         return {'data': []}
     if larva is None:
         return {'data': []}
-    if len(figure['data']) == 0:
-        x, y = 0, 0
-    else:
-        x, y = time, figure['data'][0]['y'][time]
 
     larva_data = []
     manual_data = []
@@ -2248,8 +2243,8 @@ def callback(well_idx, coef, time, midpoints, weight, style,
     common_data = [
             {
                 # Selected data point
-                'x': [x],
-                'y': [y],
+                'x': [time],
+                'y': [larva_diffs[well_idx, time]],
                 'mode': 'markers',
                 'marker': {'size': 10, 'color': '#ff0000'},
                 'name': '',
@@ -2341,7 +2336,6 @@ def callback(detect):
          Input('adult-window-sigma', 'value'),
          Input('detection-method', 'value')],
         [State('well-selector', 'value'),
-         State('adult-signal', 'figure'),
          State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
@@ -2353,7 +2347,7 @@ def callback(detect):
 def callback(larva_coef, adult_coef, time, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
-        adult_w_size, adult_w_sigma, method, well_idx, figure,
+        adult_w_size, adult_w_sigma, method, well_idx,
         data_root, env, detect, larva, adult, timestamps,
         larva_signal_name, adult_signal_name):
     # Guard
@@ -2361,10 +2355,6 @@ def callback(larva_coef, adult_coef, time, midpoints,
         return {'data': []}
     if adult is None:
         return {'data': []}
-    if len(figure['data']) == 0:
-        x, y = 0, 0
-    else:
-        x, y = time, figure['data'][0]['y'][time]
 
     adult_data = []
     manual_data = []
@@ -2482,8 +2472,8 @@ def callback(larva_coef, adult_coef, time, midpoints,
     common_data = [
             {
                 # Selected data point
-                'x': [x],
-                'y': [y],
+                'x': [time],
+                'y': [adult_diffs[well_idx, time]],
                 'mode': 'markers',
                 'marker': {'size': 10, 'color': '#ff0000'},
                 'name': '',
