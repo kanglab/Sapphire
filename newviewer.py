@@ -4910,62 +4910,39 @@ def max_amplitude(signals):
 def detect_event(signals, thresholds, signal_type, detect, method):
     if method == 'relmax':
         auto_evals = []
-        _, global_amp = max_amplitude(signals)
         for signal in signals:
 
-            if signal.sum() == 0:
+            if np.all(signal == signal[0]):
                 auto_evals.append(0)
 
             else:
+                # Calculate a threshold
                 max = signal.max()
                 min = signal.min()
+                thresh = min + (max - min) / 4
 
-                if (max - min) > 0.2 * global_amp:
-                    thresh = min + (max - min) / 2
-                    signal_mask = signal > thresh
+                relmax_args = scipy.signal.argrelmax(signal, order=3)[0]
+                relmax_values = signal[relmax_args]
 
-                    relmax_mask = np.zeros_like(signal, dtype=bool)
-                    relmax_args = scipy.signal.argrelmax(signal, order=3)[0]
-                    relmax_mask[relmax_args] = True
+                candidate_args = relmax_args[np.where(relmax_values > thresh)[0]]
+                candidate_values = signal[candidate_args]
 
-                    masked_relmax_args = np.where(
-                            np.logical_and(signal_mask, relmax_mask))[0]
+                if len(candidate_args) == 0:
+                    auto_eval = len(signal) - 1
 
-                    if len(masked_relmax_args) == 0:
-                        auto_evals.append(0)
-                        continue
-
-                    if detect == 'pupariation' and signal_type == 'larva':
-                        auto_eval = masked_relmax_args[-1]
-
-                    elif detect == 'pupariation' and signal_type == 'adult':
-                        # Never evaluated
-                        pass
-
-                    elif detect == 'eclosion' and signal_type == 'larva':
-                        # Never evaluated
-                        pass
-
-                    elif detect == 'eclosion' and signal_type == 'adult':
-                        auto_eval = masked_relmax_args[0]
-
-                    elif detect == 'pupa-and-eclo' and signal_type == 'larva':
-                        auto_eval = masked_relmax_args[-1]
-
-                    elif detect == 'pupa-and-eclo' and signal_type == 'adult':
-                        auto_eval = masked_relmax_args[0]
-
-                    elif detect == 'death' and signal_type == 'larva':
-                        # Never evaluated
-                        pass
-
-                    elif detect == 'death' and signal_type == 'adult':
-                        auto_eval = masked_relmax_args[-1]
-
-                    auto_evals.append(auto_eval)
+                elif len(candidate_args) == 1:
+                    auto_eval = candidate_args[0]
 
                 else:
-                    auto_evals.append(len(signal))
+                    normed = candidate_values / candidate_values.sum()
+
+                    if normed.max() >= 0.5:
+                        auto_eval = candidate_args[np.argmax(candidate_values)]
+
+                    else:
+                        auto_eval = len(signal) - 1
+
+                auto_evals.append(auto_eval)
 
         auto_evals = np.array(auto_evals, dtype=int)
 
