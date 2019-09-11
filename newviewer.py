@@ -4916,15 +4916,12 @@ def detect_event(signals, thresholds, signal_type, detect, method):
                 auto_evals.append(0)
 
             else:
-                # Calculate a threshold
-                max = signal.max()
-                min = signal.min()
-                thresh = min + (max - min) / 4
-
                 relmax_args = scipy.signal.argrelmax(signal, order=3)[0]
                 relmax_values = signal[relmax_args]
 
-                candidate_args = relmax_args[np.where(relmax_values > thresh)[0]]
+                sorted_args = np.argsort(relmax_values)
+
+                candidate_args = relmax_args[sorted_args][-3:]
                 candidate_values = signal[candidate_args]
 
                 if len(candidate_args) == 0:
