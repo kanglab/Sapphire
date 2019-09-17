@@ -4907,6 +4907,77 @@ def max_amplitude(signals):
     return np.argmax(amplitudes), np.max(amplitudes)
 
 
+def calc_threshold(signal, coef=0.5):
+    max = signal.max()
+    min = signal.min()
+    return min + coef * (max - min)
+
+
+def find_rising_up_and_falling_down(signal, thresh):
+    # シグナルに閾値処理をして二値化する
+    icebergs = (signal > thresh).astype(int)
+    
+    # 二値化されたシグナルから立ち上がりと立ち下がりのインデックスを探す
+    diff = np.diff(icebergs)
+    rising_up_idxs = np.where(diff == 1)[0] + 1
+    falling_down_idxs = np.where(diff == -1)[0] + 1
+    
+    # 例外処理
+    # 始めから立ち上がっていた場合、0 を立ち上がりインデックスとして挿入する
+    if icebergs[0] == 1:
+        rising_up_idxs = np.concatenate([np.array([0]), rising_up_idxs])
+        
+    # 最後が立ち上がりのまま終わっていた場合、
+    # シグナルの最終インデックスを立ち下がりインデックスとして挿入する
+    if icebergs[-1] == 1:
+        falling_down_idxs = np.concatenate([falling_down_idxs, np.array([len(icebergs) - 1])])
+    
+    # 立ち上がりと立ち下がりの数は必ず同数になる
+    if len(rising_up_idxs) != len(falling_down_idxs):
+        print(rising_up_idxs)
+        print(falling_down_idxs)
+        
+        f, axs = plt.subplots(3, 1)
+        axs[0].plot(signal)
+        axs[1].plot(icebergs)
+        axs[2].plot(diff)
+    assert len(rising_up_idxs) == len(falling_down_idxs)
+    
+    return rising_up_idxs, falling_down_idxs
+
+
+def relmax_by_thresh(signal, thresh):
+    # 閾値を切ったシグナルに対して、立ち上がりと立ち下がりを探す
+    rising_up_idxs, falling_down_idxs = find_rising_up_and_falling_down(signal, thresh)
+    
+    # 極大値の計算
+    relmax_args = scipy.signal.argrelmax(signal, order=3)[0]
+    relmax_values = signal[relmax_args]
+    
+    candidate_args = []
+    for rising_up_idx, falling_down_idx in zip(rising_up_idxs, falling_down_idxs):
+        args = []
+        values = []
+        for relmax_arg, relmax_value in zip(relmax_args, relmax_values):
+            if relmax_arg in range(rising_up_idx, falling_down_idx):
+                args.append(relmax_arg)
+                values.append(relmax_value)
+        assert len(args) == len(values)
+        if len(args) == 0:
+            if rising_up_idx == falling_down_idx:
+                candidate_args.append(rising_up_idx)
+            else:
+                candidate_args.append(rising_up_idx + np.argmax(signal[rising_up_idx:falling_down_idx]))
+        elif len(args) == 1:
+            candidate_args.append(args[0])
+        elif len(args) >= 2:
+            candidate_args.append(args[np.argmax(values)])
+    
+    candidate_args = np.array(candidate_args)
+    
+    return relmax_args, candidate_args
+
+
 def detect_event(signals, thresholds, signal_type, detect, method):
     if method == 'relmax':
         auto_evals = []
@@ -4916,12 +4987,8 @@ def detect_event(signals, thresholds, signal_type, detect, method):
                 auto_evals.append(0)
 
             else:
-                relmax_args = scipy.signal.argrelmax(signal, order=3)[0]
-                relmax_values = signal[relmax_args]
-
-                sorted_args = np.argsort(relmax_values)
-
-                candidate_args = relmax_args[sorted_args][-3:]
+                thresh = calc_threshold(signal, 0.5)
+                relmax_args, candidate_args = relmax_by_thresh(signal, thresh)
                 candidate_values = signal[candidate_args]
 
                 if len(candidate_args) == 0:
