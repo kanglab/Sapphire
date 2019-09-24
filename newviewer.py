@@ -293,8 +293,8 @@ app.layout = html.Div([
                                     id='larva-thresh-selector',
                                     type='number',
                                     value=2,
-                                    min=-5,
-                                    max=20,
+                                    min=0,
+                                    max=2,
                                     step=0.1,
                                     style={
                                         'width': '70px',
@@ -426,8 +426,8 @@ app.layout = html.Div([
                                     id='adult-thresh-selector',
                                     type='number',
                                     value=2,
-                                    min=-5,
-                                    max=20,
+                                    min=0,
+                                    max=2,
                                     step=0.1,
                                     style={
                                         'width': '70px',
@@ -4978,13 +4978,46 @@ def relmax_by_thresh(signal, thresh):
     return relmax_args, candidate_args
 
 
+def exception_event(detect, signal_type, exception_value):
+    if detect == 'pupariation' and signal_type == 'larva':
+        auto_eval = 0
+
+    elif detect == 'pupariation' and signal_type == 'adult':
+        # Never evaluated
+        raise Exception
+
+    elif detect == 'eclosion' and signal_type == 'larva':
+        # Never evaluated
+        raise Exception
+
+    elif detect == 'eclosion' and signal_type == 'adult':
+        auto_eval = 0
+
+    elif detect == 'pupa-and-eclo' and signal_type == 'larva':
+        auto_eval = 0
+
+    elif detect == 'pupa-and-eclo' and signal_type == 'adult':
+        auto_eval = 0
+
+    elif detect == 'death' and signal_type == 'larva':
+        # Never evaluated
+        raise Exception
+
+    elif detect == 'death' and signal_type == 'adult':
+        auto_eval = exception_value
+
+    return auto_eval
+
+
 def detect_event(signals, thresholds, signal_type, detect, method):
+    n_wells, length = signals.shape
+
     if method == 'relmax':
         auto_evals = []
         for signal in signals:
 
             if np.all(signal == signal[0]):
-                auto_evals.append(0)
+                auto_eval = exception_event(detect, signal_type, length)
 
             else:
                 thresh = calc_threshold(signal, 0.5)
@@ -4992,7 +5025,7 @@ def detect_event(signals, thresholds, signal_type, detect, method):
                 candidate_values = signal[candidate_args]
 
                 if len(candidate_args) == 0:
-                    auto_eval = len(signal) - 1
+                    auto_eval = exception_event(detect, signal_type, length)
 
                 elif len(candidate_args) == 1:
                     auto_eval = candidate_args[0]
@@ -5004,32 +5037,41 @@ def detect_event(signals, thresholds, signal_type, detect, method):
                         auto_eval = candidate_args[np.argmax(candidate_values)]
 
                     else:
-                        auto_eval = len(signal) - 1
+                        auto_eval = exception_event(detect, signal_type, length)
 
-                auto_evals.append(auto_eval)
+            auto_evals.append(auto_eval)
 
         auto_evals = np.array(auto_evals, dtype=int)
 
     elif method == 'max':
-        auto_evals = signals.argmax(axis=1)
+        auto_evals = []
+        for signal in signals:
+            if np.all(signal == signal[0]):
+                auto_eval = exception_event(detect, signal_type, length)
+
+            else:
+                auto_eval = signal.argmax()
+
+            auto_evals.append(auto_eval)
+
+        auto_evals = np.array(auto_evals, dtype=int)
 
     elif method == 'thresholding':
-
         if detect == 'pupariation' and signal_type == 'larva':
             # Detect the falling of the signal
             # Scan the signal from the right hand side.
-            auto_evals = (signals.shape[1]
-                    - (np.fliplr(signals) > thresholds).argmax(axis=1))
+            auto_evals = \
+                    length - (np.fliplr(signals) > thresholds).argmax(axis=1)
             # If the signal was not more than the threshold.
-            auto_evals[auto_evals == signals.shape[1]] = 0
+            auto_evals[auto_evals == length] = 0
 
         elif detect == 'pupariation' and signal_type == 'adult':
             # Never evaluated
-            pass
+            raise Exception
 
         elif detect == 'eclosion' and signal_type == 'larva':
             # Never evaluated
-            pass
+            raise Exception
 
         elif detect == 'eclosion' and signal_type == 'adult':
             # Detect the rising of the signal
@@ -5039,10 +5081,10 @@ def detect_event(signals, thresholds, signal_type, detect, method):
         elif detect == 'pupa-and-eclo' and signal_type == 'larva':
             # Detect the falling of the signal
             # Scan the signal from the right hand side.
-            auto_evals = (signals.shape[1]
-                    - (np.fliplr(signals) > thresholds).argmax(axis=1))
+            auto_evals = \
+                    length - (np.fliplr(signals) > thresholds).argmax(axis=1)
             # If the signal was not more than the threshold.
-            auto_evals[auto_evals == signals.shape[1]] = 0
+            auto_evals[auto_evals == length] = 0
 
         elif detect == 'pupa-and-eclo' and signal_type == 'adult':
             # Detect the rising of the signal
@@ -5051,12 +5093,12 @@ def detect_event(signals, thresholds, signal_type, detect, method):
 
         elif detect == 'death' and signal_type == 'larva':
             # Never evaluated
-            pass
+            raise Exception
 
         elif detect == 'death' and signal_type == 'adult':
             # Scan the signal from the right hand side.
-            auto_evals = (signals.shape[1]
-                    - (np.fliplr(signals) > thresholds).argmax(axis=1))
+            auto_evals = \
+                    length - (np.fliplr(signals) > thresholds).argmax(axis=1)
 
     return auto_evals
 
