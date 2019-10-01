@@ -16,7 +16,6 @@ import base64
 import zipfile
 import datetime
 import PIL.Image
-import dash_auth
 import dash_table
 import numpy as np
 import pandas as pd
@@ -4933,14 +4932,6 @@ def find_rising_up_and_falling_down(signal, thresh):
         falling_down_idxs = np.concatenate([falling_down_idxs, np.array([len(icebergs) - 1])])
     
     # 立ち上がりと立ち下がりの数は必ず同数になる
-    if len(rising_up_idxs) != len(falling_down_idxs):
-        print(rising_up_idxs)
-        print(falling_down_idxs)
-        
-        f, axs = plt.subplots(3, 1)
-        axs[0].plot(signal)
-        axs[1].plot(icebergs)
-        axs[2].plot(diff)
     assert len(rising_up_idxs) == len(falling_down_idxs)
     
     return rising_up_idxs, falling_down_idxs
@@ -5104,7 +5095,6 @@ def detect_event(signals, thresholds, signal_type, detect, method):
 
 
 def load_blacklist(data_root, dataset_name, white=False):
-    
     # Load a blacklist
     if os.path.exists(os.path.join(data_root, dataset_name, 'blacklist.csv')):
         blacklist = np.loadtxt(
