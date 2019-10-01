@@ -1340,7 +1340,7 @@ def callback(well_idx, data_root, env, blacklist):
         return []
 
     if blacklist['value'][well_idx]:
-        return 'checked'
+        return ['checked']
 
     else:
         return []
