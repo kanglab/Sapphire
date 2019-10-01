@@ -931,12 +931,9 @@ def callback(env, data_root):
 
 @app.callback(
         Output('well-slider', 'value'),
-        [Input('env-dropdown', 'value'),
-         Input('well-buff', 'children'),
-         Input('larva-signal-type', 'value'),
-         Input('adult-signal-type', 'value')],
+        [Input('well-buff', 'children')],
         [State('changed-well', 'children')])
-def callback(_, buff, __, ___, changed_data):
+def callback(buff, changed_data):
     buff = json.loads(buff)
     changed_data = json.loads(changed_data)['changed']
 
@@ -1337,7 +1334,7 @@ def callback(checks):
          State('hidden-blacklist', 'data')])
 def callback(well_idx, data_root, env, blacklist):
     if well_idx is None or env is None or blacklist is None:
-        return []
+        raise dash.exceptions.PreventUpdate
 
     if blacklist['value'][well_idx]:
         return ['checked']
@@ -1346,34 +1343,44 @@ def callback(well_idx, data_root, env, blacklist):
         return []
 
 
+def get_trigger_input(callback_context):
+    if callback_context.triggered:
+        return callback_context.triggered[0]['prop_id'].split('.')[0]
+    else:
+        return 'No inputs'
+
+
 @app.callback(
         Output('hidden-blacklist', 'data'),
-        [Input('blacklist-check', 'values')],
+        [Input('env-dropdown', 'value'),
+         Input('blacklist-check', 'values')],
         [State('hidden-blacklist', 'data'),
          State('well-selector', 'value'),
-         State('data-root', 'children'),
-         State('env-dropdown', 'value')])
-def callback(check, blacklist, well_idx, data_root, dataset_name):
+         State('data-root', 'children')])
+def callback(dataset_name, check, blacklist, well_idx, data_root):
     # Guard
     if well_idx is None or dataset_name is None:
-        return
+        raise dash.exceptions.PreventUpdate
 
-    # Load a mask params
-    with open(os.path.join(data_root, dataset_name, 'mask_params.json')) as f:
-        params = json.load(f)
-    n_wells = params['n-rows'] * params['n-plates'] * params['n-clms']
+    trigger_input = get_trigger_input(dash.callback_context)
 
-    # Initialize the buffer
-    if blacklist is None or len(blacklist['value']) != n_wells:
+    # If triggered by the env-dropdown, initialize the blacklist buffer
+    if trigger_input == 'env-dropdown':
         blacklist, exist = load_blacklist(data_root, dataset_name)
         return {'value': list(blacklist)}
+    
+    # If triggered by the checkbox, put the T/F value in the blacklist buffer
+    elif trigger_input == 'blacklist-check':
+        print(check)
+        if check:
+            blacklist['value'][well_idx] = True
+        else:
+            blacklist['value'][well_idx] = False
 
-    if check:
-        blacklist['value'][well_idx] = True
+        return blacklist
+
     else:
-        blacklist['value'][well_idx] = False
-
-    return blacklist
+        raise Exception
 
 
 @app.callback(
