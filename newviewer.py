@@ -16,6 +16,7 @@ import base64
 import zipfile
 import datetime
 import PIL.Image
+import dash_auth
 import dash_table
 import numpy as np
 import pandas as pd
