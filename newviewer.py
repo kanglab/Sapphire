@@ -121,13 +121,13 @@ app.layout = html.Div([
                         id='detection-method',
                         options=[
                             {
-                                'label': 'Relative maxima',
-                                'value': 'relmax',
+                                'label': 'Maximum',
+                                'value': 'max',
                                 'disabled': False,
                             },
                             {
-                                'label': 'Maximum',
-                                'value': 'max',
+                                'label': 'Relative maxima',
+                                'value': 'relmax',
                                 'disabled': False,
                             },
                             {
