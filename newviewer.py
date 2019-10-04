@@ -137,7 +137,7 @@ app.layout = html.Div([
                                 'disabled': False,
                             },
                         ],
-                        value='relmax',
+                        value='max',
                     ),
                     'Inference Data:',
                     html.Br(),
