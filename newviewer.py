@@ -1102,11 +1102,9 @@ def callback(env, data_root):
 @app.callback(
         Output('time-slider', 'value'),
         [Input('env-dropdown', 'value'),
-         Input('time-buff', 'children'),
-         Input('larva-signal-type', 'value'),
-         Input('adult-signal-type', 'value')],
+         Input('time-buff', 'children')],
         [State('changed-time', 'children')])
-def callback(_, buff, __, ___, changed_data):
+def callback(_, buff, changed_data):
     buff = json.loads(buff)
     changed_data = json.loads(changed_data)['changed']
 
@@ -1487,13 +1485,13 @@ def callback(time, well_idx, data_root, env):
 @app.callback(
         Output('label-and-prob', 'children'),
         [Input('time-selector', 'value'),
-         Input('well-selector', 'value')],
+         Input('well-selector', 'value'),
+         Input('larva-dropdown', 'value'),
+         Input('adult-dropdown', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
-         State('detect-target', 'value'),
-         State('larva-dropdown', 'value'),
-         State('adult-dropdown', 'value')])
-def callback(time, well_idx, data_root, env, detect, larva, adult):
+         State('detect-target', 'value')])
+def callback(time, well_idx, larva, adult, data_root, env, detect):
     # Guard
     if env is None:
         return
@@ -2163,16 +2161,16 @@ def callback(midpoint, midpoints, well_idx, data_root, dataset_name):
          Input('larva-smoothing-check', 'values'),
          Input('larva-window-size', 'value'),
          Input('larva-window-sigma', 'value'),
+         Input('larva-signal-type', 'value'),
          Input('detection-method', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('hidden-timestamp', 'data'),
-         State('larva-signal-type', 'value')])
+         State('hidden-timestamp', 'data')])
 def callback(well_idx, coef, time, midpoints, weight, style,
-        checks, size, sigma, method, data_root, env, detect,
-        larva, timestamps, signal_name):
+        checks, size, sigma, signal_name, method,
+        data_root, env, detect, larva, timestamps):
     # Guard
     if env is None:
         return {'data': []}
@@ -2341,6 +2339,7 @@ def callback(detect):
          Input('adult-smoothing-check', 'values'),
          Input('adult-window-size', 'value'),
          Input('adult-window-sigma', 'value'),
+         Input('adult-signal-type', 'value'),
          Input('detection-method', 'value')],
         [State('well-selector', 'value'),
          State('data-root', 'children'),
@@ -2349,14 +2348,13 @@ def callback(detect):
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value'),
          State('hidden-timestamp', 'data'),
-         State('larva-signal-type', 'value'),
-         State('adult-signal-type', 'value')])
+         State('larva-signal-type', 'value')])
 def callback(larva_coef, adult_coef, time, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
-        adult_w_size, adult_w_sigma, method, well_idx,
+        adult_w_size, adult_w_sigma, adult_signal_name, method, well_idx,
         data_root, env, detect, larva, adult, timestamps,
-        larva_signal_name, adult_signal_name):
+        larva_signal_name):
     # Guard
     if env is None:
         return {'data': []}
@@ -2566,15 +2564,15 @@ def callback(detect):
          Input('larva-smoothing-check', 'values'),
          Input('larva-window-size', 'value'),
          Input('larva-window-sigma', 'value'),
+         Input('larva-signal-type', 'value'),
          Input('hidden-blacklist', 'data'),
          Input('detection-method', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
-         State('larva-dropdown', 'value'),
-         State('larva-signal-type', 'value')])
+         State('larva-dropdown', 'value')])
 def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
-        blacklist, method, data_root, env, detect, larva, signal_name):
+        signal_name, blacklist, method, data_root, env, detect, larva):
     # Guard
     if env is None:
         return {'data': []}
@@ -2820,6 +2818,7 @@ def callback(detect):
          Input('adult-smoothing-check', 'values'),
          Input('adult-window-size', 'value'),
          Input('adult-window-sigma', 'value'),
+         Input('adult-signal-type', 'value'),
          Input('hidden-blacklist', 'data'),
          Input('detection-method', 'value')],
         [State('data-root', 'children'),
@@ -2827,14 +2826,13 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value'),
-         State('larva-signal-type', 'value'),
-         State('adult-signal-type', 'value')])
+         State('larva-signal-type', 'value')])
 def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
-        adult_w_size, adult_w_sigma, blacklist, method,
+        adult_w_size, adult_w_sigma, adult_signal_name, blacklist, method,
         data_root, env, detect, larva, adult,
-        larva_signal_name, adult_signal_name):
+        larva_signal_name):
     # Guard
     if env is None:
         return {'data': []}
@@ -3129,15 +3127,15 @@ def callback(detect):
          Input('larva-smoothing-check', 'values'),
          Input('larva-window-size', 'value'),
          Input('larva-window-sigma', 'value'),
+         Input('larva-signal-type', 'value'),
          Input('hidden-blacklist', 'data'),
          Input('detection-method', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
-         State('larva-dropdown', 'value'),
-         State('larva-signal-type', 'value')])
+         State('larva-dropdown', 'value')])
 def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
-        blacklist, method, data_root, env, detect, larva, signal_name):
+        signal_name, blacklist, method, data_root, env, detect, larva):
     # Guard
     if env is None:
         return {'data': []}
@@ -3326,6 +3324,7 @@ def callback(detect):
          Input('adult-smoothing-check', 'values'),
          Input('adult-window-size', 'value'),
          Input('adult-window-sigma', 'value'),
+         Input('adult-signal-type', 'value'),
          Input('hidden-blacklist', 'data'),
          Input('detection-method', 'value')],
         [State('data-root', 'children'),
@@ -3333,14 +3332,13 @@ def callback(detect):
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
          State('adult-dropdown', 'value'),
-         State('larva-signal-type', 'value'),
-         State('adult-signal-type', 'value')])
+         State('larva-signal-type', 'value')])
 def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
         larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
-        adult_w_size, adult_w_sigma, blacklist, method,
+        adult_w_size, adult_w_sigma, adult_signal_name, blacklist, method,
         data_root, env, detect, larva, adult,
-        larva_signal_name, adult_signal_name):
+        larva_signal_name):
     # Guard
     if env is None:
         return {'data': []}
@@ -3566,25 +3564,25 @@ def callback(detect):
          Input('larva-smoothing-check', 'values'),
          Input('larva-window-size', 'value'),
          Input('larva-window-sigma', 'value'),
+         Input('larva-signal-type', 'value'),
          Input('adult-weight-check', 'values'),
          Input('adult-weight-style', 'value'),
          Input('adult-smoothing-check', 'values'),
          Input('adult-window-size', 'value'),
          Input('adult-window-sigma', 'value'),
+         Input('adult-signal-type', 'value'),
          Input('hidden-blacklist', 'data'),
          Input('detection-method', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('adult-dropdown', 'value'),
-         State('larva-signal-type', 'value'),
-         State('adult-signal-type', 'value')])
+         State('adult-dropdown', 'value')])
 def callback(larva_coef, adult_coef, well_idx, midpoints, larva_weighting,
         larva_w_style, larva_smoothing, larva_w_size, larva_w_sigma,
-        adult_weighting, adult_w_style, adult_smoothing, adult_w_size,
-        adult_w_sigma, blacklist, method, data_root, env, detect, larva, adult,
-        larva_signal_name, adult_signal_name):
+        larva_signal_name, adult_weighting, adult_w_style, adult_smoothing,
+        adult_w_size, adult_w_sigma, adult_signal_name,
+        blacklist, method, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -3720,15 +3718,15 @@ def callback(detect):
          Input('adult-smoothing-check', 'values'),
          Input('adult-window-size', 'value'),
          Input('adult-window-sigma', 'value'),
+         Input('adult-signal-type', 'value'),
          Input('hidden-blacklist', 'data'),
          Input('detection-method', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
-         State('adult-dropdown', 'value'),
-         State('adult-signal-type', 'value')])
+         State('adult-dropdown', 'value')])
 def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
-        blacklist, method, data_root, env, detect, adult, signal_name):
+        signal_name, blacklist, method, data_root, env, detect, adult):
     # Guard
     if env is None:
         return {'data': []}
@@ -3873,15 +3871,15 @@ def callback(detect):
          Input('larva-smoothing-check', 'values'),
          Input('larva-window-size', 'value'),
          Input('larva-window-sigma', 'value'),
+         Input('larva-signal-type', 'value'),
          Input('hidden-blacklist', 'data'),
          Input('detection-method', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
-         State('larva-dropdown', 'value'),
-         State('larva-signal-type', 'value')])
+         State('larva-dropdown', 'value')])
 def callback(coef, well_idx, midpoints, weight, style, checks, size, sigma,
-        blacklist, method, data_root, env, detect, larva, signal_name):
+        signal_name, blacklist, method, data_root, env, detect, larva):
     # Guard
     if env is None:
         return {'data': []}
@@ -4002,26 +4000,25 @@ def callback(detect):
          Input('larva-smoothing-check', 'values'),
          Input('larva-window-size', 'value'),
          Input('larva-window-sigma', 'value'),
+         Input('larva-signal-type', 'value'),
          Input('adult-weight-check', 'values'),
          Input('adult-weight-style', 'value'),
          Input('adult-smoothing-check', 'values'),
          Input('adult-window-size', 'value'),
          Input('adult-window-sigma', 'value'),
+         Input('adult-signal-type', 'value'),
          Input('hidden-blacklist', 'data'),
          Input('detection-method', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
          State('detect-target', 'value'),
          State('larva-dropdown', 'value'),
-         State('adult-dropdown', 'value'),
-         State('larva-signal-type', 'value'),
-         State('adult-signal-type', 'value')])
+         State('adult-dropdown', 'value')])
 def callback(larva_coef, adult_coef, well_idx, midpoints,
         larva_weighting, larva_w_style, larva_smoothing, larva_w_size,
-        larva_w_sigma, adult_weighting, adult_w_style, adult_smoothing,
-        adult_w_size, adult_w_sigma, blacklist, method,
-        data_root, env, detect, larva, adult,
-        larva_signal_name, adult_signal_name):
+        larva_w_sigma, larva_signal_name, adult_weighting, adult_w_style,
+        adult_smoothing, adult_w_size, adult_w_sigma, adult_signal_name,
+        blacklist, method, data_root, env, detect, larva, adult):
     # Guard
     if env is None:
         return {'data': []}
