@@ -4250,6 +4250,8 @@ def callback(tab_name, data_root, env, detect, larva):
         return 'Not available.'
     if detect is None:
         return 'Not available.'
+    if larva is None:
+        return 'Not available.'
     if tab_name != 'tab-2':
         return
 
@@ -4279,28 +4281,13 @@ def callback(tab_name, data_root, env, detect, larva):
                 + pd.DataFrame(larva_evals).to_csv(
                         index=False, encoding='utf-8', header=False)
 
-        larva_style = [{
-                'if': {
-                    'column_id': '{}'.format(clm),
-                    'filter': 'num({2}) > {0} && {1} >= num({3})'.format(
-                            clm, clm, int(t)+100, int(t)),
-                },
-                'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
-                'color': 'black',
-            }
-            for clm in range(params['n-clms'])
-            for t, c in zip(
-                range(0, larva_evals.max(), 100),
-                np.linspace(0, 255, len(range(0, larva_evals.max(), 100))))
-        ]
-
         return [
                 html.H4('Event Timings of Larva (manual)'),
                 dash_table.DataTable(
                     columns=[{'name': str(clm), 'id': str(clm)}
                             for clm in range(params['n-clms'])],
                     data=pd.DataFrame(larva_evals).to_dict('rows'),
-                    style_data_conditional=larva_style,
+                    style_data_conditional=get_cell_style(params, larva_evals),
                     style_table={'width': '100%'}
                 ),
                 html.A(
@@ -4418,28 +4405,13 @@ def callback(tab_name, data_root, env, detect, larva, coef,
             + pd.DataFrame(auto_evals).to_csv(
                     index=False, encoding='utf-8', header=False),
 
-    style = [{
-            'if': {
-                'column_id': '{}'.format(clm),
-                'filter': 'num({2}) > {0} && {1} >= num({3})'.format(
-                        clm, clm, int(t)+100, int(t)),
-            },
-            'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
-            'color': 'black',
-        }
-        for clm in range(params['n-clms'])
-        for t, c in zip(
-            range(0, auto_evals.max(), 100),
-            np.linspace(0, 255, len(range(0, auto_evals.max(), 100))))
-    ]
-
     return [
             html.H4('Event Timings of Larva (auto)'),
             dash_table.DataTable(
                 columns=[{'name': str(clm), 'id': str(clm)}
                         for clm in range(params['n-clms'])],
                 data=pd.DataFrame(auto_evals).to_dict('rows'),
-                style_data_conditional=style,
+                style_data_conditional=get_cell_style(params, auto_evals),
                 style_table={'width': '100%'}
             ),
             html.A(
@@ -4492,6 +4464,8 @@ def callback(tab_name, data_root, env, detect, adult):
         return 'Not available.'
     if detect == 'pupariation':
         return 'Not available.'
+    if adult is None:
+        return 'Not available.'
     if tab_name != 'tab-2':
         return
 
@@ -4531,28 +4505,13 @@ def callback(tab_name, data_root, env, detect, adult):
             + pd.DataFrame(adult_evals).to_csv(
                     index=False, encoding='utf-8', header=False)
 
-    adult_style = [{
-            'if': {
-                'column_id': '{}'.format(clm),
-                'filter': 'num({2}) > {0} && {1} >= num({3})'.format(
-                        clm, clm, int(t)+100, int(t)),
-            },
-            'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
-            'color': 'black',
-        }
-        for clm in range(params['n-clms'])
-        for t, c in zip(
-            range(0, adult_evals.max(), 100),
-            np.linspace(0, 255, len(range(0, adult_evals.max(), 100))))
-    ]
-
     return [
             html.H4('Event Timings of Adult (manual)'),
             dash_table.DataTable(
                 columns=[{'name': str(clm), 'id': str(clm)}
                         for clm in range(params['n-clms'])],
                 data=pd.DataFrame(adult_evals).to_dict('rows'),
-                style_data_conditional=adult_style,
+                style_data_conditional=get_cell_style(params, adult_evals),
                 style_table={'width': '100%'}
             ),
             html.A(
@@ -4706,28 +4665,13 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
             + pd.DataFrame(auto_evals).to_csv(
                     index=False, encoding='utf-8', header=False),
 
-    style = [{
-            'if': {
-                'column_id': '{}'.format(clm),
-                'filter': 'num({2}) > {0} && {1} >= num({3})'.format(
-                        clm, clm, int(t)+100, int(t)),
-            },
-            'backgroundColor': '#{:02X}{:02X}00'.format(int(c), int(c)),
-            'color': 'black',
-        }
-        for clm in range(params['n-clms'])
-        for t, c in zip(
-            range(0, auto_evals.max(), 100),
-            np.linspace(0, 255, len(range(0, auto_evals.max(), 100))))
-    ]
-
     return [
             html.H4('Event Timings of Adult (auto)'),
             dash_table.DataTable(
                 columns=[{'name': str(clm), 'id': str(clm)}
                         for clm in range(params['n-clms'])],
                 data=pd.DataFrame(auto_evals).to_dict('rows'),
-                style_data_conditional=style,
+                style_data_conditional=get_cell_style(params, auto_evals),
                 style_table={'width': '100%'}
             ),
             html.A(
@@ -4763,6 +4707,35 @@ def callback(detect):
 # ====================
 #  Utility functions
 # ====================
+def get_cell_style(params, auto_evals):
+    return [
+        {
+            'if': {
+                'column_id': f'{clm}',
+                'filter': '{} < num({}) && {} >= num({})'.format(
+                        clm, int(t2), clm, int(t1)),
+            },
+            'backgroundColor': '#44{:02X}44'.format(int(c), int(c)),
+            'color': 'black',
+        }
+        for clm in range(params['n-clms'])
+        for t1, t2, c in zip(
+            np.linspace(0, auto_evals.max() + 1, 11)[:10],
+            np.linspace(0, auto_evals.max() + 1, 11)[1:],
+            np.linspace(50, 255, 10))
+    ] + [
+        {
+            'if': {
+                'column_id': f'{clm}',
+                'filter': f'{clm} = num(0)',
+            },
+            'backgroundColor': '#000000',
+            'color': 'white',
+        }
+        for clm in range(params['n-clms'])
+    ]
+
+
 def seasoning(signals, signal_type, detect, size, sigma, smooth, weight,
         pupar_times, midpoints=None, weight_style=None):
 
