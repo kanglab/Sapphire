@@ -10,6 +10,16 @@
 import numpy as np
 
 
+def minmax(signals, coef=1):
+
+    mins = signals.min(axis=1)
+    maxs = signals.max(axis=1)
+    thresholds = mins + (maxs - mins) / 2
+    thresholds = coef * thresholds
+
+    return np.expand_dims(thresholds, axis=-1)
+
+
 def entire_stats(signals, coef=2):
 
     threshold = signals.mean() + coef * signals.std()
