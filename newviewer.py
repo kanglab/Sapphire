@@ -644,51 +644,7 @@ app.layout = html.Div([
             html.Div(id='dummy-div'),
         ]),
         dcc.Tab(id='tab-2', label='Data Table', value='tab-2', children=[
-            html.Div(
-                id='timestamp-table',
-                style={
-                    'display': 'inline-block',
-                    'vertical-align': 'top',
-                    'margin': '10px',
-                    'width': '200px',
-                },
-            ),
-            html.Div(
-                id='larva-man-table',
-                style={
-                    'display': 'inline-block',
-                    'vertical-align': 'top',
-                    'margin': '10px',
-                    'width': '400px',
-                },
-            ),
-            html.Div(
-                id='larva-auto-table',
-                style={
-                    'display': 'inline-block',
-                    'vertical-align': 'top',
-                    'margin': '10px',
-                    'width': '400px',
-                },
-            ),
-            html.Div(
-                id='adult-man-table',
-                style={
-                    'display': 'inline-block',
-                    'vertical-align': 'top',
-                    'margin': '10px',
-                    'width': '400px',
-                },
-            ),
-            html.Div(
-                id='adult-auto-table',
-                style={
-                    'display': 'inline-block',
-                    'vertical-align': 'top',
-                    'margin': '10px',
-                    'width': '400px',
-                },
-            ),
+            html.Div(id='data-tables', children=[]),
         ], style={'width': '100%'}),
     ], style={'width': '100%'}),
 
@@ -1370,7 +1326,6 @@ def callback(dataset_name, check, blacklist, well_idx, data_root):
     
     # If triggered by the checkbox, put the T/F value in the blacklist buffer
     elif trigger_input == 'blacklist-check':
-        print(check)
         if check:
             blacklist['value'][well_idx] = True
         else:
@@ -4183,372 +4138,11 @@ def get_create_time(path):
     return DateTimeDigitized
 
 
-# ======================================================
-#  Timestamp table
-# ======================================================
+# ===================
+#  Make data tables
+# ===================
 @app.callback(
-        Output('timestamp-table', 'children'),
-        [Input('tabs', 'value')],
-        [State('data-root', 'children'),
-         State('env-dropdown', 'value'),
-         State('hidden-timestamp', 'data')])
-def callback(tab_name, data_root, env, timestamps):
-    # Guard
-    if data_root is None:
-        return 'Not available.'
-    if env is None:
-        return 'Not available.'
-    if timestamps is None:
-        return 'Now loading...'
-    if tab_name != 'tab-2':
-        return
-
-    df = pd.DataFrame([timestamps['Image name'], timestamps['Create time']],
-            index=['Image name', 'Create time']).T
-
-    data = [
-            {'Image name': image_name, 'Create time': create_time}
-            for image_name, create_time in zip(
-                    timestamps['Image name'], timestamps['Create time'])]
-
-    return [
-            html.H4('Timestamp'),
-            dash_table.DataTable(
-                columns=[
-                    {'id': 'Image name', 'name': 'Image name'},
-                    {'id': 'Create time', 'name': 'Create time'}],
-                data=data,
-                n_fixed_rows=1,
-                style_table={'width': '100%'},
-                pagination_mode=False,
-            ),
-            html.A(
-                'Download',
-                id='download-link',
-                download='Timestamp({}).csv'.format(env[0:20]),
-                href='data:text/csv;charset=utf-8,' + df.to_csv(index=False),
-                target='_blank',
-            ),
-        ]
-
-
-# ======================================================
-#  Manual table for larva
-# ======================================================
-@app.callback(
-        Output('larva-man-table', 'children'),
-        [Input('tabs', 'value')],
-        [State('data-root', 'children'),
-         State('env-dropdown', 'value'),
-         State('detect-target', 'value'),
-         State('larva-dropdown', 'value')])
-def callback(tab_name, data_root, env, detect, larva):
-    # Guard
-    if data_root is None:
-        return 'Not available.'
-    if env is None:
-        return 'Not available.'
-    if detect is None:
-        return 'Not available.'
-    if larva is None:
-        return 'Not available.'
-    if tab_name != 'tab-2':
-        return
-
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
-
-    if detect in ('pupariation', 'pupa-and-eclo'):
-        if not os.path.exists(os.path.join(
-                data_root, env, 'original', 'pupariation.csv')):
-            return 'Not available.'
-
-        # Load a manual data
-        larva_evals = np.loadtxt(
-                os.path.join(data_root, env, 'original', 'pupariation.csv'),
-                dtype=np.int32, delimiter=',').flatten()
-
-        larva_evals = larva_evals.reshape(
-                params['n-rows']*params['n-plates'], params['n-clms'])
-
-        larva_csv = \
-                  'data:text/csv;charset=utf-8,'  \
-                + 'Dataset,{}\n'.format(urllib.parse.quote(env))  \
-                + 'Morphology,larva\n'  \
-                + 'Inference Data,{}\n'.format(urllib.parse.quote(larva))  \
-                + 'Event Timing\n'  \
-                + pd.DataFrame(larva_evals).to_csv(
-                        index=False, encoding='utf-8', header=False)
-
-        return [
-                html.H4('Event Timings of Larva (manual)'),
-                dash_table.DataTable(
-                    columns=[{'name': str(clm), 'id': str(clm)}
-                            for clm in range(params['n-clms'])],
-                    data=pd.DataFrame(larva_evals).to_dict('rows'),
-                    style_data_conditional=get_cell_style(params, larva_evals),
-                    style_table={'width': '100%'}
-                ),
-                html.A(
-                    'Download',
-                    id='download-link',
-                    download='Manual_Detection.csv',
-                    href=larva_csv,
-                    target='_blank',
-                ),
-            ]
-
-    if detect in ('eclosion', 'death'):
-        return []
-
-
-@app.callback(
-        Output('larva-man-table', 'style'),
-        [Input('detect-target', 'value')])
-def callback(detect):
-
-    if detect in ('pupariation', 'pupa-and-eclo'):
-        return {
-                'display': 'inline-block',
-                'vertical-align': 'top',
-                'margin': '10px',
-                'width': '400px',
-            }
-
-    elif detect in ('eclosion', 'death'):
-        return {'display': 'none'}
-
-    else:
-        return {}
-
-
-# ======================================================
-#  Auto table for larva
-# ======================================================
-@app.callback(
-        Output('larva-auto-table', 'children'),
-        [Input('tabs', 'value')],
-        [State('data-root', 'children'),
-         State('env-dropdown', 'value'),
-         State('detect-target', 'value'),
-         State('larva-dropdown', 'value'),
-         State('larva-thresh-selector', 'value'),
-         State('hidden-midpoint', 'data'),
-         State('larva-weight-check', 'values'),
-         State('larva-weight-style', 'value'),
-         State('larva-window-size', 'value'),
-         State('larva-window-sigma', 'value'),
-         State('larva-smoothing-check', 'values'),
-         State('larva-signal-type', 'value'),
-         State('detection-method', 'value')])
-def callback(tab_name, data_root, env, detect, larva, coef,
-        midpoints, weight, style, size, sigma, checks, signal_name, method):
-    # Guard
-    if data_root is None:
-        return 'Not available.'
-    if env is None:
-        return 'Not available.'
-    if tab_name != 'tab-2':
-        return
-    if detect is None:
-        return 'Not available.'
-    if larva is None:
-        return 'Not available.'
-    if detect in ('eclosion', 'death'):
-        return []
-    if not os.path.exists(os.path.join(
-            data_root, env, 'inference', 'larva', larva, signal_name)):
-        return 'Not available.'
-
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
-
-    larva_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'larva', larva, signal_name)).T
-    larva_diffs = seasoning(
-            larva_diffs, 'larva', detect, size, sigma,
-            smooth=len(checks) != 0,
-            weight=len(weight) != 0,
-            pupar_times=None,
-            midpoints=midpoints,
-            weight_style=style)
-
-    thresholds = THRESH_FUNC(larva_diffs, coef=coef)
-
-    auto_evals = detect_event(larva_diffs, thresholds, 'larva', detect, method)
-
-    auto_evals = auto_evals.reshape(
-            params['n-rows']*params['n-plates'], params['n-clms'])
-
-    if method == 'relmax':
-        detection_method = 'Relative maxima'
-    elif method == 'thresholding':
-        detection_method = 'Thresholding'
-    elif method == 'max':
-        detection_method = 'Maximum'
-    else:
-        detection_method = 'Error'
-
-    auto_to_csv =  \
-              'data:text/csv;charset=utf-8,'  \
-            + 'Dataset,{}\n'.format(urllib.parse.quote(env))  \
-            + 'Morphology,larva\n'  \
-            + 'Inference Data,{}\n'.format(urllib.parse.quote(larva))  \
-            + 'Detection Method,{}\n'.format(detection_method)  \
-            + 'Threshold Value,{:.1f}\n'.format(thresholds[0, 0])  \
-            + '(coef * (min + (max - min) / 2) for each individual)\n'  \
-            + 'Coefficient (coef),{}\n'.format(coef)  \
-            + 'Smoothing Window Size,{}\n'.format(size)  \
-            + 'Smoothing Sigma,{}\nEvent Timing\n'.format(sigma)  \
-            + pd.DataFrame(auto_evals).to_csv(
-                    index=False, encoding='utf-8', header=False),
-
-    return [
-            html.H4('Event Timings of Larva (auto)'),
-            dash_table.DataTable(
-                columns=[{'name': str(clm), 'id': str(clm)}
-                        for clm in range(params['n-clms'])],
-                data=pd.DataFrame(auto_evals).to_dict('rows'),
-                style_data_conditional=get_cell_style(params, auto_evals),
-                style_table={'width': '100%'}
-            ),
-            html.A(
-                'Download',
-                id='download-link',
-                download='Auto_Detection.csv',
-                href=auto_to_csv,
-                target='_blank',
-            ),
-        ]
-
-
-@app.callback(
-        Output('larva-auto-table', 'style'),
-        [Input('detect-target', 'value')])
-def callback(detect):
-
-    if detect in ('pupariation', 'pupa-and-eclo'):
-        return {
-                'display': 'inline-block',
-                'vertical-align': 'top',
-                'margin': '10px',
-                'width': '400px',
-            }
-
-    elif detect in ('eclosion', 'death'):
-        return {'display': 'none'}
-
-    else:
-        return {}
-
-
-# ======================================================
-#  Manual table for adult
-# ======================================================
-@app.callback(
-        Output('adult-man-table', 'children'),
-        [Input('tabs', 'value')],
-        [State('data-root', 'children'),
-         State('env-dropdown', 'value'),
-         State('detect-target', 'value'),
-         State('adult-dropdown', 'value')])
-def callback(tab_name, data_root, env, detect, adult):
-    # Guard
-    if data_root is None:
-        return 'Not available.'
-    if env is None:
-        return 'Not available.'
-    if detect is None:
-        return 'Not available.'
-    if detect == 'pupariation':
-        return 'Not available.'
-    if adult is None:
-        return 'Not available.'
-    if tab_name != 'tab-2':
-        return
-
-    # Load a mask params
-    with open(os.path.join(data_root, env, 'mask_params.json')) as f:
-        params = json.load(f)
-
-    if detect in ('eclosion', 'pupa-and-eclo'):
-        if not os.path.exists(os.path.join(
-                data_root, env, 'original', 'eclosion.csv')):
-            return 'Not available.'
-
-        # Load a manual data
-        adult_evals = np.loadtxt(
-                os.path.join(data_root, env, 'original', 'eclosion.csv'),
-                dtype=np.int32, delimiter=',').flatten()
-
-    elif detect == 'death':
-        if not os.path.exists(os.path.join(
-                data_root, env, 'original', 'death.csv')):
-            return 'Not available.'
-
-        # Load a manual data
-        adult_evals = np.loadtxt(
-                os.path.join(data_root, env, 'original', 'death.csv'),
-                dtype=np.int32, delimiter=',').flatten()
-
-    adult_evals = adult_evals.reshape(
-            params['n-rows']*params['n-plates'], params['n-clms'])
-
-    adult_csv = \
-              'data:text/csv;charset=utf-8,'  \
-            + 'Dataset,{}\n'.format(urllib.parse.quote(env))  \
-            + 'Morphology,adult\n'  \
-            + 'Inference Data,{}\n'.format(urllib.parse.quote(adult))  \
-            + 'Event Timing\n'  \
-            + pd.DataFrame(adult_evals).to_csv(
-                    index=False, encoding='utf-8', header=False)
-
-    return [
-            html.H4('Event Timings of Adult (manual)'),
-            dash_table.DataTable(
-                columns=[{'name': str(clm), 'id': str(clm)}
-                        for clm in range(params['n-clms'])],
-                data=pd.DataFrame(adult_evals).to_dict('rows'),
-                style_data_conditional=get_cell_style(params, adult_evals),
-                style_table={'width': '100%'}
-            ),
-            html.A(
-                'Download',
-                id='download-link',
-                download='Manual_Detection.csv',
-                href=adult_csv,
-                target='_blank',
-            ),
-        ]
-
-
-@app.callback(
-        Output('adult-man-table', 'style'),
-        [Input('detect-target', 'value')])
-def callback(detect):
-
-    if detect == 'pupariation':
-        return {'display': 'none'}
-
-    elif detect in ('eclosion', 'pupa-and-eclo', 'death'):
-        return {
-                'display': 'inline-block',
-                'vertical-align': 'top',
-                'margin': '10px',
-                'width': '400px',
-            }
-
-    else:
-        return {}
-
-
-# ======================================================
-#  Auto table for adult
-# ======================================================
-@app.callback(
-        Output('adult-auto-table', 'children'),
+        Output('data-tables', 'children'),
         [Input('tabs', 'value')],
         [State('data-root', 'children'),
          State('env-dropdown', 'value'),
@@ -4570,75 +4164,96 @@ def callback(detect):
          State('adult-smoothing-check', 'values'),
          State('larva-signal-type', 'value'),
          State('adult-signal-type', 'value'),
-         State('detection-method', 'value')])
+         State('detection-method', 'value'),
+         State('hidden-timestamp', 'data')])
 def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
         adult_coef, midpoints, larva_weighting, larva_w_style, larva_w_size,
         larva_w_sigma, larva_smoothing, adult_weighting, adult_w_style,
         adult_w_size, adult_w_sigma, adult_smoothing, larva_signal_name,
-        adult_signal_name, method):
+        adult_signal_name, method, timestamps):
     # Guard
     if data_root is None:
-        return 'Not available.'
+        raise dash.exceptions.PreventUpdate
     if env is None:
-        return 'Not available.'
+        return 'Please select a dataset.'
     if tab_name != 'tab-2':
-        return
-    if detect is None:
-        return 'Not available.'
-    if detect == 'pupariation':
-        return 'Not available.'
-    if adult is None:
-        return 'Not available.'
-    if not os.path.exists(os.path.join(
-            data_root, env, 'inference', 'adult', adult, adult_signal_name)):
-        return 'Not available.'
+        raise dash.exceptions.PreventUpdate
 
-    # Load a mask params
     with open(os.path.join(data_root, env, 'mask_params.json')) as f:
         params = json.load(f)
 
+    larva_man_table = make_manual_table(
+            data_root, env, 'larva', detect, params)
+    larva_auto_table = make_auto_table(
+            data_root, env, 'larva', larva, detect, larva_signal_name,
+            params, larva_w_size, larva_w_sigma, larva_smoothing,
+            larva_weighting, midpoints, larva_w_style, larva_coef, method)
+    adult_man_table = make_manual_table(
+            data_root, env, 'adult', detect, params)
+    adult_auto_table = make_auto_table(
+            data_root, env, 'adult', adult, detect, adult_signal_name,
+            params, adult_w_size, adult_w_sigma, adult_smoothing,
+            adult_weighting, midpoints, adult_w_style, adult_coef, method)
 
-    # ----------------------------------------------------------
-    #  Detect pupariation timing for detecting eclosion timing
-    # ----------------------------------------------------------
-    if larva is None:
-        pupar_times = None
+    timestamp_table = make_timestamp_table(env, timestamps)
 
-    else:
-        larva_diffs = np.load(os.path.join(data_root,
-                env, 'inference', 'larva', larva, larva_signal_name)).T
-
-        larva_diffs = seasoning(
-                larva_diffs, 'larva', detect, larva_w_size, larva_w_sigma,
-                smooth=len(larva_smoothing) != 0,
-                weight=len(larva_weighting) != 0,
-                pupar_times=None,
-                midpoints=midpoints,
-                weight_style=larva_w_style)
-
-        larva_thresh = THRESH_FUNC(larva_diffs, coef=larva_coef)
-
-        pupar_times = detect_event(larva_diffs, larva_thresh, 'larva', detect, method)
+    return [timestamp_table, larva_man_table,
+            larva_auto_table, adult_man_table, adult_auto_table]
 
 
-    # ----------------------------------------
-    #  Detection of eclosion or death timing
-    # ----------------------------------------
-    # Load the data
-    adult_diffs = np.load(os.path.join(
-            data_root, env, 'inference', 'adult', adult, adult_signal_name)).T
-    adult_diffs = seasoning(
-            adult_diffs, 'adult', detect, adult_w_size, adult_w_sigma,
-            smooth=len(adult_smoothing) != 0,
-            weight=len(adult_weighting) != 0,
-            pupar_times=pupar_times,
+def make_timestamp_table(env, timestamps):
+    df = pd.DataFrame([timestamps['Image name'], timestamps['Create time']],
+            index=['Image name', 'Create time']).T
+
+    data = [{'Image name': image_name, 'Create time': create_time}
+            for image_name, create_time in zip(
+                    timestamps['Image name'], timestamps['Create time'])]
+
+    return html.Div(id='timestamp-table', children=[
+            html.H4('Timestamp'),
+            dash_table.DataTable(
+                columns=[
+                    {'id': 'Image name', 'name': 'Image name'},
+                    {'id': 'Create time', 'name': 'Create time'}],
+                data=data,
+                n_fixed_rows=1,
+                style_table={'width': '100%'},
+                pagination_mode=False,
+            ),
+            html.A(
+                'Download',
+                id='download-link',
+                download='Timestamp({}).csv'.format(env[0:20]),
+                href='data:text/csv;charset=utf-8,' + df.to_csv(index=False),
+                target='_blank',
+            ),
+        ],
+        style={
+            'display': 'inline-block',
+            'vertical-align': 'top',
+            'margin': '10px',
+            'width': '200px',
+        },
+    )
+
+
+def make_auto_table(data_root, env, morph, target_dir, detect, signal_name, params, w_size, w_sigma, smoothing, weighting, midpoints, w_style, coef, method):
+    if target_dir is None:
+        return html.Div(style={'display': 'inline-block'})
+
+    signals = np.load(os.path.join(
+            data_root, env, 'inference', morph, target_dir, signal_name)).T
+    signals = seasoning(
+            signals, morph, detect, w_size, w_sigma,
+            smooth=len(smoothing) != 0,
+            weight=len(weighting) != 0,
+            pupar_times=None,
             midpoints=midpoints,
-            weight_style=adult_w_style)
+            weight_style=w_style)
 
-    adult_thresh = THRESH_FUNC(adult_diffs, coef=adult_coef)
+    thresh = THRESH_FUNC(signals, coef=coef)
 
-    auto_evals = detect_event(adult_diffs, adult_thresh, 'adult', detect, method)
-
+    auto_evals = detect_event(signals, thresh, morph, detect, method)
     auto_evals = auto_evals.reshape(
             params['n-rows']*params['n-plates'], params['n-clms'])
 
@@ -4654,19 +4269,21 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
     auto_to_csv =  \
               'data:text/csv;charset=utf-8,'  \
             + 'Dataset,{}\n'.format(urllib.parse.quote(env))  \
-            + 'Morphology,adult\n'  \
-            + 'Inference Data,{}\n'.format(urllib.parse.quote(adult))  \
-            + 'Detection Method,{}\n'.format(detection_method)  \
-            + 'Threshold Value,{:.1f}\n'.format(adult_thresh[0, 0])  \
-            + '(coef * (min + (max - min) / 2) for each individual)\n'  \
-            + 'Coefficient (coef),{}\n'.format(adult_coef)  \
-            + 'Smoothing Window Size,{}\n'.format(adult_w_size)  \
-            + 'Smoothing Sigma,{}\nEvent Timing\n'.format(adult_w_sigma)  \
+            + f'Morphology,{morph}\n'  \
+            + 'Inference data,{}\n'.format(urllib.parse.quote(target_dir))  \
+            + 'Detection method,{}\n'.format(detection_method)  \
+            + 'Threshold value,'  \
+            + 'coef * (min + (max - min) / 2) for each individual\n'  \
+            + 'Coefficient (coef),{}\n'.format(coef)  \
+            + 'Smoothing window size,{}\n'.format(w_size)  \
+            + 'Smoothing sigma,{}\nEvent timing\n'.format(w_sigma)  \
             + pd.DataFrame(auto_evals).to_csv(
                     index=False, encoding='utf-8', header=False),
 
-    return [
-            html.H4('Event Timings of Adult (auto)'),
+    return html.Div(
+        id=f'{morph}-auto-table',
+        children = [
+            html.H4(f'Event timings of {morph} (auto)'),
             dash_table.DataTable(
                 columns=[{'name': str(clm), 'id': str(clm)}
                         for clm in range(params['n-clms'])],
@@ -4676,32 +4293,109 @@ def callback(tab_name, data_root, env, detect, larva, adult, larva_coef,
             ),
             html.A(
                 'Download',
-                id='download-link',
-                download='Auto_Detection.csv',
+                download=f'auto_detection_{morph}.csv',
                 href=auto_to_csv,
                 target='_blank',
             ),
-        ]
+        ],
+        style={
+            'display': 'inline-block',
+            'vertical-align': 'top',
+            'margin': '10px',
+            'width': '400px',
+        },
+    )
 
+def make_manual_table(data_root, env, morph, detect, params):
+    if morph == 'larva' and detect == 'pupariation':
+        try:
+            auto_evals = np.loadtxt(os.path.join(data_root, env, 'original',
+                'pupariation.csv'), dtype=np.int32, delimiter=',').flatten()
+        except:
+            return make_null_table(morph, 'manual')
 
-@app.callback(
-        Output('adult-auto-table', 'style'),
-        [Input('detect-target', 'value')])
-def callback(detect):
+    elif morph == 'larva' and detect == 'eclosion':
+        return make_null_table(morph, 'manual')
 
-    if detect == 'pupariation':
-        return {'display': 'none'}
+    elif morph == 'larva' and detect == 'death':
+        return make_null_table(morph, 'manual')
 
-    elif detect in ('eclosion', 'pupa-and-eclo', 'death'):
-        return {
-                'display': 'inline-block',
-                'vertical-align': 'top',
-                'margin': '10px',
-                'width': '400px',
-            }
+    elif morph == 'larva' and detect == 'pupa-and-eclo':
+        try:
+            auto_evals = np.loadtxt(os.path.join(data_root, env, 'original',
+                'pupariation.csv'), dtype=np.int32, delimiter=',').flatten()
+        except:
+            return make_null_table(morph, 'manual')
+
+    elif morph == 'adult' and detect == 'pupariation':
+        return make_null_table(morph, 'manual')
+
+    elif morph == 'adult' and detect == 'eclosion':
+        try:
+            auto_evals = np.loadtxt(
+                    os.path.join(data_root, env, 'original', 'eclosion.csv'),
+                    dtype=np.int32, delimiter=',').flatten()
+        except:
+            return make_null_table(morph, 'manual')
+
+    elif morph == 'adult' and detect == 'death':
+        try:
+            auto_evals = np.loadtxt(
+                    os.path.join(data_root, env, 'original', 'death.csv'),
+                    dtype=np.int32, delimiter=',').flatten()
+        except:
+            return make_null_table(morph, 'manual')
+
+    elif morph == 'adult' and detect == 'pupa-and-eclo':
+        try:
+            auto_evals = np.loadtxt(
+                    os.path.join(data_root, env, 'original', 'eclosion.csv'),
+                    dtype=np.int32, delimiter=',').flatten()
+        except:
+            return make_null_table(morph, 'manual')
 
     else:
-        return {}
+        raise Exception()
+
+    auto_evals = auto_evals.reshape(
+            params['n-rows']*params['n-plates'], params['n-clms'])
+
+    auto_csv = \
+              'data:text/csv;charset=utf-8,'  \
+            + 'Dataset,{}\n'.format(urllib.parse.quote(env))  \
+            + f'Morphology,{morph}\n'  \
+            + 'Event timing\n'  \
+            + pd.DataFrame(auto_evals).to_csv(
+                    index=False, encoding='utf-8', header=False)
+
+    return html.Div(
+        id=f'{morph}-manual-table',
+        children = [
+            html.H4(f'Event timings of {morph} (manual)'),
+            dash_table.DataTable(
+                columns=[{'name': str(clm), 'id': str(clm)}
+                        for clm in range(params['n-clms'])],
+                data=pd.DataFrame(auto_evals).to_dict('rows'),
+                style_data_conditional=get_cell_style(params, auto_evals),
+                style_table={'width': '100%'}
+            ),
+            html.A(
+                'Download',
+                download=f'manual_dtection_{morph}.csv',
+                href=auto_csv,
+                target='_blank',
+            ),
+        ],
+        style={
+            'display': 'inline-block',
+            'vertical-align': 'top',
+            'margin': '10px',
+            'width': '400px',
+        },
+    )
+
+def make_null_table(morph, string):
+    return html.Div(style={'display': 'inline-block'})
 
 
 # ====================
