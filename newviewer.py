@@ -780,7 +780,7 @@ def callback(detect, data_root, env):
 
     results = [os.path.basename(i)
             for i in sorted(glob.glob(os.path.join(
-                data_root, env, 'inference', 'larva', '*')))
+                data_root, glob.escape(env), 'inference', 'larva', '*')))
             if os.path.isdir(i)]
 
     return [{'label': i, 'value': i} for i in results]
@@ -833,7 +833,7 @@ def callback(detect, data_root, env):
 
     results = [os.path.basename(i)
             for i in sorted(glob.glob(os.path.join(
-                data_root, env, 'inference', 'adult', '*')))
+                data_root, glob.escape(env), 'inference', 'adult', '*')))
             if os.path.isdir(i)]
 
     return [{'label': i, 'value': i} for i in results]
@@ -1032,8 +1032,8 @@ def callback(env, data_root):
     if env is None:
         return
 
-    return len(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg'))) - 2
+    return len(glob.glob(os.path.join(
+            data_root, glob.escape(env), 'original', '*.jpg'))) - 2
 
 
 @app.callback(
@@ -1051,8 +1051,8 @@ def callback(env, data_root):
     if env is None:
         return 100
 
-    return len(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg'))) - 2
+    return len(glob.glob(os.path.join(
+            data_root, glob.escape(env), 'original', '*.jpg'))) - 2
 
 
 @app.callback(
@@ -1143,8 +1143,9 @@ def callback(larva, data_root, dataset_name):
     if larva is None or dataset_name is None:
         return []
 
-    signal_files = sorted(glob.glob(os.path.join(data_root,
-            dataset_name, 'inference', 'larva', larva, '*signals.npy')))
+    signal_files = sorted(glob.glob(os.path.join(
+            data_root, glob.escape(dataset_name), 'inference',
+            'larva', larva, '*signals.npy')))
     signal_files = [os.path.basename(file_path) for file_path in signal_files]
 
     return [{'label': i, 'value': i} for i in signal_files]
@@ -1160,8 +1161,9 @@ def callback(adult, data_root, dataset_name):
     if adult is None or dataset_name is None:
         return []
 
-    signal_files = sorted(glob.glob(os.path.join(data_root,
-            dataset_name, 'inference', 'adult', adult, '*signals.npy')))
+    signal_files = sorted(glob.glob(os.path.join(
+            data_root, glob.escape(dataset_name), 'inference',
+            'adult', adult, '*signals.npy')))
     signal_files = [os.path.basename(file_path) for file_path in signal_files]
 
     return [{'label': i, 'value': i} for i in signal_files]
@@ -1386,7 +1388,7 @@ def callback(time, well_idx, data_root, env):
 
     # Load an original image
     orgimg_paths = sorted(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg')))
+            os.path.join(data_root, glob.escape(env), 'original', '*.jpg')))
     orgimg1 = np.array(
             PIL.Image.open(orgimg_paths[time]).convert('L'), dtype=np.uint8)
     orgimg2 = np.array(
@@ -1832,7 +1834,7 @@ def callback(time, well_idx, data_root, env):
 
     # Load an original image
     orgimg_paths = sorted(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg')))
+            os.path.join(data_root, glob.escape(env), 'original', '*.jpg')))
     org_img = PIL.Image.open(orgimg_paths[time]).convert('L')
 
     # Buffer the well image as byte stream
@@ -2029,8 +2031,8 @@ def callback(env, data_root):
     if env is None:
         return 100
 
-    return len(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg'))) - 2
+    return len(glob.glob(os.path.join(
+            data_root, glob.escape(env), 'original', '*.jpg'))) - 2
 
 
 @app.callback(
@@ -2054,8 +2056,8 @@ def callback(env, data_root):
     if env is None:
         return 100
 
-    return len(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg'))) - 2
+    return len(glob.glob(os.path.join(
+            data_root, glob.escape(env), 'original', '*.jpg'))) - 2
 
 
 @app.callback(
@@ -4120,8 +4122,8 @@ def callback(env, data_root):
         return
 
     # Load an original image
-    orgimg_paths = sorted(glob.glob(
-            os.path.join(data_root, env, 'original', '*.jpg')))
+    orgimg_paths = sorted(glob.glob(os.path.join(
+            data_root, glob.escape(env), 'original', '*.jpg')))
 
     return {
             'Image name': [os.path.basename(path) for path in orgimg_paths],
