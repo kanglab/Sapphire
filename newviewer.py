@@ -5309,4 +5309,4 @@ def create_mask(
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, dev_tools_props_check=True)
