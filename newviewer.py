@@ -643,9 +643,135 @@ app.layout = html.Div([
             ]),
             html.Div(id='dummy-div'),
         ]),
-        dcc.Tab(id='tab-2', label='Data Table', value='tab-2', children=[
+
+        dcc.Tab(id='tab-2', label='Data table', value='tab-2', children=[
             html.Div(id='data-tables', children=[]),
         ], style={'width': '100%'}),
+
+        dcc.Tab(id='tab-3', label='Mask maker', value='tab-3', children=[
+            html.Div([
+                html.Div([
+                    dcc.Upload(
+                        id='uploader',
+                        children=html.Div(['Drag and Drop or ', html.A('Select A File')]),
+                        style={
+                            'width': '400px',
+                            'height': '60px',
+                            'lineHeight': '60px',
+                            'borderWidth': '1px',
+                            'borderStyle': 'dashed',
+                            'borderRadius': '5px',
+                            'textAlign': 'center',
+                            'margin': '10px'},
+                        multiple=False,
+                    ),
+                    html.Div([
+                        '# of rows',
+                        html.Br(),
+                        dcc.Input(id='n-rows', placeholder='# of rows',
+                                type='number', value=8, max=100, min=0, size=5),
+                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    html.Div([
+                        '# of columns',
+                        html.Br(),
+                        dcc.Input(id='n-clms', placeholder='# of columns',
+                                type='number', value=12, max=100, min=0, size=5),
+                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    html.Div([
+                        '# of plates',
+                        html.Br(),
+                        dcc.Input(id='n-plates', placeholder='# of plates',
+                                type='number', value=3, max=10, min=0, size=5),
+                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    html.Div([
+                        'gap between rows',
+                        html.Br(),
+                        dcc.Input(id='row-gap', placeholder='gap between rows',
+                                type='number', value=1, max=10, min=0, size=5, step=0.1),
+                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    html.Div([
+                        'gap between columns',
+                        html.Br(),
+                        dcc.Input(id='clm-gap', placeholder='gap between columns',
+                                type='number', value=1, max=10, min=0, size=5, step=0.1),
+                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    html.Div([
+                        'gap between plates',
+                        html.Br(),
+                        dcc.Input(id='plate-gap', placeholder='gap between plates',
+                                type='number', value=71, max=800, min=0, size=5),
+                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    html.Div([
+                        'x-coord of the lower left corner',
+                        html.Br(),
+                        dcc.Input(id='x', placeholder='x-coord of the lower left corner',
+                                type='number', value=0, max=1500, min=0, size=5),
+                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    html.Div([
+                        'y-coord of the lower left corner',
+                        html.Br(),
+                        dcc.Input(id='y', placeholder='y-coord of the lower left corner',
+                                type='number', value=0, max=1500, min=0, size=5),
+                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    html.Div([
+                        'width of a well',
+                        html.Br(),
+                        dcc.Input(id='well_w', placeholder='width of a well',
+                                type='number', value=0, max=1500, min=0, size=5),
+                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    html.Div([
+                        'height of a well',
+                        html.Br(),
+                        dcc.Input(id='well_h', placeholder='height of a well',
+                                type='number', value=0, max=1500, min=0, size=5),
+                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    html.Div([
+                        'rotation correction (degree)',
+                        html.Br(),
+                        dcc.Input(id='angle', placeholder='rotation correction (degree)',
+                                type='number', value=0, max=90, min=0, size=5, step=0.1),
+                    ], style={'display': 'inline-block', 'width': '100px'}),
+                ]),
+                html.Div([
+                    html.Div([
+                        dcc.Graph(
+                            id='org-img',
+                            figure={
+                                'data': [],
+                                'layout':{},
+                            },
+                            style={
+                                'display': 'inline-block',
+                                'width': '33%',
+                            },
+                        ),
+                        dcc.Graph(
+                            id='masked-img',
+                            figure={
+                                'data': [],
+                                'layout':{},
+                            },
+                            style={
+                                'display': 'inline-block',
+                                'width': '33%',
+                            },
+                        ),
+                        dcc.Graph(
+                            id='mask-img',
+                            figure={
+                                'data': [],
+                                'layout':{},
+                            },
+                            style={
+                                'display': 'inline-block',
+                                'width': '33%',
+                            },
+                        ),
+                    ]),
+                ]),
+            ]),
+        ], style={'width': '100%'}),
+
     ], style={'width': '100%'}),
 
     dcc.Store(id='hidden-timestamp'),
@@ -4848,6 +4974,338 @@ def day_and_night(timestamps):
         )
 
     return shapes
+
+
+
+# =====================
+#  Mask maker (tab 3)
+# =====================
+@app.callback(
+        Output('org-img', 'figure'),
+        [Input('uploader', 'contents')])
+def update_images_div(data_uri):
+
+    if data_uri is None:
+        return {'data': [], 'layout': {}}
+
+    imghash = data_uri.split(',')[1]
+    img = PIL.Image.open(io.BytesIO(base64.b64decode(imghash)))
+    height, width = np.array(img).shape
+
+    return {
+            'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
+            'layout': {
+                'width': 400,
+                'height': 700,
+                'margin': go.layout.Margin(l=40, b=40, t=26, r=10),
+                'xaxis': {
+                    'range': (0, width),
+                    'scaleanchor': 'y',
+                    'scaleratio': 1,
+                },
+                'yaxis': {
+                    'range': (0, height),
+                },
+                'images': [{
+                    'xref': 'x',
+                    'yref': 'y',
+                    'x': 0,
+                    'y': 0,
+                    'yanchor': 'bottom',
+                    'sizing': 'stretch',
+                    'sizex': width,
+                    'sizey': height,
+                    'source': data_uri,
+                }],
+                'dragmode': 'select',
+            }
+        }
+
+
+@app.callback(
+        Output('x', 'value'),
+        [Input('org-img', 'selectedData')])
+def update_x(selected_data):
+    if selected_data is None:
+        return
+    range_x = np.array(selected_data['range']['x']).astype(int)
+    return range_x[0]
+
+
+@app.callback(
+        Output('y', 'value'),
+        [Input('org-img', 'selectedData')])
+def update_y(selected_data):
+    if selected_data is None:
+        return
+    range_y = np.array(selected_data['range']['y']).astype(int)
+    return range_y[0]
+
+
+
+@app.callback(
+        Output('well_w', 'value'),
+        [Input('org-img', 'selectedData')])
+def update_well_w(selected_data):
+    if selected_data is None:
+        return
+    range_x = np.array(selected_data['range']['x']).astype(int)
+    return range_x[1] - range_x[0]
+
+
+@app.callback(
+        Output('well_h', 'value'),
+        [Input('org-img', 'selectedData')])
+def update_well_h(selected_data):
+    if selected_data is None:
+        return
+    range_y = np.array(selected_data['range']['y']).astype(int)
+    return range_y[1] - range_y[0]
+
+
+@app.callback(
+        Output('mask-img', 'figure'),
+        [Input('n-rows', 'value'),
+            Input('n-clms', 'value'),
+            Input('n-plates', 'value'),
+            Input('row-gap', 'value'),
+            Input('clm-gap', 'value'),
+            Input('plate-gap', 'value'),
+            Input('x', 'value'),
+            Input('y', 'value'),
+            Input('well_w', 'value'),
+            Input('well_h', 'value'),
+            Input('angle', 'value')],
+        [State('org-img', 'figure'),
+         State('mask-img', 'relayoutData')])
+def draw_images(
+        n_rows, n_clms, n_plates,
+        gap_r, gap_c, gap_p, x, y, well_w, well_h, angle,
+        figure, layout):
+
+    # Guard
+    if 'images' not in figure['layout']:
+        return {'data': [], 'layout': {}}
+
+    # Get base64ed hash of original image
+    orgimg_uri = figure['layout']['images'][0]['source']
+    imghash = orgimg_uri.split(',')[1]
+
+    # Transform hash to ndarray
+    org_img = np.array(PIL.Image.open(io.BytesIO(base64.b64decode(imghash))))
+
+    # Create a mask
+    mask = create_mask(
+            org_img.shape, n_rows, n_clms, n_plates,
+            gap_r, gap_c, gap_p, x, y, well_w, well_h, np.deg2rad(angle))
+
+    label = PIL.Image.fromarray(
+            (255 * (np.log(mask + 2) / np.log(mask + 2).max())).astype(np.uint8))
+    mask_buf = io.BytesIO()
+    label.save(mask_buf, format='JPEG')
+
+    # make the directory for saving
+    os.makedirs('static/', exist_ok=True)
+
+    # save the mask
+    np.save('static/mask.npy', mask.astype(np.int16))
+
+    # save the parameters
+    params_dict = {
+            'n-rows': n_rows,
+            'n-clms': n_clms,
+            'n-plates': n_plates,
+            'row-gap': gap_r,
+            'clm-gap': gap_c,
+            'plate-gap': gap_p,
+            'x': x,
+            'y': y,
+            'well-w': well_w,
+            'well-h': well_h,
+            'angle': angle,
+            }
+    with open('static/mask_params.json', 'w') as f:
+        json.dump(params_dict, f, indent=4)
+
+    if 'xaxis.range[0]' in layout:
+        xaxis = {
+                'range': (layout['xaxis.range[0]'], layout['xaxis.range[1]']),
+                'scaleanchor': 'y',
+                'scaleratio': 1,
+        }
+
+    else:
+        xaxis = {
+                'range': (0, org_img.shape[1]),
+                'scaleanchor': 'y',
+                'scaleratio': 1,
+        }
+
+    if 'yaxis.range[0]' in layout:
+        yaxis = {
+                'range': (layout['yaxis.range[0]'], layout['yaxis.range[1]']),
+        }
+
+    else:
+        yaxis = {
+                'range': (0, org_img.shape[0]),
+        }
+
+    # define the graphs to draw
+    return {
+            'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
+            'layout': {
+                'width': 400,
+                'height': 700,
+                'margin': go.layout.Margin(l=40, b=40, t=26, r=10),
+                'xaxis': xaxis,
+                'yaxis': yaxis,
+                'images': [{
+                    'xref': 'x',
+                    'yref': 'y',
+                    'x': 0,
+                    'y': 0,
+                    'yanchor': 'bottom',
+                    'sizing': 'stretch',
+                    'sizex': org_img.shape[1],
+                    'sizey': org_img.shape[0],
+                    'source': 'data:image/jpeg;base64,{}'.format(
+                        base64.b64encode(mask_buf.getvalue()).decode('utf-8')),
+                }],
+                'dragmode': 'select',
+            }
+        }
+
+
+@app.callback(
+        Output('masked-img', 'figure'),
+        [Input('n-rows', 'value'),
+            Input('n-clms', 'value'),
+            Input('n-plates', 'value'),
+            Input('row-gap', 'value'),
+            Input('clm-gap', 'value'),
+            Input('plate-gap', 'value'),
+            Input('x', 'value'),
+            Input('y', 'value'),
+            Input('well_w', 'value'),
+            Input('well_h', 'value'),
+            Input('angle', 'value')],
+        [State('org-img', 'figure'),
+         State('masked-img', 'relayoutData')])
+def draw_images(
+        n_rows, n_clms, n_plates,
+        gap_r, gap_c, gap_p, x, y, well_w, well_h, angle,
+        figure, layout):
+
+    # Guard
+    if 'images' not in figure['layout']:
+        return {'data': [], 'layout': {}}
+
+    # Get base64ed hash of original image
+    orgimg_uri = figure['layout']['images'][0]['source']
+    imghash = orgimg_uri.split(',')[1]
+
+    # Transform hash to ndarray
+    org_img = np.array(PIL.Image.open(io.BytesIO(base64.b64decode(imghash))))
+
+    # Create a mask
+    mask = create_mask(
+            org_img.shape, n_rows, n_clms, n_plates,
+            gap_r, gap_c, gap_p, x, y, well_w, well_h, np.deg2rad(angle))
+
+    masked = PIL.Image.fromarray(
+            np.where(mask>=0, 1, 0).astype(np.uint8) * org_img)
+    masked_buf = io.BytesIO()
+    masked.save(masked_buf, format='JPEG')
+
+    if 'xaxis.range[0]' in layout:
+        xaxis = {
+                'range': (layout['xaxis.range[0]'], layout['xaxis.range[1]']),
+                'scaleanchor': 'y',
+                'scaleratio': 1,
+        }
+
+    else:
+        xaxis = {
+                'range': (0, org_img.shape[1]),
+                'scaleanchor': 'y',
+                'scaleratio': 1,
+        }
+
+    if 'yaxis.range[0]' in layout:
+        yaxis = {
+                'range': (layout['yaxis.range[0]'], layout['yaxis.range[1]']),
+        }
+
+    else:
+        yaxis = {
+                'range': (0, org_img.shape[0]),
+        }
+
+    return {
+            'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
+            'layout': {
+                'width': 400,
+                'height': 700,
+                'margin': go.layout.Margin(l=40, b=40, t=26, r=10),
+                'xaxis': xaxis,
+                'yaxis': yaxis,
+                'images': [{
+                    'xref': 'x',
+                    'yref': 'y',
+                    'x': 0,
+                    'y': 0,
+                    'yanchor': 'bottom',
+                    'sizing': 'stretch',
+                    'sizex': org_img.shape[1],
+                    'sizey': org_img.shape[0],
+                    'source': 'data:image/jpeg;base64,{}'.format(
+                        base64.b64encode(masked_buf.getvalue()).decode('utf-8')),
+                }],
+                'dragmode': 'select',
+            }
+        }
+
+
+def create_mask(
+        shape, n_rows, n_clms, n_plates,
+        gap_r, gap_c, gap_p, x, y, well_w, well_h, angle):
+
+    well_idxs = np.flipud(
+            np.arange(n_rows * n_clms * n_plates, dtype=int).reshape(
+                n_rows*n_plates, n_clms)).reshape(n_rows * n_clms * n_plates)
+
+    count = 0
+    mask = -1 * np.ones(shape)
+    for n in range(n_plates):
+        for idx_r in range(n_rows):
+            for idx_c in range(n_clms):
+                c1 = x + round(idx_c*(well_w + gap_c))
+                r1 = y + round(idx_r*(well_h + gap_r)) + n*(n_rows*well_h + gap_p) + round(gap_r*(n - 1))
+                c1, r1 = np.dot(
+                        np.array(
+                            [[np.cos(angle), -np.sin(angle)],
+                             [np.sin(angle),  np.cos(angle)]]),
+                        np.array([c1-x, r1-y])) + np.array([x, y])
+                c1, r1 = np.round([c1, r1]).astype(int)
+                c2 = c1 + well_w
+                r2 = r1 + well_h
+                mask[r1:r2, c1:c2] = well_idxs[count]
+                count += 1
+
+    shapes = []
+    for well_idx in np.unique(mask)[1:]:
+        clms, rows = np.where(mask == well_idx)
+        masked = mask[min(clms):max(clms), min(rows):max(rows)]
+        shapes.append(masked.shape)
+    shapes = np.array(shapes)
+
+    if np.unique(shapes.T[0]).shape[0] >= 2 \
+            or np.unique(shapes.T[1]).shape[0] >= 2:
+        return np.flipud(mask) \
+                * np.logical_not(np.eye(mask.shape[0], mask.shape[1]))
+
+    return np.flipud(mask)
 
 
 if __name__ == '__main__':
