@@ -733,7 +733,7 @@ app.layout = html.Div([
                     ], style={'display': 'inline-block', 'width': '100px'}),
                 ]),
                 html.Div([
-                    html.Div([
+                    dcc.Loading([
                         dcc.Graph(
                             id='org-img',
                             figure={
