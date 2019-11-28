@@ -5118,28 +5118,6 @@ def draw_images(
     mask_buf = io.BytesIO()
     label.save(mask_buf, format='JPEG')
 
-    # make the directory for saving
-    os.makedirs('static/', exist_ok=True)
-
-    # save the mask
-    np.save('static/mask.npy', mask.astype(np.int16))
-
-    # save the parameters
-    params_dict = {
-            'n-rows': n_rows,
-            'n-clms': n_clms,
-            'n-plates': n_plates,
-            'row-gap': gap_r,
-            'clm-gap': gap_c,
-            'plate-gap': gap_p,
-            'x': x,
-            'y': y,
-            'well-w': well_w,
-            'well-h': well_h,
-            'angle': angle,
-            }
-    with open('static/mask_params.json', 'w') as f:
-        json.dump(params_dict, f, indent=4)
 
     if 'xaxis.range[0]' in layout:
         xaxis = {
@@ -5320,6 +5298,125 @@ def create_mask(
                 * np.logical_not(np.eye(mask.shape[0], mask.shape[1]))
 
     return np.flipud(mask)
+
+
+@app.callback(
+        Output('mask-save-notification-dialog', 'message'),
+        [Input('mask-save-confirm-dialog', 'submit_n_clicks')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value'),
+         State('n-rows', 'value'),
+         State('n-clms', 'value'),
+         State('n-plates', 'value'),
+         State('row-gap', 'value'),
+         State('clm-gap', 'value'),
+         State('plate-gap', 'value'),
+         State('x', 'value'),
+         State('y', 'value'),
+         State('well_w', 'value'),
+         State('well_h', 'value'),
+         State('angle', 'value'),
+         State('org-img', 'figure')])
+def draw_images(submit_n_clicks, data_root, dataset_name,
+        n_rows, n_clms, n_plates, gap_r, gap_c, gap_p, x, y, well_w, well_h, angle, figure):
+
+    # Guard
+    if submit_n_clicks is None or data_root is None:
+        print('submit_n_clicks is None or data_root is None or dataset_name is None')
+        raise dash.exceptions.PreventUpdate
+
+    # No dataset is selected
+    if dataset_name is None:
+        return 'Saveing a mask failed. Please select a dataset.'
+
+    if n_rows is None:
+        return 'Saveing a mask failed. Please enter the # of rows.'
+
+    if n_clms is None:
+        return 'Saveing a mask failed. Please enter the # of columns.'
+
+    if n_plates is None:
+        return 'Saveing a mask failed. Please enter the # of plates.'
+
+    if gap_r is None:
+        return 'Saveing a mask failed. Please enter the gap between rows.'
+
+    if gap_c is None:
+        return 'Saveing a mask failed. Please enter the gap between columns.'
+
+    if gap_p is None:
+        return 'Saveing a mask failed. Please enter the gap between plates.'
+
+    if x is None:
+        return 'Saveing a mask failed. Please enter the x-coordinate of the lower left corner.'
+
+    if y is None:
+        return 'Saveing a mask failed. Please enter the y-coordinate of the lower left corner.'
+
+    if well_w is None:
+        return 'Saveing a mask failed. Please enter the width of a well.'
+
+    if well_h is None:
+        return 'Saveing a mask failed. Please enter the height of a well.'
+
+    if angle is None:
+        return 'Saveing a mask failed. Please enter the angle for rotation correction.'
+
+    if 'images' not in figure['layout']:
+        return 'Saveing a mask failed. Please upload an original image.'
+
+    out_dir = os.path.join(data_root, dataset_name)
+    save_mask_file(out_dir, n_rows, n_clms, n_plates,
+            gap_r, gap_c, gap_p, x, y, well_w, well_h, angle, figure)
+
+    return 'Saved!'
+
+
+@app.callback(
+        Output('mask-save-notification-dialog', 'displayed'),
+        [Input('mask-save-notification-dialog', 'message')])
+def callback(message):
+    print(message)
+    if message is None:
+        raise dash.exceptions.PreventUpdate
+
+    return True
+
+
+def save_mask_file(out_dir, n_rows, n_clms, n_plates,
+        gap_r, gap_c, gap_p, x, y, well_w, well_h, angle, figure):
+
+    # Get base64ed hash of original image
+    orgimg_uri = figure['layout']['images'][0]['source']
+    imghash = orgimg_uri.split(',')[1]
+
+    # Transform hash to ndarray
+    org_img = np.array(PIL.Image.open(io.BytesIO(base64.b64decode(imghash))))
+
+    # save the mask
+    mask = create_mask(
+            org_img.shape, n_rows, n_clms, n_plates,
+            gap_r, gap_c, gap_p, x, y, well_w, well_h, np.deg2rad(angle))
+    np.save(os.path.join(out_dir, 'mask_temp.npy'), mask.astype(np.int16))
+
+    # save the parameters
+    params_dict = {
+            'n-rows': n_rows,
+            'n-clms': n_clms,
+            'n-plates': n_plates,
+            'row-gap': gap_r,
+            'clm-gap': gap_c,
+            'plate-gap': gap_p,
+            'x': x,
+            'y': y,
+            'well-w': well_w,
+            'well-h': well_h,
+            'angle': angle,
+            }
+    with open(os.path.join(out_dir, 'mask_params_temp.json'), 'w') as f:
+        json.dump(params_dict, f, indent=4)
+
+    return True
 
 
 if __name__ == '__main__':
