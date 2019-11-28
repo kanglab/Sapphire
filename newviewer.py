@@ -651,20 +651,34 @@ app.layout = html.Div([
         dcc.Tab(id='tab-3', label='Mask maker', value='tab-3', children=[
             html.Div([
                 html.Div([
-                    dcc.Upload(
-                        id='uploader',
-                        children=html.Div(['Drag and Drop or ', html.A('Select A File')]),
-                        style={
-                            'width': '400px',
-                            'height': '60px',
-                            'lineHeight': '60px',
-                            'borderWidth': '1px',
-                            'borderStyle': 'dashed',
-                            'borderRadius': '5px',
-                            'textAlign': 'center',
-                            'margin': '10px'},
-                        multiple=False,
-                    ),
+                    html.Div([
+                        html.Div([
+                            dcc.Upload(
+                                id='uploader',
+                                children=html.Div(['Drag and drop or ', html.A('select a file')]),
+                                style={
+                                    'width': '400px',
+                                    'height': '60px',
+                                    'lineHeight': '60px',
+                                    'borderWidth': '1px',
+                                    'borderStyle': 'dashed',
+                                    'borderRadius': '5px',
+                                    'textAlign': 'center',
+                                    'margin': '10px'},
+                                multiple=False,
+                            ),
+                        ], style={'display': 'inline-block'}),
+
+                        html.Div([
+                            dcc.ConfirmDialogProvider(
+                                id='mask-save-confirm-dialog',
+                                children=html.Button('Save', id='mask-save-button'),
+                                message='Are you sure you want to overwrite the mask file?',
+                            ),
+                            dcc.ConfirmDialog(id='mask-save-notification-dialog', message=''),
+                        ], style={'display': 'inline-block'}),
+                    ]),
+
                     html.Div([
                         '# of rows',
                         html.Br(),
