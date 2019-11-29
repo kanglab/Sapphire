@@ -652,99 +652,79 @@ app.layout = html.Div([
             html.Div([
                 html.Div([
                     html.Div([
-                        html.Div([
-                            dcc.Upload(
-                                id='uploader',
-                                children=html.Div(['Drag and drop or ', html.A('select a file')]),
-                                style={
-                                    'width': '400px',
-                                    'height': '60px',
-                                    'lineHeight': '60px',
-                                    'borderWidth': '1px',
-                                    'borderStyle': 'dashed',
-                                    'borderRadius': '5px',
-                                    'textAlign': 'center',
-                                    'margin': '10px'},
-                                multiple=False,
-                            ),
-                        ], style={'display': 'inline-block'}),
-
-                        html.Div([
-                            dcc.ConfirmDialogProvider(
-                                id='mask-save-confirm-dialog',
-                                children=html.Button('Save', id='mask-save-button'),
-                                message='Are you sure you want to overwrite the mask file?',
-                            ),
-                            dcc.ConfirmDialog(id='mask-save-notification-dialog', message=''),
-                        ], style={'display': 'inline-block'}),
-                    ]),
-
-                    html.Div([
                         '# of rows',
                         html.Br(),
                         dcc.Input(id='n-rows', placeholder='# of rows', debounce=True,
                                 type='number', value=8, max=100, min=0, size=5),
-                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         '# of columns',
                         html.Br(),
                         dcc.Input(id='n-clms', placeholder='# of columns', debounce=True,
                                 type='number', value=12, max=100, min=0, size=5),
-                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         '# of plates',
                         html.Br(),
                         dcc.Input(id='n-plates', placeholder='# of plates', debounce=True,
                                 type='number', value=3, max=10, min=0, size=5),
-                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'gap between rows',
                         html.Br(),
                         dcc.Input(id='row-gap', placeholder='gap between rows', debounce=True,
                                 type='number', value=1, max=10, min=0, size=5, step=0.1),
-                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'gap between columns',
                         html.Br(),
                         dcc.Input(id='clm-gap', placeholder='gap between columns', debounce=True,
                                 type='number', value=1, max=10, min=0, size=5, step=0.1),
-                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'gap between plates',
                         html.Br(),
                         dcc.Input(id='plate-gap', placeholder='gap between plates', debounce=True,
                                 type='number', value=71, max=800, min=0, size=5),
-                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'x-coord of the lower left corner',
                         html.Br(),
                         dcc.Input(id='x', placeholder='x-coord of the lower left corner', debounce=True,
                                 type='number', value=0, max=1500, min=0, size=5),
-                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'y-coord of the lower left corner',
                         html.Br(),
                         dcc.Input(id='y', placeholder='y-coord of the lower left corner', debounce=True,
                                 type='number', value=0, max=1500, min=0, size=5),
-                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'width of a well',
                         html.Br(),
                         dcc.Input(id='well_w', placeholder='width of a well', debounce=True,
                                 type='number', value=0, max=1500, min=0, size=5),
-                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'height of a well',
                         html.Br(),
                         dcc.Input(id='well_h', placeholder='height of a well', debounce=True,
                                 type='number', value=0, max=1500, min=0, size=5),
-                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'rotation correction (degree)',
                         html.Br(),
                         dcc.Input(id='angle', placeholder='rotation correction (degree)', debounce=True,
                                 type='number', value=0, max=90, min=0, size=5, step=0.1),
-                    ], style={'display': 'inline-block', 'width': '100px'}),
+                    ], style={'display': 'inline-block', 'width': '110px'}),
+                    html.Div([
+                        dcc.ConfirmDialogProvider(
+                            id='mask-save-confirm-dialog',
+                            children=html.Button('Save', id='mask-save-button'),
+                            message='Are you sure you want to overwrite the mask file?',
+                        ),
+                        dcc.ConfirmDialog(id='mask-save-notification-dialog', message=''),
+                    ], style={'display': 'inline-block'}),
                 ]),
                 html.Div([
                     dcc.Loading([
@@ -4996,15 +4976,28 @@ def day_and_night(timestamps):
 # =====================
 @app.callback(
         Output('org-img', 'figure'),
-        [Input('uploader', 'contents')])
-def update_images_div(data_uri):
-
-    if data_uri is None:
+        [Input('tabs', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def update_images_div(table_name, data_root, dataset_name):
+    # Guard
+    if data_root is None or dataset_name is None:
         return {'data': [], 'layout': {}}
+    if table_name != 'tab-3':
+        raise dash.exceptions.PreventUpdate
 
-    imghash = data_uri.split(',')[1]
-    img = PIL.Image.open(io.BytesIO(base64.b64decode(imghash)))
-    height, width = np.array(img).shape
+    # Load an original image
+    original_image_paths = sorted(glob.glob(os.path.join(
+            data_root, glob.escape(dataset_name), 'original', '*.jpg')))
+    original_image = PIL.Image.open(original_image_paths[0]).convert('L')
+
+    # Buffer the well image as byte stream
+    buf = io.BytesIO()
+    original_image.save(buf, format='JPEG')
+    data_uri = 'data:image/jpeg;base64,{}'.format(
+            base64.b64encode(buf.getvalue()).decode('utf-8'))
+
+    height, width = np.array(original_image).shape
 
     return {
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
