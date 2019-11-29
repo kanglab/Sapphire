@@ -4976,15 +4976,28 @@ def day_and_night(timestamps):
 # =====================
 @app.callback(
         Output('org-img', 'figure'),
-        [Input('uploader', 'contents')])
-def update_images_div(data_uri):
-
-    if data_uri is None:
+        [Input('tabs', 'value')],
+        [State('data-root', 'children'),
+         State('env-dropdown', 'value')])
+def update_images_div(table_name, data_root, dataset_name):
+    # Guard
+    if data_root is None or dataset_name is None:
         return {'data': [], 'layout': {}}
+    if table_name != 'tab-3':
+        raise dash.exceptions.PreventUpdate
 
-    imghash = data_uri.split(',')[1]
-    img = PIL.Image.open(io.BytesIO(base64.b64decode(imghash)))
-    height, width = np.array(img).shape
+    # Load an original image
+    original_image_paths = sorted(glob.glob(os.path.join(
+            data_root, glob.escape(dataset_name), 'original', '*.jpg')))
+    original_image = PIL.Image.open(original_image_paths[0]).convert('L')
+
+    # Buffer the well image as byte stream
+    buf = io.BytesIO()
+    original_image.save(buf, format='JPEG')
+    data_uri = 'data:image/jpeg;base64,{}'.format(
+            base64.b64encode(buf.getvalue()).decode('utf-8'))
+
+    height, width = np.array(original_image).shape
 
     return {
             'data': [go.Scatter(x=[0], y=[0], mode='lines+markers')],
