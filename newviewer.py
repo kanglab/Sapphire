@@ -652,34 +652,6 @@ app.layout = html.Div([
             html.Div([
                 html.Div([
                     html.Div([
-                        html.Div([
-                            dcc.Upload(
-                                id='uploader',
-                                children=html.Div(['Drag and drop or ', html.A('select a file')]),
-                                style={
-                                    'width': '400px',
-                                    'height': '60px',
-                                    'lineHeight': '60px',
-                                    'borderWidth': '1px',
-                                    'borderStyle': 'dashed',
-                                    'borderRadius': '5px',
-                                    'textAlign': 'center',
-                                    'margin': '10px'},
-                                multiple=False,
-                            ),
-                        ], style={'display': 'inline-block'}),
-
-                        html.Div([
-                            dcc.ConfirmDialogProvider(
-                                id='mask-save-confirm-dialog',
-                                children=html.Button('Save', id='mask-save-button'),
-                                message='Are you sure you want to overwrite the mask file?',
-                            ),
-                            dcc.ConfirmDialog(id='mask-save-notification-dialog', message=''),
-                        ], style={'display': 'inline-block'}),
-                    ]),
-
-                    html.Div([
                         '# of rows',
                         html.Br(),
                         dcc.Input(id='n-rows', placeholder='# of rows', debounce=True,
@@ -745,6 +717,14 @@ app.layout = html.Div([
                         dcc.Input(id='angle', placeholder='rotation correction (degree)', debounce=True,
                                 type='number', value=0, max=90, min=0, size=5, step=0.1),
                     ], style={'display': 'inline-block', 'width': '110px'}),
+                    html.Div([
+                        dcc.ConfirmDialogProvider(
+                            id='mask-save-confirm-dialog',
+                            children=html.Button('Save', id='mask-save-button'),
+                            message='Are you sure you want to overwrite the mask file?',
+                        ),
+                        dcc.ConfirmDialog(id='mask-save-notification-dialog', message=''),
+                    ], style={'display': 'inline-block'}),
                 ]),
                 html.Div([
                     dcc.Loading([
