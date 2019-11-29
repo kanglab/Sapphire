@@ -5390,7 +5390,7 @@ def save_mask_file(out_dir, n_rows, n_clms, n_plates,
     mask = create_mask(
             org_img.shape, n_rows, n_clms, n_plates,
             gap_r, gap_c, gap_p, x, y, well_w, well_h, np.deg2rad(angle))
-    np.save(os.path.join(out_dir, 'mask_temp.npy'), mask.astype(np.int16))
+    np.save(os.path.join(out_dir, 'mask.npy'), mask.astype(np.int16))
 
     # save the parameters
     params_dict = {
@@ -5406,7 +5406,7 @@ def save_mask_file(out_dir, n_rows, n_clms, n_plates,
             'well-h': well_h,
             'angle': angle,
             }
-    with open(os.path.join(out_dir, 'mask_params_temp.json'), 'w') as f:
+    with open(os.path.join(out_dir, 'mask_params.json'), 'w') as f:
         json.dump(params_dict, f, indent=4)
 
     return True
