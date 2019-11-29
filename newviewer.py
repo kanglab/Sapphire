@@ -13,6 +13,7 @@ import glob
 import dash
 import json
 import base64
+import shutil
 import zipfile
 import datetime
 import PIL.Image
@@ -5386,13 +5387,28 @@ def save_mask_file(out_dir, n_rows, n_clms, n_plates,
     # Transform hash to ndarray
     org_img = np.array(PIL.Image.open(io.BytesIO(base64.b64decode(imghash))))
 
-    # save the mask
+    # Make a mask
     mask = create_mask(
             org_img.shape, n_rows, n_clms, n_plates,
             gap_r, gap_c, gap_p, x, y, well_w, well_h, np.deg2rad(angle))
-    np.save(os.path.join(out_dir, 'mask.npy'), mask.astype(np.int16))
 
-    # save the parameters
+    # Make a timestamp for backup
+    timestamp = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+
+    if os.path.exists(os.path.join(out_dir, 'mask.npy')):
+        # If exists, make the backup
+        source_path = os.path.join(out_dir, 'mask.npy')
+        dest_path = os.path.join(out_dir, f'mask_{timestamp}.npy')
+        shutil.copy2(source_path, dest_path)
+
+        # save the mask
+        np.save(os.path.join(out_dir, 'mask.npy'), mask.astype(np.int16))
+
+    else:
+        # save the mask
+        np.save(os.path.join(out_dir, 'mask.npy'), mask.astype(np.int16))
+
+    # Parameters
     params_dict = {
             'n-rows': n_rows,
             'n-clms': n_clms,
@@ -5406,10 +5422,21 @@ def save_mask_file(out_dir, n_rows, n_clms, n_plates,
             'well-h': well_h,
             'angle': angle,
             }
-    with open(os.path.join(out_dir, 'mask_params.json'), 'w') as f:
-        json.dump(params_dict, f, indent=4)
 
-    return True
+    if os.path.exists(os.path.join(out_dir, 'mask_params.json')):
+        # If exists, make the backup
+        source_path = os.path.join(out_dir, 'mask_params.json')
+        dest_path = os.path.join(out_dir, f'mask_params_{timestamp}.json')
+        shutil.copy2(source_path, dest_path)
+
+        # save the parameters
+        with open(os.path.join(out_dir, 'mask_params.json'), 'w') as f:
+            json.dump(params_dict, f, indent=4)
+
+    else:
+        # save the parameters
+        with open(os.path.join(out_dir, 'mask_params.json'), 'w') as f:
+            json.dump(params_dict, f, indent=4)
 
 
 if __name__ == '__main__':
