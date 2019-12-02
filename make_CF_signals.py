@@ -10,7 +10,7 @@
 import os
 import numpy as np
 import changefinder
-import tqdm.tqdm
+from tqdm import tqdm
 import argparse
 
 
@@ -27,7 +27,9 @@ def normalize(signals, coef=1):
 def change_find(signal, r, order, smooth, window, head_width, tail_width, task, survive=False):
     # シグナルの値がすべて同じだった場合、changefinder をかけずに終了する
     if np.all(signal[0] == signal):
-        return np.zeros(head_width + len(signal) + tail_width)
+        return np.zeros(len(signal)),  \
+               np.zeros(head_width + len(signal) + tail_width),  \
+               np.zeros(head_width + len(signal) + tail_width)
 
     # 生き残った個体がいる可能性がある場合（survive==True）、始めと最後のシグナルの平均値から
     # 生き残ったかを判断し、生き残った場合は changefinder をかけずに終了する
@@ -40,22 +42,37 @@ def change_find(signal, r, order, smooth, window, head_width, tail_width, task, 
         end_std = end.std()
 
         if -2.8 * (start_mean - end_mean) + 1.0 > (start_std - end_std):
-            return np.zeros(head_width + len(signal) + tail_width)
+            return np.zeros(len(signal)),  \
+                   np.zeros(head_width + len(signal) + tail_width),  \
+                   np.zeros(head_width + len(signal) + tail_width)
 
-    # Flip
+    # ラベル差分シグナルに ChangeFinder 適用すると、立ち下がり検出が
+    # うまくいかないので、蛹化・死亡判定時（立ち下がり検出時）は
+    # あらかじめシグナルを左右反転しておく。
     if task in ('pupariation', 'death'):
         signal = signal[::-1]
 
-    padded = randpad(signal, head_width, tail_width)
-    cf = changefinder.ChangeFinder(r, order=order, smooth=smooth)
+    signal_padded = randpad(signal, head_width, tail_width)
         
-    # r の値が小さすぎると ValueError: math domain error が生じるので
+    # r の値が小さすぎるとまれに ValueError: math domain error が生じるので
     # 10回までリトライする
     for _ in range(10):
         try:
-            return np.array([cf.update(s) for s in padded])
+            cf = changefinder.ChangeFinder(r, order=order, smooth=smooth)
+            score_padded = np.array([cf.update(s) for s in signal_padded])
+            score = score_padded[head_width + tail_width:]
+
+            # 反転されたシグナルとスコアをさらに反転してもとに戻す
+            if event in ('pupariation', 'death'):
+                score = score[::-1]
+                score_padded = score_padded[::-1]
+                signal_padded = signal_padded[::-1]
+
+            return score, score_padded, signal_padded
+
         except:
             pass  # エラーが生じても繰り返す
+
     else:
         raise Exception()  # 10回ともエラーが生じた場合は Exception を送出する
 
@@ -125,23 +142,15 @@ signals = normalize(signals, coef=1)
 # ===================
 #  ChangeFinder
 # ===================
-scores_zeropad = []
+scores = []
 for well_idx in tqdm(range(n_wells)):
     signal = signals[:, well_idx]
-    score_zeropad = change_find(signal, r, 1, smooth, window, head_width, tail_width, event)
-    scores_zeropad.append(score_zeropad)
-scores_zeropad = np.array(scores_zeropad).T
-
-scores = scores_zeropad[head_width + tail_width]
+    score, _, __ = change_find(
+            signal, r, 1, smooth, window, head_width, tail_width, event)
+    scores.append(score)
+scores = np.array(scores).T
 
 assert signals.shape == scores.shape
-
-# Flip
-if event in ('pupariation', 'death'):
-    scores = scores[::-1]
-    signals = signals[::-1]
-    scores_zeropad = scores_zeropad[::-1]
-    signals_zeropad = signals_zeropad[::-1]
 
 
 # ===================
