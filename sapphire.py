@@ -169,7 +169,7 @@ app.layout = html.Div([
                             type='number',
                             value=0,
                             min=0,
-                            size=5,
+                            size='5',
                         ),
                         ],
                         style={
@@ -199,7 +199,7 @@ app.layout = html.Div([
                                 type='number',
                                 value=0,
                                 min=0,
-                                size=5,
+                                size='5',
                             ),
                         ],
                         style={
@@ -332,8 +332,10 @@ app.layout = html.Div([
                                 ),
                                 dcc.Checklist(
                                     id='larva-smoothing-check',
-                                    options=[
-                                        {'label': 'Smoothing', 'value': True}],
+                                    options=[{
+                                        'label': 'Smoothing',
+                                        'value': 'checked',
+                                    }],
                                     values=[],
                                     style={
                                         'margin-left': '10px',
@@ -346,7 +348,7 @@ app.layout = html.Div([
                                         type='number',
                                         value=10,
                                         min=0,
-                                        size=5,
+                                        size='5',
                                         style={
                                             'width': '70px',
                                             'margin-left': '25px',
@@ -360,7 +362,7 @@ app.layout = html.Div([
                                         type='number',
                                         value=5,
                                         min=0,
-                                        size=5,
+                                        size='5',
                                         step=0.1,
                                         style={
                                             'width': '70px',
@@ -370,8 +372,10 @@ app.layout = html.Div([
                                 ], style={'margin': '0px 0px 0px 20px'}),
                                 dcc.Checklist(
                                     id='larva-weight-check',
-                                    options=[
-                                        {'label': 'Weight', 'value': True}],
+                                    options=[{
+                                        'label': 'Weight',
+                                        'value': 'checked',
+                                    }],
                                     values=[],
                                     style={
                                         'margin-left': '10px',
@@ -465,8 +469,10 @@ app.layout = html.Div([
                                 ),
                                 dcc.Checklist(
                                     id='adult-smoothing-check',
-                                    options=[
-                                        {'label': 'Smoothing', 'value': True}],
+                                    options=[{
+                                        'label': 'Smoothing',
+                                        'value': 'checked',
+                                    }],
                                     values=[],
                                     style={
                                         'margin-left': '10px',
@@ -479,7 +485,7 @@ app.layout = html.Div([
                                         type='number',
                                         value=10,
                                         min=0,
-                                        size=5,
+                                        size='5',
                                         style={
                                             'width': '70px',
                                             'margin-left': '25px',
@@ -493,7 +499,7 @@ app.layout = html.Div([
                                         type='number',
                                         value=5,
                                         min=0,
-                                        size=5,
+                                        size='5',
                                         step=0.1,
                                         style={
                                             'width': '70px',
@@ -503,8 +509,10 @@ app.layout = html.Div([
                                 ], style={'margin': '0px 0px 0px 20px'}),
                                 dcc.Checklist(
                                     id='adult-weight-check',
-                                    options=[
-                                        {'label': 'Weight', 'value': True}],
+                                    options=[{
+                                        'label': 'Weight',
+                                        'value': 'checked',
+                                    }],
                                     values=[],
                                     style={
                                         'display': 'inline-block',
@@ -656,67 +664,67 @@ app.layout = html.Div([
                         '# of rows',
                         html.Br(),
                         dcc.Input(id='n-rows', placeholder='# of rows', debounce=True,
-                                type='number', value=8, max=100, min=0, size=5),
+                                type='number', value=8, max=100, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         '# of columns',
                         html.Br(),
                         dcc.Input(id='n-clms', placeholder='# of columns', debounce=True,
-                                type='number', value=12, max=100, min=0, size=5),
+                                type='number', value=12, max=100, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         '# of plates',
                         html.Br(),
                         dcc.Input(id='n-plates', placeholder='# of plates', debounce=True,
-                                type='number', value=3, max=10, min=0, size=5),
+                                type='number', value=3, max=10, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'gap between rows',
                         html.Br(),
                         dcc.Input(id='row-gap', placeholder='gap between rows', debounce=True,
-                                type='number', value=1, max=10, min=0, size=5, step=0.1),
+                                type='number', value=1, max=10, min=0, size='5', step=0.1),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'gap between columns',
                         html.Br(),
                         dcc.Input(id='clm-gap', placeholder='gap between columns', debounce=True,
-                                type='number', value=1, max=10, min=0, size=5, step=0.1),
+                                type='number', value=1, max=10, min=0, size='5', step=0.1),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'gap between plates',
                         html.Br(),
                         dcc.Input(id='plate-gap', placeholder='gap between plates', debounce=True,
-                                type='number', value=71, max=800, min=0, size=5),
+                                type='number', value=71, max=800, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'x-coord of the lower left corner',
                         html.Br(),
                         dcc.Input(id='x', placeholder='x-coord of the lower left corner', debounce=True,
-                                type='number', value=0, max=1500, min=0, size=5),
+                                type='number', value=0, max=1500, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'y-coord of the lower left corner',
                         html.Br(),
                         dcc.Input(id='y', placeholder='y-coord of the lower left corner', debounce=True,
-                                type='number', value=0, max=1500, min=0, size=5),
+                                type='number', value=0, max=1500, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'width of a well',
                         html.Br(),
                         dcc.Input(id='well_w', placeholder='width of a well', debounce=True,
-                                type='number', value=0, max=1500, min=0, size=5),
+                                type='number', value=0, max=1500, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'height of a well',
                         html.Br(),
                         dcc.Input(id='well_h', placeholder='height of a well', debounce=True,
-                                type='number', value=0, max=1500, min=0, size=5),
+                                type='number', value=0, max=1500, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'rotation correction (degree)',
                         html.Br(),
                         dcc.Input(id='angle', placeholder='rotation correction (degree)', debounce=True,
-                                type='number', value=0, max=90, min=0, size=5, step=0.1),
+                                type='number', value=0, max=90, min=0, size='5', step=0.1),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         dcc.ConfirmDialogProvider(
