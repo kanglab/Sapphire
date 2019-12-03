@@ -4409,7 +4409,7 @@ def make_auto_table(data_root, env, morph, target_dir, detect, signal_name, para
             + 'Smoothing window size,{}\n'.format(w_size)  \
             + 'Smoothing sigma,{}\nEvent timing\n'.format(w_sigma)  \
             + pd.DataFrame(auto_evals).to_csv(
-                    index=False, encoding='utf-8', header=False),
+                    index=False, encoding='utf-8', header=False)
 
     return html.Div(
         id=f'{morph}-auto-table',
