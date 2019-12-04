@@ -34,6 +34,8 @@ GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#008000',
                 '#89c3eb', '#84a2d4', '#3e62ad', '#0000ff', '#7f00ff',
                 '#56256e', '#000000']
 
+ALPHABETS = [chr(i) for i in range(65, 65 + 26)]
+
 
 DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '/mnt/sdb/Research/Drosophila/data/TsukubaRIKEN/'
@@ -4416,9 +4418,10 @@ def make_auto_table(data_root, env, morph, target_dir, detect, signal_name, para
         children = [
             html.H4(f'Event timings of {morph} (auto)'),
             dash_table.DataTable(
-                columns=[{'name': str(clm), 'id': str(clm)}
-                        for clm in range(params['n-clms'])],
-                data=pd.DataFrame(auto_evals).to_dict('rows'),
+                columns=[{'name': f'{clm}', 'id': f'{clm}'}
+                        for clm in ALPHABETS[:params['n-clms']]],
+                data=pd.DataFrame(auto_evals,
+                        columns=ALPHABETS[:params['n-clms']]).to_dict('rows'),
                 style_data_conditional=get_cell_style(params, auto_evals),
                 style_table={'width': '100%'}
             ),
@@ -4504,11 +4507,12 @@ def make_manual_table(data_root, env, morph, detect, params):
         children = [
             html.H4(f'Event timings of {morph} (manual)'),
             dash_table.DataTable(
-                columns=[{'name': str(clm), 'id': str(clm)}
-                        for clm in range(params['n-clms'])],
-                data=pd.DataFrame(auto_evals).to_dict('rows'),
+                columns=[{'name': f'{clm}', 'id': f'{clm}'}
+                        for clm in ALPHABETS[:params['n-clms']]],
+                data=pd.DataFrame(auto_evals,
+                        columns=ALPHABETS[:params['n-clms']]).to_dict('rows'),
                 style_data_conditional=get_cell_style(params, auto_evals),
-                style_table={'width': '100%'}
+                style_table={'width': '100%'},
             ),
             html.A(
                 'Download',
@@ -4537,13 +4541,12 @@ def get_cell_style(params, auto_evals):
         {
             'if': {
                 'column_id': f'{clm}',
-                'filter': '{} < num({}) && {} >= num({})'.format(
-                        clm, int(t2), clm, int(t1)),
+                'filter': f'{{{clm}}} < {int(t2)} && {{{clm}}} >= {int(t1)}',
             },
             'backgroundColor': '#44{:02X}44'.format(int(c), int(c)),
             'color': 'black',
         }
-        for clm in range(params['n-clms'])
+        for clm in ALPHABETS[:params['n-clms']]
         for t1, t2, c in zip(
             np.linspace(0, auto_evals.max() + 1, 11)[:10],
             np.linspace(0, auto_evals.max() + 1, 11)[1:],
@@ -4552,12 +4555,12 @@ def get_cell_style(params, auto_evals):
         {
             'if': {
                 'column_id': f'{clm}',
-                'filter': f'{clm} = num(0)',
+                'filter': f'{{{clm}}} = 0',
             },
             'backgroundColor': '#000000',
             'color': 'white',
         }
-        for clm in range(params['n-clms'])
+        for clm in ALPHABETS[:params['n-clms']]
     ]
 
 
