@@ -172,7 +172,6 @@ model = keras.models.load_model(trained_network_path,
 # オリジナル画像のファイルパス
 orgimg_paths = sorted(glob.glob(os.path.join(
         glob.escape(inference_dataset_path), 'original', '*.jpg')))
-orgimg_paths = orgimg_paths[:5]
 
 probs = []
 # for each frame
