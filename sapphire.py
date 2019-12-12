@@ -4457,7 +4457,7 @@ def make_auto_table(data_root, env, morph, target_dir, detect, signal_name, para
             'display': 'inline-block',
             'vertical-align': 'top',
             'margin': '10px',
-            'width': '400px',
+            'width': '550px',
         },
     )
 
@@ -4546,7 +4546,7 @@ def make_manual_table(data_root, env, morph, detect, params):
             'display': 'inline-block',
             'vertical-align': 'top',
             'margin': '10px',
-            'width': '400px',
+            'width': '550px',
         },
     )
 
