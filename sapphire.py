@@ -34,6 +34,8 @@ GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#008000',
                 '#89c3eb', '#84a2d4', '#3e62ad', '#0000ff', '#7f00ff',
                 '#56256e', '#000000']
 
+ALPHABETS = [chr(i) for i in range(65, 65 + 26)]
+
 
 DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
 DATA_ROOT = '/mnt/sdb/Research/Drosophila/data/TsukubaRIKEN/'
@@ -169,7 +171,7 @@ app.layout = html.Div([
                             type='number',
                             value=0,
                             min=0,
-                            size=5,
+                            size='5',
                         ),
                         ],
                         style={
@@ -199,7 +201,7 @@ app.layout = html.Div([
                                 type='number',
                                 value=0,
                                 min=0,
-                                size=5,
+                                size='5',
                             ),
                         ],
                         style={
@@ -332,8 +334,10 @@ app.layout = html.Div([
                                 ),
                                 dcc.Checklist(
                                     id='larva-smoothing-check',
-                                    options=[
-                                        {'label': 'Smoothing', 'value': True}],
+                                    options=[{
+                                        'label': 'Smoothing',
+                                        'value': 'checked',
+                                    }],
                                     values=[],
                                     style={
                                         'margin-left': '10px',
@@ -346,7 +350,7 @@ app.layout = html.Div([
                                         type='number',
                                         value=10,
                                         min=0,
-                                        size=5,
+                                        size='5',
                                         style={
                                             'width': '70px',
                                             'margin-left': '25px',
@@ -360,7 +364,7 @@ app.layout = html.Div([
                                         type='number',
                                         value=5,
                                         min=0,
-                                        size=5,
+                                        size='5',
                                         step=0.1,
                                         style={
                                             'width': '70px',
@@ -370,8 +374,10 @@ app.layout = html.Div([
                                 ], style={'margin': '0px 0px 0px 20px'}),
                                 dcc.Checklist(
                                     id='larva-weight-check',
-                                    options=[
-                                        {'label': 'Weight', 'value': True}],
+                                    options=[{
+                                        'label': 'Weight',
+                                        'value': 'checked',
+                                    }],
                                     values=[],
                                     style={
                                         'margin-left': '10px',
@@ -465,8 +471,10 @@ app.layout = html.Div([
                                 ),
                                 dcc.Checklist(
                                     id='adult-smoothing-check',
-                                    options=[
-                                        {'label': 'Smoothing', 'value': True}],
+                                    options=[{
+                                        'label': 'Smoothing',
+                                        'value': 'checked',
+                                    }],
                                     values=[],
                                     style={
                                         'margin-left': '10px',
@@ -479,7 +487,7 @@ app.layout = html.Div([
                                         type='number',
                                         value=10,
                                         min=0,
-                                        size=5,
+                                        size='5',
                                         style={
                                             'width': '70px',
                                             'margin-left': '25px',
@@ -493,7 +501,7 @@ app.layout = html.Div([
                                         type='number',
                                         value=5,
                                         min=0,
-                                        size=5,
+                                        size='5',
                                         step=0.1,
                                         style={
                                             'width': '70px',
@@ -503,8 +511,10 @@ app.layout = html.Div([
                                 ], style={'margin': '0px 0px 0px 20px'}),
                                 dcc.Checklist(
                                     id='adult-weight-check',
-                                    options=[
-                                        {'label': 'Weight', 'value': True}],
+                                    options=[{
+                                        'label': 'Weight',
+                                        'value': 'checked',
+                                    }],
                                     values=[],
                                     style={
                                         'display': 'inline-block',
@@ -655,76 +665,97 @@ app.layout = html.Div([
                     html.Div([
                         '# of rows',
                         html.Br(),
-                        dcc.Input(id='n-rows', placeholder='# of rows', debounce=True,
-                                type='number', value=8, max=100, min=0, size=5),
+                        dcc.Input(id='n-rows', placeholder='# of rows',
+                                debounce=True, type='number', value=8,
+                                max=100, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         '# of columns',
                         html.Br(),
-                        dcc.Input(id='n-clms', placeholder='# of columns', debounce=True,
-                                type='number', value=12, max=100, min=0, size=5),
+                        dcc.Input(id='n-clms', placeholder='# of columns',
+                                debounce=True, type='number', value=12,
+                                max=100, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         '# of plates',
                         html.Br(),
-                        dcc.Input(id='n-plates', placeholder='# of plates', debounce=True,
-                                type='number', value=3, max=10, min=0, size=5),
+                        dcc.Input(id='n-plates', placeholder='# of plates',
+                                debounce=True, type='number', value=1,
+                                max=10, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'gap between rows',
                         html.Br(),
-                        dcc.Input(id='row-gap', placeholder='gap between rows', debounce=True,
-                                type='number', value=1, max=10, min=0, size=5, step=0.1),
+                        dcc.Input(id='row-gap',
+                                placeholder='gap between rows', debounce=True,
+                                type='number', value=1,
+                                max=10, min=0, size='5', step=0.1),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'gap between columns',
                         html.Br(),
-                        dcc.Input(id='clm-gap', placeholder='gap between columns', debounce=True,
-                                type='number', value=1, max=10, min=0, size=5, step=0.1),
+                        dcc.Input(id='clm-gap',
+                                placeholder='gap between columns',
+                                debounce=True, type='number', value=1,
+                                max=10, min=0, size='5', step=0.1),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'gap between plates',
                         html.Br(),
-                        dcc.Input(id='plate-gap', placeholder='gap between plates', debounce=True,
-                                type='number', value=71, max=800, min=0, size=5),
+                        dcc.Input(id='plate-gap',
+                                placeholder='gap between plates',
+                                debounce=True, type='number', value=71,
+                                max=800, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'x-coord of the lower left corner',
                         html.Br(),
-                        dcc.Input(id='x', placeholder='x-coord of the lower left corner', debounce=True,
-                                type='number', value=0, max=1500, min=0, size=5),
+                        dcc.Input(id='x',
+                                placeholder='x-coord of the lower left corner',
+                                debounce=True, type='number', value=0,
+                                max=1500, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'y-coord of the lower left corner',
                         html.Br(),
-                        dcc.Input(id='y', placeholder='y-coord of the lower left corner', debounce=True,
-                                type='number', value=0, max=1500, min=0, size=5),
+                        dcc.Input(id='y',
+                                placeholder='y-coord of the lower left corner',
+                                debounce=True, type='number', value=0,
+                                max=1500, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'width of a well',
                         html.Br(),
-                        dcc.Input(id='well_w', placeholder='width of a well', debounce=True,
-                                type='number', value=0, max=1500, min=0, size=5),
+                        dcc.Input(id='well_w',
+                                placeholder='width of a well',
+                                debounce=True, type='number', value=0,
+                                max=1500, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'height of a well',
                         html.Br(),
-                        dcc.Input(id='well_h', placeholder='height of a well', debounce=True,
-                                type='number', value=0, max=1500, min=0, size=5),
+                        dcc.Input(id='well_h',
+                                placeholder='height of a well', debounce=True,
+                                type='number', value=0,
+                                max=1500, min=0, size='5'),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         'rotation correction (degree)',
                         html.Br(),
-                        dcc.Input(id='angle', placeholder='rotation correction (degree)', debounce=True,
-                                type='number', value=0, max=90, min=0, size=5, step=0.1),
+                        dcc.Input(id='angle',
+                                placeholder='rotation correction (degree)',
+                                debounce=True, type='number', value=0,
+                                max=90, min=0, size='5', step=0.1),
                     ], style={'display': 'inline-block', 'width': '110px'}),
                     html.Div([
                         dcc.ConfirmDialogProvider(
-                            id='mask-save-confirm-dialog',
-                            children=html.Button('Save', id='mask-save-button'),
+                                id='mask-save-confirm-dialog',
+                                children=html.Button('Save',
+                                        id='mask-save-button'),
                             message='Are you sure you want to overwrite the mask file?',
                         ),
-                        dcc.ConfirmDialog(id='mask-save-notification-dialog', message=''),
+                        dcc.ConfirmDialog(id='mask-save-notification-dialog',
+                                message=''),
                     ], style={'display': 'inline-block'}),
                 ]),
                 html.Div([
@@ -4401,16 +4432,17 @@ def make_auto_table(data_root, env, morph, target_dir, detect, signal_name, para
             + 'Smoothing window size,{}\n'.format(w_size)  \
             + 'Smoothing sigma,{}\nEvent timing\n'.format(w_sigma)  \
             + pd.DataFrame(auto_evals).to_csv(
-                    index=False, encoding='utf-8', header=False),
+                    index=False, encoding='utf-8', header=False)
 
     return html.Div(
         id=f'{morph}-auto-table',
         children = [
             html.H4(f'Event timings of {morph} (auto)'),
             dash_table.DataTable(
-                columns=[{'name': str(clm), 'id': str(clm)}
-                        for clm in range(params['n-clms'])],
-                data=pd.DataFrame(auto_evals).to_dict('rows'),
+                columns=[{'name': f'{clm}', 'id': f'{clm}'}
+                        for clm in ALPHABETS[:params['n-clms']]],
+                data=pd.DataFrame(auto_evals,
+                        columns=ALPHABETS[:params['n-clms']]).to_dict('rows'),
                 style_data_conditional=get_cell_style(params, auto_evals),
                 style_table={'width': '100%'}
             ),
@@ -4425,7 +4457,7 @@ def make_auto_table(data_root, env, morph, target_dir, detect, signal_name, para
             'display': 'inline-block',
             'vertical-align': 'top',
             'margin': '10px',
-            'width': '400px',
+            'width': '550px',
         },
     )
 
@@ -4496,11 +4528,12 @@ def make_manual_table(data_root, env, morph, detect, params):
         children = [
             html.H4(f'Event timings of {morph} (manual)'),
             dash_table.DataTable(
-                columns=[{'name': str(clm), 'id': str(clm)}
-                        for clm in range(params['n-clms'])],
-                data=pd.DataFrame(auto_evals).to_dict('rows'),
+                columns=[{'name': f'{clm}', 'id': f'{clm}'}
+                        for clm in ALPHABETS[:params['n-clms']]],
+                data=pd.DataFrame(auto_evals,
+                        columns=ALPHABETS[:params['n-clms']]).to_dict('rows'),
                 style_data_conditional=get_cell_style(params, auto_evals),
-                style_table={'width': '100%'}
+                style_table={'width': '100%'},
             ),
             html.A(
                 'Download',
@@ -4513,7 +4546,7 @@ def make_manual_table(data_root, env, morph, detect, params):
             'display': 'inline-block',
             'vertical-align': 'top',
             'margin': '10px',
-            'width': '400px',
+            'width': '550px',
         },
     )
 
@@ -4529,13 +4562,12 @@ def get_cell_style(params, auto_evals):
         {
             'if': {
                 'column_id': f'{clm}',
-                'filter': '{} < num({}) && {} >= num({})'.format(
-                        clm, int(t2), clm, int(t1)),
+                'filter': f'{{{clm}}} < {int(t2)} && {{{clm}}} >= {int(t1)}',
             },
             'backgroundColor': '#44{:02X}44'.format(int(c), int(c)),
             'color': 'black',
         }
-        for clm in range(params['n-clms'])
+        for clm in ALPHABETS[:params['n-clms']]
         for t1, t2, c in zip(
             np.linspace(0, auto_evals.max() + 1, 11)[:10],
             np.linspace(0, auto_evals.max() + 1, 11)[1:],
@@ -4544,12 +4576,12 @@ def get_cell_style(params, auto_evals):
         {
             'if': {
                 'column_id': f'{clm}',
-                'filter': f'{clm} = num(0)',
+                'filter': f'{{{clm}}} = 0',
             },
             'backgroundColor': '#000000',
             'color': 'white',
         }
-        for clm in range(params['n-clms'])
+        for clm in ALPHABETS[:params['n-clms']]
     ]
 
 
