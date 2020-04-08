@@ -17,7 +17,6 @@ import shutil
 import zipfile
 import datetime
 import PIL.Image
-import dash_auth
 import dash_table
 import numpy as np
 import pandas as pd
@@ -5468,4 +5467,4 @@ def save_mask_file(out_dir, n_rows, n_clms, n_plates,
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, dev_tools_props_check=True)
+    app.run_server(debug=False, dev_tools_props_check=False)
