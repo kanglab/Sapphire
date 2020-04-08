@@ -17,23 +17,31 @@ You can find version information in [CHANGELOG.md](./CHANGELOG.md).
 The application requires Python 3.6.
 It also needs Python modules as described bellow:
 
-- changefinder (0.3)
-- cudatoolkit (9.0)
-- cudnn (7.6.0)
-- dash (0.43.0)
-- dash-auth (1.3.2)
-- dash-core-components (0.48.0)
-- dash-html-components (0.16.0)
-- dash-renderer (0.24.0)
-- dash-table (3.7.0)
-- keras (2.2.4)
-- numpy (1.16.5)
-- pandas (0.25.1)
-- Pillow (6.1.0)
-- plotly (3.2.0)
-- scipy (1.3.1)
-- tensorflow-gpu (1.9.0)
-- tqdm (4.32.1)
+If you want to use only Sapphire (only viewing images, signals, etc).
+
+| Module name | Version | Description |
+| ---- | ----: | ---- |
+| dash | 0.43.0 | You have not to install following modules because it is automatically installed with `dash`.<br> - `dash-core-components`<br> - `dash-html-components`<br> - `dash-renderer`<br> - `dash-table`<br> - `plotly` |
+| dash-core-components | 0.48.0 |  |
+| dash-html-components | 0.16.0 | |
+| dash-renderer | 0.24.0 | |
+| dash-table | 3.7.0 | |
+| numpy | 1.16.5 | |
+| pandas | 0.25.1 | |
+| Pillow | 6.1.0 | |
+| plotly | 3.2.0 | |
+| scipy | 1.3.1 | |
+
+If you want to carry out inference and/or further analysis with the scripts in this repository.
+
+| Module name | Version | Description |
+| ---- | ----: | ---- |
+| changefinder | 0.3 | Please use `pip install` command if you are using Anaconda/Miniconda environment. This is not provided by Anaconda repository at this point (2020/04/08). |
+| cudatoolkit | 9.0 | Automatically installed by `tensorflow-gpu` installing. |
+| cudnn | 7.6.0 | Automatically installed by `tensorflow-gpu` installing. |
+| keras | 2.4.0 |  |
+| tensorflow/tensorflow-gpu | 1.9.0 | You can acceralate inference by a neural network with GPU computing. In this case, please install `tensorflow-gpu`, not `tensorflow`. In installation of `tensorflow-gpu`, `cudatoolkit` and `cudnn` will automatically be installed. |
+| tqdm | 4.32.1 |  |
 
 ## Usage
 
@@ -66,7 +74,7 @@ After installing all the dependencies, please execute `python` command in your s
 python sapphire.py
 ```
 
-And then, please open your web browser and access to `localhost:8080`.
+And then, please open your web browser and access to `localhost:8050`.
 Your browser will show Sapphire application.
 If your installation is correct, you can select any parameters with the selector elements on Sapphire and explore flys' images, signals, and statistics like the [demo image](./demoimage.png).
 If you can't select parameters (for example, a selector element has blank), Sapphire might raise some errors.
