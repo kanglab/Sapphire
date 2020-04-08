@@ -1,0 +1,13 @@
+{
+    "n-rows": 8,
+    "n-clms": 12,
+    "n-plates": 3,
+    "row-gap": 1,
+    "clm-gap": 1,
+    "plate-gap": 87,
+    "x": 50,
+    "y": 28,
+    "well-w": 52,
+    "well-h": 52,
+    "angle": 0
+}
