@@ -45,7 +45,7 @@ If you want to carry out inference and/or further analysis with the scripts in t
 
 ## Usage
 
-See manual.pdf in the repository.
+See [manual.pdf](./manual.pdf) in this repository.
 
 ## Install
 
