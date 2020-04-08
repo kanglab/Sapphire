@@ -1,6 +1,6 @@
 # Change log
 
-## [Ver. 0.2.0](https://github.com/kanglab/DiamondsOnDash/tree/release/0.2.0) (2019-10-07)
+## [Ver. 0.2.0](https://github.com/kanglab/DiamondsOnDash/releases/tag/0.2.0) (2019-10-07)
 
 **Implemented enhancements:**
 
@@ -14,13 +14,13 @@
 - シグナルグラフの選択データ点（赤点）が更新されないバグを修正しました。
 - データセットを選択するごとにブラックリストを再読み込みするようにしました。
 
-## [Ver. 0.2.1](https://github.com/kanglab/DiamondsOnDash/tree/release/0.2.1) (2019-11-21)
+## [Ver. 0.2.1](https://github.com/kanglab/DiamondsOnDash/releases/tag/0.2.1) (2019-11-21)
 
 **Bugfix:**
 
 - データセットフォルダの名前に括弧（[]）が含まれる場合、globがうまく読み取らないので置換処理を加えました。
 
-## [Ver. 0.3.0](https://github.com/kanglab/DiamondsOnDash/tree/release/0.3.0) (2019-12-25)
+## [Ver. 0.3.0](https://github.com/kanglab/DiamondsOnDash/releases/tag/0.3.0) (2019-12-25)
 
 **Implemented enhancements:**
 
@@ -30,9 +30,10 @@
 - ファイルのリネーム（newviewer.py -> sapphire.py）
 - 不要ファイルの削除（mask.py、viewer.py）
 
-## [Ver. 0.3.1](https://github.com/kanglab/DiamondsOnDash/tree/release/0.3.1) (2020-04-08)
+## [Ver. 0.3.1](https://github.com/kanglab/DiamondsOnDash/releases/tag/0.3.1) (2020-04-08)
 
 **Modification:**
 
 - Update README.
+- Update manual.pdf.
 - Add directory tree for demo.
