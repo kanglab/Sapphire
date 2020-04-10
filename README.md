@@ -15,13 +15,13 @@ You can find version information in [CHANGELOG.md](./CHANGELOG.md).
 ## Dependencies
 
 The application requires Python 3.6.
-It also needs Python modules as described bellow:
+It also needs Python modules as described bellow.
 
-If you want to use only Sapphire (only viewing images, signals, etc).
+If you want to use only Sapphire (only viewing images, signals, etc):
 
 | Module name | Version | Description |
 | ---- | ----: | ---- |
-| dash | 0.43.0 | You have not to install following modules because it is automatically installed with `dash`.<br> - `dash-core-components`<br> - `dash-html-components`<br> - `dash-renderer`<br> - `dash-table`<br> - `plotly` |
+| dash | 0.43.0 | You have not to install following modules because it is automatically installed with `dash`.<br> - `dash-core-components`<br> - `dash-html-components`<br> - `dash-renderer`<br> - `dash-table`<br> - `plotly`<br> If you use `conda`/`pip`, execute the install command specifying the version: `conda install -c conda-forge dash==0.43.0`/`pip install dash==0.43.0`. |
 | dash-core-components | 0.48.0 |  |
 | dash-html-components | 0.16.0 | |
 | dash-renderer | 0.24.0 | |
@@ -32,20 +32,24 @@ If you want to use only Sapphire (only viewing images, signals, etc).
 | plotly | 3.2.0 | |
 | scipy | 1.3.1 | |
 
-If you want to carry out inference and/or further analysis with the scripts in this repository.
+If you want to carry out inference and/or further analysis with the scripts in this repository:
 
 | Module name | Version | Description |
 | ---- | ----: | ---- |
-| changefinder | 0.3 | Please use `pip install` command if you are using Anaconda/Miniconda environment. This is not provided by Anaconda repository at this point (2020/04/08). |
+| changefinder | 0.3 | Please use `pip install` command if you are using Anaconda/Miniconda environment. This is not provided by the Anaconda repository at this point (2020/04/08). |
 | cudatoolkit | 9.0 | Automatically installed by `tensorflow-gpu` installing. |
 | cudnn | 7.6.0 | Automatically installed by `tensorflow-gpu` installing. |
 | keras | 2.4.0 |  |
 | tensorflow/tensorflow-gpu | 1.9.0 | You can acceralate inference by a neural network with GPU computing. In this case, please install `tensorflow-gpu`, not `tensorflow`. In installation of `tensorflow-gpu`, `cudatoolkit` and `cudnn` will automatically be installed. |
 | tqdm | 4.32.1 |  |
 
+This application run on any OS (Windows, macOS, Linux, etc.).
+Running of Sapphire is verified in Windows 7, Ubuntu 16.04/18.04, and Apple OS X 10.11 El Capitan.
+We have carried out operation verification of Sapphire in all the minor version releases.
+
 ## Usage
 
-See [manual.pdf](./manual.pdf) in this repository.
+See the [manual](./manual_en.pdf) ([japanese ver.](./manual_ja.pdf)) in this repository.
 
 ## Install
 
@@ -57,22 +61,18 @@ git clone git@github.com:kanglab/DiamondsOnDash.git
 
 Or download the zip file by clicking the Clone or download button in this page.
 
-Install Python language and the dependencies according to the Dependencies section.
-This application run on any OS (Windows, macOS, Linux, etc.).
-Running of Sapphire is verified in Windows 7, Ubuntu 16.04/18.04, and Apple OS X 10.11 El Capitan.
-We have carried out operation verification of Sapphire in all the minor version releases.
+Install Python language and the dependencies according to the Dependencies section (see the [manual](./manual_en.pdf) ([japanese ver.](./manual_ja.pdf))).
+After installing all the dependencies, please execute `python` command in your shell terminal to start Sapphire:
+
+``` shell
+python sapphire.py
+```
 
 ## Demo
 
 This repository includes the directory `data_root_for_demo` for storing datasets.
 Note that the directory tree under `data_root_for_demo` is regorously defined to load data appropriately.
 Please put your data under the directories in `data_root_for_demo` without breaking the directory tree (renaming the directories is allowed).
-
-After installing all the dependencies, please execute `python` command in your shell terminal to start Sapphire:
-
-``` shell
-python sapphire.py
-```
 
 And then, please open your web browser and access to `localhost:8050`.
 Your browser will show Sapphire application.

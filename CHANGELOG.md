@@ -35,5 +35,5 @@
 **Modification:**
 
 - Update README.
-- Update manual.pdf.
+- Add manual_ja.pdf and manual_en.pdf.
 - Add directory tree for demo.
