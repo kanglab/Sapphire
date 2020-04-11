@@ -17,7 +17,6 @@ import shutil
 import zipfile
 import datetime
 import PIL.Image
-import dash_auth
 import dash_table
 import numpy as np
 import pandas as pd
@@ -37,11 +36,7 @@ GROUP_COLORS = ['#ff0000', '#ff7f00', '#e6b422', '#38b48b', '#008000',
 ALPHABETS = [chr(i) for i in range(65, 65 + 26)]
 
 
-DATA_ROOT = '/Volumes/sdb/Research/Drosophila/data/TsukubaRIKEN/'
-DATA_ROOT = '/mnt/sdb/Research/Drosophila/data/TsukubaRIKEN/'
-DATA_ROOT = '//133.24.88.18/Drosophila/data/TsukubaUniv/'
-DATA_ROOT = '//133.24.88.18/Drosophila/data/OkayamaUniv/'
-DATA_ROOT = '//133.24.88.18/Drosophila/Data/TsukubaRIKEN/'
+DATA_ROOT = './data_root_for_demo'
 
 THETA = 50
 
@@ -5472,4 +5467,4 @@ def save_mask_file(out_dir, n_rows, n_clms, n_plates,
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, dev_tools_props_check=True)
+    app.run_server(debug=False, dev_tools_props_check=False)
