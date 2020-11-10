@@ -150,4 +150,5 @@ The files/directories beggining with asterisk can be arbitrarily named, although
 
 ## Licence
 
-MIT license.
+MIT license.  
+If you use Sapphire for your work and find it useful, please cite our original paper ([Seong, et al., *eLife*, 2020](https://elifesciences.org/articles/58630), DOI: 10.7554/eLife.58630) in your paper.
