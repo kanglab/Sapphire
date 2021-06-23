@@ -46,6 +46,7 @@ import PIL
 import json
 import glob
 import numpy as np
+from PIL import Image
 from tqdm import tqdm
 
 import keras
@@ -98,8 +99,8 @@ def zeropadding(img, shape=(100, 100)):
     result : ndarray (height, width, n_channels)
     '''
     assert len(img.shape) == 2 or len(img.shape) == 3, 'Image must be 2D or 3D.'
-    assert img.shape[0] < shape[0], 'Image is too small.'
-    assert img.shape[1] < shape[1], 'Image is too small.'
+    #assert img.shape[0] < shape[0], 'Image is too small.'
+    #assert img.shape[1] < shape[1], 'Image is too small.'
 
     r0, c0 = int((shape[0] - img.shape[0]) / 2), int((shape[1] - img.shape[1]) / 2)
     if len(img.shape) == 3:
@@ -119,6 +120,9 @@ def split(image_path, n_wells, mask):
         # Cut out a well image from the original image
         r, c = np.where(mask == well_idx)
         well_image = org_image[r.min():r.max(), c.min():c.max()]
+		# Up sampling
+        img = Image.fromarray(np.uint8(well_image))
+        well_image = np.asarray(img.resize((56,56)))
         height, width = well_image.shape
         well_images.append(well_image)
         
