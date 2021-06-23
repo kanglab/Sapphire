@@ -148,6 +148,10 @@ The files/directories beggining with asterisk can be arbitrarily named, although
 - `network/*/profile1`: The name of training profile.
 - `original`: Stores original images.
 
+### Example network
+
+We put pre-trained networks in the root of this repository. `pre_trained_network_for_adult.h5`/`pre_trained_network_for_larva.h5` is a network for detecting adult/larva animals. Pre-trained networks are expected to be located in a directory under `network` directory in `data_root_for_demo`. The `network` directory has `adult`/`larva` directory which should has directories for training profile. Please put `pre_trained_network_for_adult.h5` or `pre_trained_network_for_larva.h5` in the `network/adult/profile1` or `network/larva/profile2` directory, respectively.
+
 ## Licence
 
 MIT license.
