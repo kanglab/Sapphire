@@ -37,3 +37,14 @@
 - Update README.
 - Add manual_ja.pdf and manual_en.pdf.
 - Add directory tree for demo.
+
+## [Ver. 0.3.2](https://github.com/kanglab/DiamondsOnDash/releases/tag/0.3.2) (2021-06-21)
+
+**Modification:**
+
+- Add example pre-trained networks and explanation about it on README.
+- Add the link to the original paper in the license statement.
+
+**Implemented enhancements:**
+
+- Do upsampling before inferencing if the size of an input image is less than 56x56.
